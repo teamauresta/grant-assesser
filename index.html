@@ -1025,7 +1025,7 @@
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(80, 80, 80);
                     const lines = doc.splitTextToSize(text, contentWidth - indent - 5);
-                    doc.text('•', margin + indent, yPos);
+                    doc.text('-', margin + indent, yPos);
                     doc.text(lines, margin + indent + 5, yPos);
                     yPos += lines.length * 5 + 2;
                 };
@@ -1091,7 +1091,7 @@
                     } else {
                         doc.setTextColor(200, 80, 80);
                     }
-                    doc.text(`${result.eligible ? '✓' : '✗'} ${program.name}`, margin, yPos);
+                    doc.text(`${result.eligible ? '[YES]' : '[NO]'} ${program.name}`, margin, yPos);
 
                     if (result.eligible) {
                         doc.setTextColor(80, 80, 80);
@@ -1116,7 +1116,7 @@
                     if (result.warnings.length > 0) {
                         result.warnings.forEach(warning => {
                             doc.setTextColor(200, 150, 50);
-                            doc.text(`  ⚠ ${warning}`, margin + 5, yPos);
+                            doc.text(`  [!] ${warning}`, margin + 5, yPos);
                             yPos += 4;
                         });
                     }
@@ -1170,7 +1170,7 @@
                 addText('Recommended Funding Stack:');
                 yPos += 3;
                 addBullet('Stage 1 (Foundation): R&D Tax Incentive + CSIRO Kick-Start');
-                addBullet('Stage 2 (Growth): IGP Advisory → IGP Grant');
+                addBullet('Stage 2 (Growth): IGP Advisory -> IGP Grant');
                 addBullet('Stage 3 (Scale): CRC-P + EMDG for export');
                 yPos += 5;
 
@@ -1210,7 +1210,7 @@
                         } else {
                             doc.setTextColor(150, 150, 150);
                         }
-                        doc.text(`  ${readiness[item.id] ? '✓' : '○'} ${item.label}${item.critical ? ' (Critical)' : ''}`, margin + 5, yPos);
+                        doc.text(`  ${readiness[item.id] ? '[x]' : '[ ]'} ${item.label}${item.critical ? ' (Critical)' : ''}`, margin + 5, yPos);
                         yPos += 4;
                     });
                     yPos += 3;
