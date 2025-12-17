@@ -59,74 +59,109 @@
 
         /* ============ BACKGROUND PATTERNS ============ */
 
-        /* Dot pattern overlay - brighter dots */
+        /* Soft scattered dots - organic placement */
         .bg-dots {
-            background-image: radial-gradient(circle, #52525b 1.5px, transparent 1.5px);
-            background-size: 24px 24px;
+            background-image:
+                radial-gradient(circle at 20% 30%, #52525b 1px, transparent 1px),
+                radial-gradient(circle at 60% 70%, #3f3f46 1.5px, transparent 1.5px),
+                radial-gradient(circle at 80% 20%, #52525b 1px, transparent 1px),
+                radial-gradient(circle at 40% 80%, #3f3f46 1px, transparent 1px);
+            background-size: 100px 100px, 150px 150px, 120px 120px, 80px 80px;
         }
 
         .bg-dots-subtle {
-            background-image: radial-gradient(circle, #3f3f46 1px, transparent 1px);
-            background-size: 32px 32px;
+            background-image:
+                radial-gradient(circle at 30% 40%, #3f3f46 1px, transparent 1px),
+                radial-gradient(circle at 70% 60%, #3f3f46 1px, transparent 1px);
+            background-size: 120px 120px, 80px 80px;
         }
 
-        /* Grid pattern overlay - more visible lines */
+        /* Soft gradient waves instead of rigid grid */
         .bg-grid {
             background-image:
-                linear-gradient(#3f3f46 1px, transparent 1px),
-                linear-gradient(90deg, #3f3f46 1px, transparent 1px);
-            background-size: 48px 48px;
+                radial-gradient(ellipse 100% 50% at 50% 0%, rgba(82, 82, 91, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse 80% 40% at 20% 100%, rgba(63, 63, 70, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 30% at 80% 60%, rgba(82, 82, 91, 0.15) 0%, transparent 50%);
         }
 
         .bg-grid-fine {
             background-image:
-                linear-gradient(rgba(82, 82, 91, 0.5) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(82, 82, 91, 0.5) 1px, transparent 1px);
-            background-size: 24px 24px;
+                radial-gradient(ellipse 120% 60% at 60% 0%, rgba(63, 63, 70, 0.25) 0%, transparent 40%),
+                radial-gradient(ellipse 80% 50% at 10% 80%, rgba(63, 63, 70, 0.2) 0%, transparent 40%);
         }
 
-        /* Gradient mesh for depth - stronger colors */
+        /* Organic gradient mesh - multiple soft blobs */
         .bg-mesh {
             background:
-                radial-gradient(at 20% 20%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-                radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
-                radial-gradient(at 40% 60%, rgba(63, 63, 70, 0.5) 0px, transparent 50%);
+                radial-gradient(ellipse 60% 40% at 10% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 90% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 50% 50%, rgba(63, 63, 70, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 70% 30%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
         }
 
-        /* Animated gradient orb - brighter */
+        /* Noise texture for organic feel */
+        .bg-noise {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+
+        /* Animated gradient orbs - larger and softer */
         .bg-orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.6;
-            animation: float 20s ease-in-out infinite;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: float 25s ease-in-out infinite;
         }
 
         .bg-orb-1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, transparent 70%);
-            top: -100px;
-            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, rgba(16, 185, 129, 0.1) 40%, transparent 70%);
+            top: -150px;
+            right: -150px;
             animation-delay: 0s;
         }
 
         .bg-orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0.1) 40%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -12s;
+        }
+
+        .bg-orb-3 {
             width: 300px;
             height: 300px;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
-            bottom: -50px;
-            left: -50px;
-            animation-delay: -10s;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 60%);
+            top: 40%;
+            left: 60%;
+            animation-delay: -6s;
         }
 
         /* ============ ANIMATIONS ============ */
 
         @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            20% { transform: translate(15px, -25px) scale(1.03) rotate(1deg); }
+            40% { transform: translate(-10px, 15px) scale(0.97) rotate(-1deg); }
+            60% { transform: translate(20px, 10px) scale(1.02) rotate(0.5deg); }
+            80% { transform: translate(-15px, -20px) scale(0.98) rotate(-0.5deg); }
+        }
+
+        @keyframes float-slow {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(10px, -20px) scale(1.05); }
-            50% { transform: translate(-5px, 10px) scale(0.95); }
-            75% { transform: translate(-15px, -10px) scale(1.02); }
+            33% { transform: translate(-20px, 30px) scale(1.05); }
+            66% { transform: translate(25px, -15px) scale(0.95); }
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(30px) translateY(-20px); }
+            50% { transform: translateX(-20px) translateY(30px); }
+            75% { transform: translateX(10px) translateY(-10px); }
         }
 
         @keyframes fadeIn {
@@ -308,16 +343,29 @@
 
         /* ============ DECORATIVE ELEMENTS ============ */
 
-        /* Floating dots decoration - brighter */
+        /* Floating dots decoration - organic movement */
         .floating-dots {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #34d399;
+            width: 5px;
+            height: 5px;
+            background: radial-gradient(circle, #34d399 0%, rgba(52, 211, 153, 0.3) 100%);
             border-radius: 50%;
-            opacity: 0.8;
-            box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
-            animation: float 8s ease-in-out infinite;
+            opacity: 0.7;
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+            animation: drift 12s ease-in-out infinite;
+        }
+
+        .floating-dots-lg {
+            width: 8px;
+            height: 8px;
+            animation: float-slow 18s ease-in-out infinite;
+        }
+
+        .floating-dots-sm {
+            width: 3px;
+            height: 3px;
+            opacity: 0.5;
+            animation: drift 15s ease-in-out infinite reverse;
         }
 
         /* Corner accents - more visible */
@@ -836,13 +884,16 @@
                     <div className="fixed inset-0 bg-zinc-950">
                         {/* Base gradient */}
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
-                        {/* Dot pattern - visible */}
+                        {/* Organic dot pattern */}
                         <div className="absolute inset-0 bg-dots-subtle"></div>
                         {/* Gradient mesh */}
                         <div className="absolute inset-0 bg-mesh"></div>
+                        {/* Noise texture */}
+                        <div className="absolute inset-0 bg-noise"></div>
                         {/* Floating orbs */}
                         <div className="bg-orb bg-orb-1"></div>
                         <div className="bg-orb bg-orb-2"></div>
+                        <div className="bg-orb bg-orb-3"></div>
                     </div>
 
                     {/* Navigation */}
@@ -873,10 +924,12 @@
                         <div className="absolute inset-0 bg-grid-fine pointer-events-none"></div>
 
                         <div className="max-w-5xl mx-auto px-6 pt-24 pb-20 relative">
-                            {/* Decorative floating dots */}
-                            <div className="floating-dots" style={{ top: '10%', left: '70%', animationDelay: '0s' }}></div>
-                            <div className="floating-dots" style={{ top: '30%', left: '85%', animationDelay: '-2s', width: '6px', height: '6px' }}></div>
-                            <div className="floating-dots" style={{ top: '60%', left: '75%', animationDelay: '-4s' }}></div>
+                            {/* Decorative floating dots - varied sizes */}
+                            <div className="floating-dots floating-dots-lg" style={{ top: '8%', left: '72%', animationDelay: '0s' }}></div>
+                            <div className="floating-dots" style={{ top: '25%', left: '88%', animationDelay: '-3s' }}></div>
+                            <div className="floating-dots floating-dots-sm" style={{ top: '45%', left: '78%', animationDelay: '-7s' }}></div>
+                            <div className="floating-dots" style={{ top: '65%', left: '82%', animationDelay: '-5s' }}></div>
+                            <div className="floating-dots floating-dots-sm" style={{ top: '15%', left: '92%', animationDelay: '-9s' }}></div>
 
                             <div className="max-w-3xl">
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8 animate-slide-up stagger-1">
@@ -2236,7 +2289,10 @@
                         <div className="fixed inset-0 bg-zinc-950">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
                             <div className="absolute inset-0 bg-dots-subtle"></div>
+                            <div className="absolute inset-0 bg-mesh"></div>
+                            <div className="absolute inset-0 bg-noise"></div>
                             <div className="bg-orb bg-orb-1"></div>
+                            <div className="bg-orb bg-orb-3"></div>
                         </div>
 
                         <div className="relative max-w-4xl mx-auto px-4 py-12">
@@ -2265,13 +2321,16 @@
                     <div className="fixed inset-0 bg-zinc-950">
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
                         <div className="absolute inset-0 bg-grid-fine"></div>
+                        <div className="absolute inset-0 bg-noise"></div>
                         <div className="bg-orb bg-orb-2"></div>
+                        <div className="bg-orb bg-orb-3"></div>
                     </div>
 
                     <div className="relative max-w-3xl mx-auto px-4 py-12">
-                        {/* Floating decorative dots */}
-                        <div className="floating-dots" style={{ top: '15%', right: '10%', animationDelay: '0s' }}></div>
-                        <div className="floating-dots" style={{ top: '40%', right: '5%', animationDelay: '-3s', width: '6px', height: '6px' }}></div>
+                        {/* Floating decorative dots - organic */}
+                        <div className="floating-dots floating-dots-lg" style={{ top: '12%', right: '8%', animationDelay: '0s' }}></div>
+                        <div className="floating-dots" style={{ top: '35%', right: '4%', animationDelay: '-4s' }}></div>
+                        <div className="floating-dots floating-dots-sm" style={{ top: '55%', right: '12%', animationDelay: '-8s' }}></div>
 
                         {/* Header */}
                         <div className="text-center mb-10">

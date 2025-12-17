@@ -10,24 +10,38 @@
         body { font-family: 'Inter', system-ui, sans-serif; background-color: #09090b; }
 
         .bg-dots {
-            background-image: radial-gradient(circle, #3f3f46 1px, transparent 1px);
-            background-size: 32px 32px;
+            background-image:
+                radial-gradient(circle at 30% 40%, #3f3f46 1px, transparent 1px),
+                radial-gradient(circle at 70% 60%, #3f3f46 1px, transparent 1px);
+            background-size: 120px 120px, 80px 80px;
         }
 
         .bg-orb {
             position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: float 25s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, rgba(16, 185, 129, 0.1) 40%, transparent 70%);
+        }
+
+        .bg-orb-2 {
             width: 300px;
             height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, transparent 70%);
-            filter: blur(80px);
-            opacity: 0.6;
-            animation: float 20s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 60%);
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(10px, -20px) scale(1.05); }
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            20% { transform: translate(15px, -25px) scale(1.03) rotate(1deg); }
+            40% { transform: translate(-10px, 15px) scale(0.97) rotate(-1deg); }
+            60% { transform: translate(20px, 10px) scale(1.02) rotate(0.5deg); }
+            80% { transform: translate(-15px, -20px) scale(0.98) rotate(-0.5deg); }
         }
 
         @keyframes fadeIn {
@@ -52,9 +66,9 @@
 <body class="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center overflow-hidden">
     <!-- Background layers -->
     <div class="fixed inset-0 bg-zinc-950">
-        <div class="absolute inset-0 bg-dots opacity-60"></div>
-        <div class="bg-orb" style="top: -100px; right: -100px;"></div>
-        <div class="bg-orb" style="bottom: -100px; left: -100px; animation-delay: -10s;"></div>
+        <div class="absolute inset-0 bg-dots"></div>
+        <div class="bg-orb bg-orb-1" style="top: -100px; right: -100px;"></div>
+        <div class="bg-orb bg-orb-2" style="bottom: -100px; left: -100px; animation-delay: -12s;"></div>
     </div>
 
     <div class="relative text-center px-4 animate-fade-in">
