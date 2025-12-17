@@ -29,9 +29,13 @@
             theme: {
                 extend: {
                     colors: {
-                        slate: {
-                            950: '#0a0f1a'
+                        neutral: {
+                            925: '#0c0c0f',
+                            950: '#09090b'
                         }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
                     }
                 }
             }
@@ -40,34 +44,77 @@
 
     <!-- Custom Styles -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background-color: #0a0f1a;
+            background-color: #09090b;
+            color: #fafafa;
         }
 
-        .gradient-text {
-            background: linear-gradient(to right, #22d3ee, #a78bfa, #e879f9);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        /* Minimal accent - single color approach */
+        .accent-text {
+            color: #10b981;
         }
 
-        .gradient-button {
-            background: linear-gradient(to right, #06b6d4, #8b5cf6);
+        .accent-bg {
+            background-color: #10b981;
         }
 
-        .gradient-button:hover {
-            background: linear-gradient(to right, #22d3ee, #a78bfa);
+        .accent-border {
+            border-color: #10b981;
         }
 
-        .card-glow {
-            box-shadow: 0 0 60px -15px rgba(6, 182, 212, 0.15);
+        /* Clean button styles */
+        .btn-primary {
+            background-color: #fafafa;
+            color: #09090b;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
+        .btn-primary:hover {
+            background-color: #e4e4e7;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: #3f3f46;
+            color: #fafafa;
+        }
+
+        /* Subtle card styling */
+        .card {
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: #3f3f46;
+        }
+
+        .card-elevated {
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Smooth animations */
         .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
+            animation: fadeIn 0.4s ease-out forwards;
         }
 
         .animate-fade-out {
@@ -75,65 +122,94 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(10px); }
+            to { opacity: 0; transform: translateY(8px); }
         }
 
-        /* Custom scrollbar */
+        /* Minimal scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
+            background: #27272a;
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+            background: #3f3f46;
         }
 
-        /* Checkbox styling */
+        /* Clean checkbox */
         input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #475569;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid #3f3f46;
             border-radius: 4px;
             background-color: transparent;
             cursor: pointer;
             position: relative;
+            transition: all 0.15s ease;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: #52525b;
         }
 
         input[type="checkbox"]:checked {
-            background-color: #06b6d4;
-            border-color: #06b6d4;
+            background-color: #10b981;
+            border-color: #10b981;
         }
 
         input[type="checkbox"]:checked::after {
-            content: '✓';
+            content: '';
             position: absolute;
-            color: white;
-            font-size: 14px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
 
         input[type="checkbox"]:focus {
-            outline: 2px solid #06b6d4;
-            outline-offset: 2px;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
         }
+
+        /* Progress bar */
+        .progress-bar {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+        }
+
+        /* Subtle divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #27272a, transparent);
+        }
+
+        /* Selection highlight */
+        .option-selected {
+            background-color: rgba(16, 185, 129, 0.08);
+            border-color: #10b981 !important;
+        }
+
+        /* Score colors */
+        .score-high { color: #10b981; }
+        .score-medium { color: #f59e0b; }
+        .score-low { color: #ef4444; }
     </style>
 
     <!-- React -->
@@ -480,33 +556,29 @@
         // Landing Page Component
         function LandingPage({ onStart }) {
             return (
-                <div className="min-h-screen bg-slate-950 text-slate-100">
-                    {/* Background Effects */}
-                    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 opacity-[0.02]" style={{
-                            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
-                                             linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-                            backgroundSize: '50px 50px'
-                        }}></div>
+                <div className="min-h-screen bg-zinc-950 text-zinc-100">
+                    {/* Subtle background */}
+                    <div className="fixed inset-0 bg-zinc-950">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
                     </div>
 
                     {/* Navigation */}
-                    <nav className="relative z-10 border-b border-slate-800/50">
-                        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl">💰</span>
-                                <span className="font-bold text-lg">GrantsAI</span>
+                    <nav className="relative z-10 border-b border-zinc-800/50">
+                        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                                    <Icon name="trending-up" className="w-4 h-4 text-zinc-950" />
+                                </div>
+                                <span className="font-semibold text-lg tracking-tight">Grants</span>
                             </div>
-                            <div className="flex items-center gap-6">
-                                <a href="#programs" className="text-slate-400 hover:text-white transition-colors text-sm">Programs</a>
-                                <a href="#how-it-works" className="text-slate-400 hover:text-white transition-colors text-sm">How It Works</a>
+                            <div className="flex items-center gap-8">
+                                <a href="#programs" className="text-zinc-500 hover:text-zinc-100 transition-colors text-sm font-medium">Programs</a>
+                                <a href="#how-it-works" className="text-zinc-500 hover:text-zinc-100 transition-colors text-sm font-medium">How It Works</a>
                                 <button
                                     onClick={onStart}
-                                    className="px-4 py-2 rounded-lg gradient-button text-white text-sm font-medium transition-all"
+                                    className="px-4 py-2 rounded-lg btn-primary text-sm"
                                 >
-                                    Start Assessment
+                                    Get Started
                                 </button>
                             </div>
                         </div>
@@ -514,54 +586,55 @@
 
                     {/* Hero Section */}
                     <div className="relative">
-                        <div className="max-w-6xl mx-auto px-4 pt-20 pb-32">
-                            <div className="text-center max-w-4xl mx-auto">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm mb-8">
-                                    <Icon name="sparkles" className="w-4 h-4" />
-                                    AI Startup Grants Intelligence Tool
+                        <div className="max-w-5xl mx-auto px-6 pt-24 pb-20">
+                            <div className="max-w-3xl">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-8">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    Australian Government Grants
                                 </div>
 
-                                <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-                                    <span className="gradient-text">Find Your Perfect</span>
+                                <h1 className="text-5xl md:text-6xl font-semibold mb-6 leading-[1.1] tracking-tight">
+                                    Find the right funding
                                     <br />
-                                    <span className="text-white">Government Grant</span>
+                                    <span className="text-zinc-500">for your startup</span>
                                 </h1>
 
-                                <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                                    Stop guessing which Australian grants you qualify for. Get personalized eligibility
-                                    results and a 90-day action plan in under 5 minutes.
+                                <p className="text-lg text-zinc-400 mb-10 max-w-xl leading-relaxed">
+                                    Discover which Australian government grants match your business.
+                                    Get a personalized assessment and 90-day action plan.
                                 </p>
 
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                                <div className="flex flex-col sm:flex-row gap-3 mb-20">
                                     <button
                                         onClick={onStart}
-                                        className="px-8 py-4 rounded-xl gradient-button text-white font-semibold text-lg transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                                        className="px-6 py-3.5 rounded-xl btn-primary text-base flex items-center justify-center gap-2"
                                     >
-                                        Start Free Assessment
-                                        <Icon name="arrow-right" className="w-5 h-5" />
+                                        Start Assessment
+                                        <Icon name="arrow-right" className="w-4 h-4" />
                                     </button>
                                     <a
                                         href="#programs"
-                                        className="px-8 py-4 rounded-xl border border-slate-700 text-slate-300 font-medium text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                                        className="px-6 py-3.5 rounded-xl btn-secondary text-base flex items-center justify-center gap-2"
                                     >
                                         View Programs
-                                        <Icon name="chevron-down" className="w-5 h-5" />
                                     </a>
                                 </div>
 
                                 {/* Stats */}
-                                <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-emerald-400 mb-1">$5M+</div>
-                                        <div className="text-sm text-slate-500">Potential Funding</div>
+                                <div className="flex gap-12">
+                                    <div>
+                                        <div className="text-3xl font-semibold text-zinc-100 mb-1">$5M+</div>
+                                        <div className="text-sm text-zinc-500">Potential funding</div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-cyan-400 mb-1">6</div>
-                                        <div className="text-sm text-slate-500">Programs Analyzed</div>
+                                    <div className="w-px bg-zinc-800"></div>
+                                    <div>
+                                        <div className="text-3xl font-semibold text-zinc-100 mb-1">6</div>
+                                        <div className="text-sm text-zinc-500">Programs analyzed</div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-violet-400 mb-1">5 min</div>
-                                        <div className="text-sm text-slate-500">Assessment Time</div>
+                                    <div className="w-px bg-zinc-800"></div>
+                                    <div>
+                                        <div className="text-3xl font-semibold text-zinc-100 mb-1">5 min</div>
+                                        <div className="text-sm text-zinc-500">Assessment time</div>
                                     </div>
                                 </div>
                             </div>
@@ -569,36 +642,32 @@
                     </div>
 
                     {/* Programs Section */}
-                    <div id="programs" className="relative bg-slate-900/50 border-y border-slate-800">
-                        <div className="max-w-6xl mx-auto px-4 py-20">
-                            <div className="text-center mb-12">
-                                <h2 className="text-3xl font-bold mb-4">Programs We Assess</h2>
-                                <p className="text-slate-400 max-w-2xl mx-auto">
-                                    We analyze your eligibility for Australia's top government funding programs for innovative startups
+                    <div id="programs" className="relative border-t border-zinc-800/50">
+                        <div className="max-w-5xl mx-auto px-6 py-20">
+                            <div className="mb-12">
+                                <h2 className="text-2xl font-semibold mb-3">Programs We Assess</h2>
+                                <p className="text-zinc-500 max-w-lg">
+                                    Australia's top government funding programs for innovative startups
                                 </p>
                             </div>
 
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {Object.entries(PROGRAMS).map(([key, program]) => (
                                     <div
                                         key={key}
-                                        className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-slate-600 transition-all"
+                                        className="card rounded-xl p-5 group"
                                     >
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div
-                                                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                                                style={{ backgroundColor: `${program.color}20` }}
-                                            >
-                                                {program.icon}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold">{program.name}</h3>
-                                                <div className="text-sm" style={{ color: program.color }}>{program.funding}</div>
-                                            </div>
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="text-2xl">{program.icon}</div>
+                                            <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
+                                                {program.funding}
+                                            </span>
                                         </div>
-                                        <p className="text-sm text-slate-400 mb-4">{program.description}</p>
-                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <h3 className="font-medium text-zinc-100 mb-2">{program.name}</h3>
+                                        <p className="text-sm text-zinc-500 mb-4 leading-relaxed">{program.description}</p>
+                                        <div className="flex items-center gap-4 text-xs text-zinc-600">
                                             <span>{program.range}</span>
+                                            <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
                                             <span>{program.effort}</span>
                                         </div>
                                     </div>
@@ -608,59 +677,64 @@
                     </div>
 
                     {/* How It Works Section */}
-                    <div id="how-it-works" className="relative">
-                        <div className="max-w-6xl mx-auto px-4 py-20">
-                            <div className="text-center mb-16">
-                                <h2 className="text-3xl font-bold mb-4">How It Works</h2>
-                                <p className="text-slate-400">Three simple steps to your personalized funding roadmap</p>
+                    <div id="how-it-works" className="relative border-t border-zinc-800/50">
+                        <div className="max-w-5xl mx-auto px-6 py-20">
+                            <div className="mb-12">
+                                <h2 className="text-2xl font-semibold mb-3">How It Works</h2>
+                                <p className="text-zinc-500">Three steps to your personalized funding roadmap</p>
                             </div>
 
                             <div className="grid md:grid-cols-3 gap-8">
-                                <div className="text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center mx-auto mb-6">
-                                        <span className="text-2xl font-bold text-emerald-400">1</span>
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-3">Answer Questions</h3>
-                                    <p className="text-slate-400">Tell us about your company, R&D activities, partnerships, and goals through our guided assessment.</p>
+                                <div className="relative">
+                                    <div className="text-5xl font-bold text-zinc-800 mb-4">01</div>
+                                    <h3 className="text-lg font-medium mb-2 text-zinc-100">Answer Questions</h3>
+                                    <p className="text-sm text-zinc-500 leading-relaxed">
+                                        Tell us about your company, R&D activities, partnerships, and goals through our guided assessment.
+                                    </p>
                                 </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center mx-auto mb-6">
-                                        <span className="text-2xl font-bold text-cyan-400">2</span>
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-3">Get Matched</h3>
-                                    <p className="text-slate-400">Our algorithm analyzes your responses against program requirements to determine eligibility and fit scores.</p>
+                                <div className="relative">
+                                    <div className="text-5xl font-bold text-zinc-800 mb-4">02</div>
+                                    <h3 className="text-lg font-medium mb-2 text-zinc-100">Get Matched</h3>
+                                    <p className="text-sm text-zinc-500 leading-relaxed">
+                                        Our algorithm analyzes your responses against program requirements to determine eligibility.
+                                    </p>
                                 </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-violet-500/20 border border-violet-500/50 flex items-center justify-center mx-auto mb-6">
-                                        <span className="text-2xl font-bold text-violet-400">3</span>
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-3">Take Action</h3>
-                                    <p className="text-slate-400">Receive a prioritized 90-day action plan with specific steps to maximize your funding opportunities.</p>
+                                <div className="relative">
+                                    <div className="text-5xl font-bold text-zinc-800 mb-4">03</div>
+                                    <h3 className="text-lg font-medium mb-2 text-zinc-100">Take Action</h3>
+                                    <p className="text-sm text-zinc-500 leading-relaxed">
+                                        Receive a prioritized 90-day action plan with specific steps to maximize your funding.
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="text-center mt-12">
-                                <button
-                                    onClick={onStart}
-                                    className="px-8 py-4 rounded-xl gradient-button text-white font-semibold text-lg transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 mx-auto"
-                                >
-                                    Start Your Assessment
-                                    <Icon name="arrow-right" className="w-5 h-5" />
-                                </button>
+                            <div className="mt-16 pt-16 border-t border-zinc-800/50">
+                                <div className="card-elevated rounded-2xl p-8 md:p-12 text-center max-w-2xl mx-auto">
+                                    <h3 className="text-xl font-semibold mb-3">Ready to find your funding?</h3>
+                                    <p className="text-zinc-500 mb-6">Take the free assessment and discover your grant opportunities.</p>
+                                    <button
+                                        onClick={onStart}
+                                        className="px-6 py-3 rounded-xl btn-primary text-base inline-flex items-center gap-2"
+                                    >
+                                        Start Assessment
+                                        <Icon name="arrow-right" className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <footer className="relative border-t border-slate-800">
-                        <div className="max-w-6xl mx-auto px-4 py-8">
+                    <footer className="relative border-t border-zinc-800/50">
+                        <div className="max-w-5xl mx-auto px-6 py-8">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xl">💰</span>
-                                    <span className="font-bold">GrantsAI</span>
-                                    <span className="text-slate-500 text-sm ml-2">Australian Grants Assessment Tool</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded bg-emerald-500 flex items-center justify-center">
+                                        <Icon name="trending-up" className="w-3 h-3 text-zinc-950" />
+                                    </div>
+                                    <span className="font-medium text-sm">Grants</span>
                                 </div>
-                                <div className="text-sm text-slate-500">
+                                <div className="text-xs text-zinc-600">
                                     Based on Australian Government programs as of December 2025
                                 </div>
                             </div>
@@ -1237,28 +1311,28 @@
             const renderQuestion = (question) => {
                 if (question.type === 'boolean') {
                     return (
-                        <div className="flex gap-4 mt-4">
+                        <div className="flex gap-3 mt-4">
                             <button
                                 onClick={() => handleAnswer(question.id, true)}
-                                className={`flex-1 p-4 rounded-xl border-2 transition-all duration-300 ${
+                                className={`flex-1 p-4 rounded-xl border transition-all ${
                                     answers[question.id] === true
                                         ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                                        : 'border-slate-700 hover:border-slate-500'
+                                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-400'
                                 }`}
                             >
                                 <Icon name="check" className="w-5 h-5 mx-auto mb-2" />
-                                <span className="font-medium">Yes</span>
+                                <span className="font-medium text-sm">Yes</span>
                             </button>
                             <button
                                 onClick={() => handleAnswer(question.id, false)}
-                                className={`flex-1 p-4 rounded-xl border-2 transition-all duration-300 ${
+                                className={`flex-1 p-4 rounded-xl border transition-all ${
                                     answers[question.id] === false
-                                        ? 'border-rose-500 bg-rose-500/10 text-rose-400'
-                                        : 'border-slate-700 hover:border-slate-500'
+                                        ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-400'
                                 }`}
                             >
                                 <Icon name="x" className="w-5 h-5 mx-auto mb-2" />
-                                <span className="font-medium">No</span>
+                                <span className="font-medium text-sm">No</span>
                             </button>
                         </div>
                     );
@@ -1266,27 +1340,33 @@
 
                 if (question.type === 'single') {
                     return (
-                        <div className="space-y-3 mt-4">
+                        <div className="space-y-2 mt-4">
                             {question.options.map(option => (
                                 <button
                                     key={option.value}
                                     onClick={() => handleAnswer(question.id, option.value)}
-                                    className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
+                                    className={`w-full p-4 rounded-xl border text-left transition-all ${
                                         answers[question.id] === option.value
-                                            ? 'border-cyan-500 bg-cyan-500/10'
-                                            : 'border-slate-700 hover:border-slate-500'
+                                            ? 'border-emerald-500 bg-emerald-500/5'
+                                            : 'border-zinc-800 hover:border-zinc-700'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <span className="font-medium">{option.label}</span>
+                                            <span className={`font-medium text-sm ${answers[question.id] === option.value ? 'text-zinc-100' : 'text-zinc-300'}`}>{option.label}</span>
                                             {option.description && (
-                                                <p className="text-sm text-slate-400 mt-1">{option.description}</p>
+                                                <p className="text-xs text-zinc-500 mt-1">{option.description}</p>
                                             )}
                                         </div>
-                                        {answers[question.id] === option.value && (
-                                            <Icon name="check" className="w-5 h-5 text-cyan-400" />
-                                        )}
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                            answers[question.id] === option.value
+                                                ? 'border-emerald-500 bg-emerald-500'
+                                                : 'border-zinc-700'
+                                        }`}>
+                                            {answers[question.id] === option.value && (
+                                                <Icon name="check" className="w-3 h-3 text-zinc-950" />
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             ))}
@@ -1297,26 +1377,32 @@
                 if (question.type === 'multi') {
                     const selected = answers[question.id] || [];
                     return (
-                        <div className="space-y-3 mt-4">
+                        <div className="space-y-2 mt-4">
                             {question.options.map(option => (
                                 <button
                                     key={option.value}
                                     onClick={() => handleMultiAnswer(question.id, option.value)}
-                                    className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
+                                    className={`w-full p-4 rounded-xl border text-left transition-all ${
                                         selected.includes(option.value)
-                                            ? 'border-cyan-500 bg-cyan-500/10'
-                                            : 'border-slate-700 hover:border-slate-500'
+                                            ? 'border-emerald-500 bg-emerald-500/5'
+                                            : 'border-zinc-800 hover:border-zinc-700'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <span className="font-medium">{option.label}</span>
-                                        {selected.includes(option.value) && (
-                                            <Icon name="check" className="w-5 h-5 text-cyan-400" />
-                                        )}
+                                        <span className={`font-medium text-sm ${selected.includes(option.value) ? 'text-zinc-100' : 'text-zinc-300'}`}>{option.label}</span>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                            selected.includes(option.value)
+                                                ? 'border-emerald-500 bg-emerald-500'
+                                                : 'border-zinc-700'
+                                        }`}>
+                                            {selected.includes(option.value) && (
+                                                <Icon name="check" className="w-3 h-3 text-zinc-950" />
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             ))}
-                            <p className="text-sm text-slate-400">Select all that apply</p>
+                            <p className="text-xs text-zinc-500 mt-2">Select all that apply</p>
                         </div>
                     );
                 }
@@ -1324,40 +1410,25 @@
 
             const renderReadinessChecklist = () => {
                 const categories = [...new Set(READINESS_ITEMS.map(i => i.category))];
-                const categoryIcons = {
-                    'Corporate': 'building-2',
-                    'Financial': 'dollar-sign',
-                    'IP/Technical': 'lightbulb',
-                    'Commercial': 'trending-up',
-                    'Partners': 'users'
-                };
-                const categoryColors = {
-                    'Corporate': 'text-cyan-400',
-                    'Financial': 'text-emerald-400',
-                    'IP/Technical': 'text-amber-400',
-                    'Commercial': 'text-violet-400',
-                    'Partners': 'text-rose-400'
-                };
 
                 return (
                     <div className="space-y-6">
-                        <div className="text-center mb-8">
-                            <h3 className="text-2xl font-bold mb-2">Application Readiness Checklist</h3>
-                            <p className="text-slate-400">Check off items you have ready for grant applications</p>
+                        <div className="mb-8">
+                            <h3 className="text-xl font-semibold mb-2">Readiness Checklist</h3>
+                            <p className="text-zinc-500 text-sm">Check off items you have ready for grant applications</p>
                         </div>
 
                         {categories.map(category => (
-                            <div key={category} className="bg-slate-800/50 rounded-2xl p-6">
-                                <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                                    <Icon name={categoryIcons[category]} className={`w-5 h-5 ${categoryColors[category]}`} />
+                            <div key={category} className="card rounded-xl p-5">
+                                <h4 className="font-medium text-sm text-zinc-400 mb-4 uppercase tracking-wider">
                                     {category}
                                 </h4>
-                                <div className="space-y-3">
+                                <div className="space-y-1">
                                     {READINESS_ITEMS.filter(i => i.category === category).map(item => (
                                         <label
                                             key={item.id}
-                                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                                                readiness[item.id] ? 'bg-emerald-500/10' : 'hover:bg-slate-700/50'
+                                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                                                readiness[item.id] ? 'bg-emerald-500/5' : 'hover:bg-zinc-800/50'
                                             }`}
                                         >
                                             <input
@@ -1365,12 +1436,12 @@
                                                 checked={readiness[item.id] || false}
                                                 onChange={(e) => handleReadiness(item.id, e.target.checked)}
                                             />
-                                            <span className={readiness[item.id] ? 'text-slate-200' : 'text-slate-400'}>
+                                            <span className={`text-sm ${readiness[item.id] ? 'text-zinc-200' : 'text-zinc-400'}`}>
                                                 {item.label}
                                             </span>
                                             {item.critical && (
-                                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
-                                                    Critical
+                                                <span className="ml-auto text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 font-medium">
+                                                    Required
                                                 </span>
                                             )}
                                         </label>
@@ -1406,128 +1477,112 @@
                 return (
                     <div className="space-y-8">
                         {/* Summary Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 rounded-2xl p-6 border border-emerald-700/50">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Icon name="award" className="w-6 h-6 text-emerald-400" />
-                                    <span className="text-slate-400">Eligible Programs</span>
-                                </div>
-                                <div className="text-4xl font-bold text-emerald-400">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="card rounded-xl p-5">
+                                <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Eligible Programs</div>
+                                <div className="text-3xl font-semibold text-zinc-100">
                                     {eligiblePrograms.length}
-                                    <span className="text-lg text-slate-400">/{Object.keys(PROGRAMS).length}</span>
+                                    <span className="text-lg text-zinc-600 font-normal">/{Object.keys(PROGRAMS).length}</span>
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-2xl p-6 border border-cyan-700/50">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Icon name="dollar-sign" className="w-6 h-6 text-cyan-400" />
-                                    <span className="text-slate-400">Potential Funding</span>
-                                </div>
-                                <div className="text-4xl font-bold text-cyan-400">
+                            <div className="card rounded-xl p-5">
+                                <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Potential Funding</div>
+                                <div className="text-3xl font-semibold text-emerald-400">
                                     ${(potentialValue / 1000).toFixed(0)}K+
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-violet-900/50 to-violet-800/30 rounded-2xl p-6 border border-violet-700/50">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Icon name="file-check" className="w-6 h-6 text-violet-400" />
-                                    <span className="text-slate-400">Readiness Score</span>
-                                </div>
-                                <div className="text-4xl font-bold text-violet-400">
+                            <div className="card rounded-xl p-5">
+                                <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Readiness Score</div>
+                                <div className="text-3xl font-semibold text-zinc-100">
                                     {getReadinessScore()}%
                                 </div>
-                                <div className="text-sm text-slate-400 mt-1">
+                                <div className="text-xs text-zinc-500 mt-1">
                                     {getCriticalReadiness().checked}/{getCriticalReadiness().total} critical items
                                 </div>
                             </div>
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex gap-2 border-b border-slate-700 pb-2 overflow-x-auto">
+                        <div className="flex gap-1 p-1 bg-zinc-900 rounded-lg overflow-x-auto">
                             {['eligibility', 'action-plan', 'stack-strategy'].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`px-4 py-2 rounded-t-lg font-medium transition-all whitespace-nowrap ${
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                                         activeTab === tab
-                                            ? 'bg-slate-800 text-cyan-400 border-b-2 border-cyan-400'
-                                            : 'text-slate-400 hover:text-slate-200'
+                                            ? 'bg-zinc-800 text-zinc-100'
+                                            : 'text-zinc-500 hover:text-zinc-300'
                                     }`}
                                 >
-                                    {tab === 'eligibility' && 'Program Eligibility'}
-                                    {tab === 'action-plan' && '90-Day Action Plan'}
-                                    {tab === 'stack-strategy' && 'Stacking Strategy'}
+                                    {tab === 'eligibility' && 'Eligibility'}
+                                    {tab === 'action-plan' && 'Action Plan'}
+                                    {tab === 'stack-strategy' && 'Strategy'}
                                 </button>
                             ))}
                         </div>
 
                         {/* Eligibility Tab */}
                         {activeTab === 'eligibility' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {sortedPrograms.map(([key, result]) => {
                                     const program = PROGRAMS[key];
                                     return (
                                         <div
                                             key={key}
-                                            className={`rounded-2xl border-2 overflow-hidden transition-all ${
-                                                result.eligible
-                                                    ? 'border-slate-700 bg-slate-800/50'
-                                                    : 'border-slate-800 bg-slate-900/50 opacity-60'
+                                            className={`card rounded-xl overflow-hidden transition-all ${
+                                                !result.eligible && 'opacity-50'
                                             }`}
                                         >
-                                            <div className="p-6">
+                                            <div className="p-5">
                                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                                    <div className="flex items-center gap-4">
-                                                        <div
-                                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                                                            style={{ backgroundColor: `${program.color}20` }}
-                                                        >
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="text-2xl flex-shrink-0">
                                                             {program.icon}
                                                         </div>
                                                         <div>
-                                                            <h3 className="text-xl font-bold">{program.name}</h3>
-                                                            <p className="text-slate-400 text-sm">{program.description}</p>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h3 className="font-medium text-zinc-100">{program.name}</h3>
+                                                                {result.eligible ? (
+                                                                    <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">
+                                                                        Eligible
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-500 font-medium">
+                                                                        Not Eligible
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-zinc-500 text-sm">{program.description}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-left md:text-right flex-shrink-0">
-                                                        {result.eligible ? (
-                                                            <div className="flex items-center gap-2 text-emerald-400">
-                                                                <Icon name="check" className="w-5 h-5" />
-                                                                <span className="font-semibold">Eligible</span>
+                                                    {result.eligible && (
+                                                        <div className="text-right flex-shrink-0">
+                                                            <div className="text-2xl font-semibold text-emerald-400">
+                                                                {result.score}%
                                                             </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-2 text-rose-400">
-                                                                <Icon name="x" className="w-5 h-5" />
-                                                                <span className="font-semibold">Not Eligible</span>
-                                                            </div>
-                                                        )}
-                                                        {result.eligible && (
-                                                            <div className="mt-2">
-                                                                <div className="text-sm text-slate-400">Match Score</div>
-                                                                <div className="text-2xl font-bold" style={{ color: program.color }}>
-                                                                    {result.score}%
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                            <div className="text-xs text-zinc-500">match</div>
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-700">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-zinc-800">
                                                     <div>
-                                                        <div className="text-xs text-slate-500 uppercase tracking-wider">Funding</div>
-                                                        <div className="font-semibold text-slate-200">{program.range}</div>
+                                                        <div className="text-xs text-zinc-600 mb-1">Funding</div>
+                                                        <div className="text-sm text-zinc-300">{program.range}</div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-xs text-slate-500 uppercase tracking-wider">Type</div>
-                                                        <div className="font-semibold text-slate-200">{program.funding}</div>
+                                                        <div className="text-xs text-zinc-600 mb-1">Type</div>
+                                                        <div className="text-sm text-zinc-300">{program.funding}</div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-xs text-slate-500 uppercase tracking-wider">Effort</div>
-                                                        <div className="font-semibold text-slate-200">{program.effort}</div>
+                                                        <div className="text-xs text-zinc-600 mb-1">Effort</div>
+                                                        <div className="text-sm text-zinc-300">{program.effort}</div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-xs text-slate-500 uppercase tracking-wider">Timeline</div>
-                                                        <div className="font-semibold text-slate-200">{program.timeline}</div>
+                                                        <div className="text-xs text-zinc-600 mb-1">Timeline</div>
+                                                        <div className="text-sm text-zinc-300">{program.timeline}</div>
                                                     </div>
                                                 </div>
 
@@ -1556,33 +1611,33 @@
 
                         {/* Action Plan Tab */}
                         {activeTab === 'action-plan' && (
-                            <div className="space-y-8">
+                            <div className="space-y-6">
                                 {/* Days 1-30 */}
-                                <div className="bg-gradient-to-r from-emerald-900/30 to-transparent rounded-2xl p-6 border border-emerald-800/50">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                                            <span className="text-xl font-bold text-emerald-400">1-30</span>
+                                <div className="card rounded-xl p-6">
+                                    <div className="flex items-center gap-3 mb-5 pb-4 border-b border-zinc-800">
+                                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                            <span className="text-sm font-semibold text-emerald-400">1-30</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-emerald-400">Immediate Actions</h3>
-                                            <p className="text-slate-400 text-sm">Foundation & Quick Wins</p>
+                                            <h3 className="text-lg font-semibold text-zinc-100">Immediate Actions</h3>
+                                            <p className="text-zinc-500 text-sm">Foundation & Quick Wins</p>
                                         </div>
                                     </div>
                                     {actionPlan.immediate.length > 0 ? (
-                                        <div className="space-y-4">
+                                        <div className="space-y-3">
                                             {actionPlan.immediate.map((action, i) => (
-                                                <div key={i} className="bg-slate-800/50 rounded-xl p-4 flex flex-col md:flex-row md:items-start gap-4">
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-medium self-start ${
-                                                        action.priority === 'Critical' ? 'bg-rose-500/20 text-rose-400' :
-                                                        action.priority === 'High' ? 'bg-amber-500/20 text-amber-400' :
-                                                        'bg-slate-600/50 text-slate-300'
+                                                <div key={i} className="bg-zinc-900/50 rounded-lg p-4 flex flex-col md:flex-row md:items-start gap-3">
+                                                    <div className={`px-2.5 py-1 rounded text-xs font-medium self-start ${
+                                                        action.priority === 'Critical' ? 'bg-rose-500/10 text-rose-400' :
+                                                        action.priority === 'High' ? 'bg-amber-500/10 text-amber-400' :
+                                                        'bg-zinc-800 text-zinc-400'
                                                     }`}>
                                                         {action.priority}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-semibold">{action.action}</div>
-                                                        <div className="text-sm text-slate-400 mt-1">{action.program}</div>
-                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
+                                                        <div className="font-medium text-zinc-200">{action.action}</div>
+                                                        <div className="text-sm text-zinc-500 mt-1">{action.program}</div>
+                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-zinc-600">
                                                             <span className="flex items-center gap-1">
                                                                 <Icon name="clock" className="w-3 h-3" /> {action.effort}
                                                             </span>
@@ -1595,35 +1650,35 @@
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-slate-400">Complete the assessment to see personalized actions</p>
+                                        <p className="text-zinc-500">Complete the assessment to see personalized actions</p>
                                     )}
                                 </div>
 
                                 {/* Days 31-60 */}
-                                <div className="bg-gradient-to-r from-cyan-900/30 to-transparent rounded-2xl p-6 border border-cyan-800/50">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                                            <span className="text-xl font-bold text-cyan-400">31-60</span>
+                                <div className="card rounded-xl p-6">
+                                    <div className="flex items-center gap-3 mb-5 pb-4 border-b border-zinc-800">
+                                        <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                                            <span className="text-sm font-semibold text-zinc-300">31-60</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-cyan-400">Short-Term Actions</h3>
-                                            <p className="text-slate-400 text-sm">Build & Validate</p>
+                                            <h3 className="text-lg font-semibold text-zinc-100">Short-Term Actions</h3>
+                                            <p className="text-zinc-500 text-sm">Build & Validate</p>
                                         </div>
                                     </div>
                                     {actionPlan.shortTerm.length > 0 ? (
-                                        <div className="space-y-4">
+                                        <div className="space-y-3">
                                             {actionPlan.shortTerm.map((action, i) => (
-                                                <div key={i} className="bg-slate-800/50 rounded-xl p-4 flex flex-col md:flex-row md:items-start gap-4">
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-medium self-start ${
-                                                        action.priority === 'High' ? 'bg-amber-500/20 text-amber-400' :
-                                                        'bg-slate-600/50 text-slate-300'
+                                                <div key={i} className="bg-zinc-900/50 rounded-lg p-4 flex flex-col md:flex-row md:items-start gap-3">
+                                                    <div className={`px-2.5 py-1 rounded text-xs font-medium self-start ${
+                                                        action.priority === 'High' ? 'bg-amber-500/10 text-amber-400' :
+                                                        'bg-zinc-800 text-zinc-400'
                                                     }`}>
                                                         {action.priority}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-semibold">{action.action}</div>
-                                                        <div className="text-sm text-slate-400 mt-1">{action.program}</div>
-                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
+                                                        <div className="font-medium text-zinc-200">{action.action}</div>
+                                                        <div className="text-sm text-zinc-500 mt-1">{action.program}</div>
+                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-zinc-600">
                                                             <span className="flex items-center gap-1">
                                                                 <Icon name="clock" className="w-3 h-3" /> {action.effort}
                                                             </span>
@@ -1636,35 +1691,35 @@
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-slate-400">No short-term actions based on current assessment</p>
+                                        <p className="text-zinc-500">No short-term actions based on current assessment</p>
                                     )}
                                 </div>
 
                                 {/* Days 61-90 */}
-                                <div className="bg-gradient-to-r from-violet-900/30 to-transparent rounded-2xl p-6 border border-violet-800/50">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                                            <span className="text-xl font-bold text-violet-400">61-90</span>
+                                <div className="card rounded-xl p-6">
+                                    <div className="flex items-center gap-3 mb-5 pb-4 border-b border-zinc-800">
+                                        <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                                            <span className="text-sm font-semibold text-zinc-300">61-90</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-violet-400">Medium-Term Actions</h3>
-                                            <p className="text-slate-400 text-sm">Execute & Scale</p>
+                                            <h3 className="text-lg font-semibold text-zinc-100">Medium-Term Actions</h3>
+                                            <p className="text-zinc-500 text-sm">Execute & Scale</p>
                                         </div>
                                     </div>
                                     {actionPlan.mediumTerm.length > 0 ? (
-                                        <div className="space-y-4">
+                                        <div className="space-y-3">
                                             {actionPlan.mediumTerm.map((action, i) => (
-                                                <div key={i} className="bg-slate-800/50 rounded-xl p-4 flex flex-col md:flex-row md:items-start gap-4">
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-medium self-start ${
-                                                        action.priority === 'High' ? 'bg-amber-500/20 text-amber-400' :
-                                                        'bg-slate-600/50 text-slate-300'
+                                                <div key={i} className="bg-zinc-900/50 rounded-lg p-4 flex flex-col md:flex-row md:items-start gap-3">
+                                                    <div className={`px-2.5 py-1 rounded text-xs font-medium self-start ${
+                                                        action.priority === 'High' ? 'bg-amber-500/10 text-amber-400' :
+                                                        'bg-zinc-800 text-zinc-400'
                                                     }`}>
                                                         {action.priority}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-semibold">{action.action}</div>
-                                                        <div className="text-sm text-slate-400 mt-1">{action.program}</div>
-                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
+                                                        <div className="font-medium text-zinc-200">{action.action}</div>
+                                                        <div className="text-sm text-zinc-500 mt-1">{action.program}</div>
+                                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-zinc-600">
                                                             <span className="flex items-center gap-1">
                                                                 <Icon name="clock" className="w-3 h-3" /> {action.effort}
                                                             </span>
@@ -1677,7 +1732,7 @@
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-slate-400">No medium-term actions based on current assessment</p>
+                                        <p className="text-zinc-500">No medium-term actions based on current assessment</p>
                                     )}
                                 </div>
                             </div>
@@ -1686,26 +1741,26 @@
                         {/* Stacking Strategy Tab */}
                         {activeTab === 'stack-strategy' && (
                             <div className="space-y-6">
-                                <div className="bg-slate-800/50 rounded-2xl p-6">
-                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                        <Icon name="sparkles" className="w-5 h-5 text-amber-400" />
+                                <div className="card rounded-xl p-6">
+                                    <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-zinc-100">
+                                        <Icon name="layers" className="w-5 h-5 text-emerald-400" />
                                         Recommended Funding Stack
                                     </h3>
 
                                     <div className="relative">
                                         {/* Timeline */}
-                                        <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-emerald-500 via-cyan-500 to-violet-500"></div>
+                                        <div className="absolute left-5 top-6 bottom-6 w-px bg-zinc-800"></div>
 
-                                        <div className="space-y-6 relative">
+                                        <div className="space-y-4 relative">
                                             {/* Stage 1 */}
                                             <div className="flex gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center z-10 flex-shrink-0">
-                                                    <span className="text-emerald-400 font-bold">1</span>
+                                                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center z-10 flex-shrink-0">
+                                                    <span className="text-emerald-400 font-semibold text-sm">1</span>
                                                 </div>
-                                                <div className="flex-1 bg-slate-900/50 rounded-xl p-4">
-                                                    <div className="font-bold text-emerald-400">Foundation Layer</div>
-                                                    <div className="text-sm text-slate-400 mt-1">R&D Tax Incentive (ongoing) + CSIRO Kick-Start</div>
-                                                    <div className="mt-2 text-xs text-slate-500">
+                                                <div className="flex-1 bg-zinc-900/50 rounded-lg p-4">
+                                                    <div className="font-medium text-zinc-100">Foundation Layer</div>
+                                                    <div className="text-sm text-zinc-400 mt-1">R&D Tax Incentive (ongoing) + CSIRO Kick-Start</div>
+                                                    <div className="mt-2 text-xs text-zinc-600">
                                                         Start claiming R&D Tax immediately. Use CSIRO for technical validation and "CSIRO-backed" credibility.
                                                     </div>
                                                 </div>
@@ -1713,13 +1768,13 @@
 
                                             {/* Stage 2 */}
                                             <div className="flex gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-cyan-500/20 border-2 border-cyan-500 flex items-center justify-center z-10 flex-shrink-0">
-                                                    <span className="text-cyan-400 font-bold">2</span>
+                                                <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center z-10 flex-shrink-0">
+                                                    <span className="text-zinc-300 font-semibold text-sm">2</span>
                                                 </div>
-                                                <div className="flex-1 bg-slate-900/50 rounded-xl p-4">
-                                                    <div className="font-bold text-cyan-400">Growth Layer</div>
-                                                    <div className="text-sm text-slate-400 mt-1">IGP Advisory - IGP Grant ($50K-$5M)</div>
-                                                    <div className="mt-2 text-xs text-slate-500">
+                                                <div className="flex-1 bg-zinc-900/50 rounded-lg p-4">
+                                                    <div className="font-medium text-zinc-100">Growth Layer</div>
+                                                    <div className="text-sm text-zinc-400 mt-1">IGP Advisory - IGP Grant ($50K-$5M)</div>
+                                                    <div className="mt-2 text-xs text-zinc-600">
                                                         Free expert advice leads to stronger grant applications. Your co-funding qualifies for R&D Tax claims.
                                                     </div>
                                                 </div>
@@ -1727,13 +1782,13 @@
 
                                             {/* Stage 3 */}
                                             <div className="flex gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-violet-500/20 border-2 border-violet-500 flex items-center justify-center z-10 flex-shrink-0">
-                                                    <span className="text-violet-400 font-bold">3</span>
+                                                <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center z-10 flex-shrink-0">
+                                                    <span className="text-zinc-300 font-semibold text-sm">3</span>
                                                 </div>
-                                                <div className="flex-1 bg-slate-900/50 rounded-xl p-4">
-                                                    <div className="font-bold text-violet-400">Scale Layer</div>
-                                                    <div className="text-sm text-slate-400 mt-1">CRC-P ($100K-$3M) + EMDG (export)</div>
-                                                    <div className="mt-2 text-xs text-slate-500">
+                                                <div className="flex-1 bg-zinc-900/50 rounded-lg p-4">
+                                                    <div className="font-medium text-zinc-100">Scale Layer</div>
+                                                    <div className="text-sm text-zinc-400 mt-1">CRC-P ($100K-$3M) + EMDG (export)</div>
+                                                    <div className="mt-2 text-xs text-zinc-600">
                                                         Use established research partnerships for CRC-P. Stack EMDG for international expansion.
                                                     </div>
                                                 </div>
@@ -1743,79 +1798,96 @@
                                 </div>
 
                                 {/* Stacking Rules */}
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="bg-emerald-900/20 rounded-2xl p-6 border border-emerald-800/50">
-                                        <h4 className="font-bold text-emerald-400 flex items-center gap-2 mb-4">
-                                            <Icon name="check" className="w-5 h-5" /> CAN Stack Together
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="card rounded-xl p-5">
+                                        <h4 className="font-medium text-zinc-100 flex items-center gap-2 mb-4">
+                                            <Icon name="check" className="w-4 h-4 text-emerald-400" /> Can Stack Together
                                         </h4>
                                         <ul className="space-y-2 text-sm">
                                             <li className="flex items-start gap-2">
                                                 <Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                                                <span>R&D Tax + Any grant (co-funding qualifies for RDTI)</span>
+                                                <span className="text-zinc-400">R&D Tax + Any grant (co-funding qualifies for RDTI)</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                                                <span>CSIRO Kick-Start + RDTI</span>
+                                                <span className="text-zinc-400">CSIRO Kick-Start + RDTI</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                                                <span>IGP + EMDG (different purposes)</span>
+                                                <span className="text-zinc-400">IGP + EMDG (different purposes)</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <Icon name="check" className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                                                <span>CRC-P + RDTI</span>
+                                                <span className="text-zinc-400">CRC-P + RDTI</span>
                                             </li>
                                         </ul>
                                     </div>
 
-                                    <div className="bg-rose-900/20 rounded-2xl p-6 border border-rose-800/50">
-                                        <h4 className="font-bold text-rose-400 flex items-center gap-2 mb-4">
-                                            <Icon name="x" className="w-5 h-5" /> CANNOT Stack
+                                    <div className="card rounded-xl p-5">
+                                        <h4 className="font-medium text-zinc-100 flex items-center gap-2 mb-4">
+                                            <Icon name="x" className="w-4 h-4 text-rose-400" /> Cannot Stack
                                         </h4>
                                         <ul className="space-y-2 text-sm">
                                             <li className="flex items-start gap-2">
                                                 <Icon name="x" className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
-                                                <span>Grant funds as co-funding for other grants</span>
+                                                <span className="text-zinc-400">Grant funds as co-funding for other grants</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <Icon name="x" className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
-                                                <span>IGP requires CASH co-funding (not in-kind)</span>
+                                                <span className="text-zinc-400">IGP requires CASH co-funding (not in-kind)</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <Icon name="x" className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
-                                                <span>Same activities claimed across multiple grants</span>
+                                                <span className="text-zinc-400">Same activities claimed across multiple grants</span>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
 
                                 {/* Reality Check */}
-                                <div className="bg-amber-900/20 rounded-2xl p-6 border border-amber-800/50">
-                                    <h4 className="font-bold text-amber-400 flex items-center gap-2 mb-4">
-                                        <Icon name="alert-triangle" className="w-5 h-5" /> Reality Check
+                                <div className="card rounded-xl p-5 border-amber-500/20">
+                                    <h4 className="font-medium text-zinc-100 flex items-center gap-2 mb-4">
+                                        <Icon name="alert-triangle" className="w-4 h-4 text-amber-400" /> Reality Check
                                     </h4>
                                     <div className="grid md:grid-cols-2 gap-6 text-sm">
                                         <div>
-                                            <div className="font-semibold text-slate-200 mb-2">Worth Pursuing</div>
-                                            <ul className="space-y-1 text-slate-400">
-                                                <li>- R&D Tax: Essential if doing genuine R&D</li>
-                                                <li>- IGP Advisory: FREE expert advice</li>
-                                                <li>- CSIRO Kick-Start: High success rate, credibility</li>
+                                            <div className="font-medium text-zinc-300 mb-2">Worth Pursuing</div>
+                                            <ul className="space-y-1.5 text-zinc-500">
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                                                    R&D Tax: Essential if doing genuine R&D
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                                                    IGP Advisory: FREE expert advice
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                                                    CSIRO Kick-Start: High success rate, credibility
+                                                </li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-slate-200 mb-2">Potential Distractions</div>
-                                            <ul className="space-y-1 text-slate-400">
-                                                <li>- CRC-P without research partners (6-12mo build)</li>
-                                                <li>- Multiple small grants &lt;$50K (effort exceeds value)</li>
-                                                <li>- EMDG without clear export strategy</li>
+                                            <div className="font-medium text-zinc-300 mb-2">Potential Distractions</div>
+                                            <ul className="space-y-1.5 text-zinc-500">
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                                                    CRC-P without research partners (6-12mo build)
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                                                    Multiple small grants &lt;$50K (effort exceeds value)
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                                                    EMDG without clear export strategy
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
-                                    <div className="mt-4 p-4 bg-slate-800/50 rounded-xl">
-                                        <div className="font-semibold text-amber-400">Remember:</div>
-                                        <p className="text-slate-300 text-sm mt-1">
-                                            $100K customer contract in 4 weeks beats $100K grant in 6 months.
+                                    <div className="mt-4 p-4 bg-amber-500/5 border border-amber-500/10 rounded-lg">
+                                        <p className="text-zinc-400 text-sm">
+                                            <span className="text-amber-400 font-medium">Remember:</span> $100K customer contract in 4 weeks beats $100K grant in 6 months.
                                             Grants should ACCELERATE, not REPLACE, commercial progress.
                                         </p>
                                     </div>
@@ -1824,12 +1896,12 @@
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-8">
                             <button
                                 onClick={generatePDF}
-                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl gradient-button font-semibold transition-all shadow-lg shadow-cyan-500/25"
+                                className="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-lg"
                             >
-                                <Icon name="download" className="w-5 h-5" />
+                                <Icon name="download" className="w-4 h-4" />
                                 Download PDF Report
                             </button>
                             <button
@@ -1840,7 +1912,7 @@
                                     setReadiness({});
                                     setActiveTab('eligibility');
                                 }}
-                                className="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors"
+                                className="btn-secondary px-6 py-3 rounded-lg"
                             >
                                 Start New Assessment
                             </button>
@@ -1857,19 +1929,18 @@
             // Show results
             if (showResults) {
                 return (
-                    <div className="min-h-screen bg-slate-950 text-slate-100">
-                        {/* Gradient Background */}
-                        <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent"></div>
+                    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+                        {/* Minimal Background */}
+                        <div className="fixed inset-0 bg-zinc-950">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
                         </div>
 
-                        <div className="relative max-w-5xl mx-auto px-4 py-12">
-                            <div className="text-center mb-12">
-                                <h1 className="text-4xl font-bold gradient-text">
-                                    Your Grants Assessment Results
+                        <div className="relative max-w-4xl mx-auto px-4 py-12">
+                            <div className="text-center mb-10">
+                                <h1 className="text-3xl font-semibold text-zinc-100">
+                                    Your Assessment Results
                                 </h1>
-                                <p className="text-slate-400 mt-2">Personalized recommendations based on your responses</p>
+                                <p className="text-zinc-500 mt-2">Personalized recommendations based on your responses</p>
                             </div>
                             {renderResults()}
                         </div>
@@ -1881,83 +1952,77 @@
             const stepIcons = ['building-2', 'lightbulb', 'sparkles', 'users', 'trending-up', 'dollar-sign', 'target'];
 
             return (
-                <div className="min-h-screen bg-slate-950 text-slate-100">
-                    {/* Gradient Background */}
-                    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent"></div>
-                        <div className="absolute inset-0 opacity-[0.02]" style={{
-                            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
-                                             linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-                            backgroundSize: '50px 50px'
-                        }}></div>
+                <div className="min-h-screen bg-zinc-950 text-zinc-100">
+                    {/* Minimal Background */}
+                    <div className="fixed inset-0 bg-zinc-950">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950"></div>
                     </div>
 
-                    <div className="relative max-w-4xl mx-auto px-4 py-12">
+                    <div className="relative max-w-3xl mx-auto px-4 py-12">
                         {/* Header */}
-                        <div className="text-center mb-12">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm mb-6">
-                                <Icon name="sparkles" className="w-4 h-4" />
-                                AI Startup Grants Intelligence Tool
+                        <div className="text-center mb-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 text-sm mb-6">
+                                <Icon name="sparkles" className="w-3 h-3 text-emerald-400" />
+                                Grants Assessment Tool
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                                <span className="gradient-text">Australian Grants</span>
+                            <h1 className="text-3xl md:text-4xl font-semibold mb-3 text-zinc-100">
+                                Australian Grants
                                 <br />
-                                <span className="text-white">Self-Assessment</span>
+                                <span className="text-zinc-400">Self-Assessment</span>
                             </h1>
-                            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                                Discover which government grants and programs match your startup's profile,
-                                then get a personalized 90-day action plan.
+                            <p className="text-zinc-500 max-w-xl mx-auto">
+                                Discover which government grants match your startup's profile
+                                and get a personalized 90-day action plan.
                             </p>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="mb-12">
-                            <div className="flex justify-between mb-3">
+                        <div className="mb-10">
+                            <div className="flex justify-between mb-2">
                                 {stepLabels.map((label, idx) => (
                                     <div
                                         key={idx}
                                         className={`text-xs hidden md:block transition-colors ${
-                                            idx === currentStep ? 'text-cyan-400' :
-                                            idx < currentStep ? 'text-slate-400' : 'text-slate-600'
+                                            idx === currentStep ? 'text-emerald-400' :
+                                            idx < currentStep ? 'text-zinc-500' : 'text-zinc-700'
                                         }`}
                                     >
                                         {label}
                                     </div>
                                 ))}
                             </div>
-                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-cyan-500 to-violet-500 transition-all duration-500 ease-out"
+                                    className="h-full progress-bar transition-all duration-500 ease-out"
                                     style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                                 />
                             </div>
-                            <div className="text-center mt-3 text-sm text-slate-400">
+                            <div className="text-center mt-2 text-xs text-zinc-600">
                                 Step {currentStep + 1} of {steps.length}
                             </div>
                         </div>
 
                         {/* Question Card */}
                         <div
-                            className={`bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-slate-800 p-8 md:p-12 shadow-2xl card-glow transition-all duration-300 ${
+                            className={`card-elevated rounded-xl p-6 md:p-8 transition-all duration-300 ${
                                 animateIn ? 'animate-fade-in' : 'animate-fade-out'
                             }`}
                         >
                             {currentStep < 7 ? (
                                 <>
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                                            <Icon name={stepIcons[currentStep]} className="w-5 h-5 text-cyan-400" />
+                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-800">
+                                        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                            <Icon name={stepIcons[currentStep]} className="w-4 h-4 text-emerald-400" />
                                         </div>
-                                        <h2 className="text-2xl font-bold">{stepLabels[currentStep]}</h2>
+                                        <h2 className="text-xl font-semibold text-zinc-100">{stepLabels[currentStep]}</h2>
                                     </div>
 
-                                    <div className="space-y-10">
+                                    <div className="space-y-8">
                                         {currentQuestions.map((question) => (
                                             <div key={question.id}>
-                                                <h3 className="text-lg font-medium">{question.question}</h3>
+                                                <h3 className="text-base font-medium text-zinc-200">{question.question}</h3>
                                                 {question.help && (
-                                                    <p className="text-sm text-slate-400 mt-1">{question.help}</p>
+                                                    <p className="text-sm text-zinc-500 mt-1">{question.help}</p>
                                                 )}
                                                 {renderQuestion(question)}
                                             </div>
@@ -1969,50 +2034,48 @@
                             )}
 
                             {/* Navigation */}
-                            <div className="flex justify-between mt-12 pt-8 border-t border-slate-800">
+                            <div className="flex justify-between mt-10 pt-6 border-t border-zinc-800">
                                 <button
                                     onClick={prevStep}
                                     disabled={currentStep === 0}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${
-                                        currentStep === 0
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:bg-slate-800'
+                                    className={`btn-secondary flex items-center gap-2 px-5 py-2.5 rounded-lg ${
+                                        currentStep === 0 ? 'opacity-40 cursor-not-allowed' : ''
                                     }`}
                                 >
-                                    <Icon name="chevron-left" className="w-5 h-5" />
+                                    <Icon name="chevron-left" className="w-4 h-4" />
                                     Back
                                 </button>
 
                                 <button
                                     onClick={nextStep}
-                                    className="flex items-center gap-2 px-8 py-3 rounded-xl gradient-button font-semibold transition-all shadow-lg shadow-cyan-500/25"
+                                    className="btn-primary flex items-center gap-2 px-6 py-2.5 rounded-lg"
                                 >
                                     {currentStep === steps.length - 1 ? 'View Results' : 'Continue'}
-                                    <Icon name="chevron-right" className="w-5 h-5" />
+                                    <Icon name="chevron-right" className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-                            <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                                <div className="text-2xl font-bold text-emerald-400">6</div>
-                                <div className="text-xs text-slate-400">Programs Analyzed</div>
+                        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+                            <div className="card rounded-lg p-3">
+                                <div className="text-xl font-semibold text-emerald-400">6</div>
+                                <div className="text-xs text-zinc-500">Programs</div>
                             </div>
-                            <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                                <div className="text-2xl font-bold text-cyan-400">$5M+</div>
-                                <div className="text-xs text-slate-400">Potential Funding</div>
+                            <div className="card rounded-lg p-3">
+                                <div className="text-xl font-semibold text-zinc-300">$5M+</div>
+                                <div className="text-xs text-zinc-500">Potential</div>
                             </div>
-                            <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                                <div className="text-2xl font-bold text-violet-400">90</div>
-                                <div className="text-xs text-slate-400">Day Action Plan</div>
+                            <div className="card rounded-lg p-3">
+                                <div className="text-xl font-semibold text-zinc-300">90</div>
+                                <div className="text-xs text-zinc-500">Day Plan</div>
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="mt-12 text-center text-sm text-slate-500">
+                        <div className="mt-10 text-center text-xs text-zinc-600">
                             <p>Based on Australian Government programs as of December 2025</p>
-                            <p className="mt-1">R&D Tax Incentive - Industry Growth Program - CSIRO Kick-Start - CRC-P - EMDG - Accelerators</p>
+                            <p className="mt-1 text-zinc-700">R&D Tax Incentive - IGP - CSIRO Kick-Start - CRC-P - EMDG - Accelerators</p>
                         </div>
                     </div>
                 </div>
