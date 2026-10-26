@@ -198,6 +198,13 @@ export function normaliseRef(ref: GateRef): { id: GateId; severity?: Severity; n
   return { id, severity, note, params };
 }
 
+/** What a gate checks, without evaluating it: for listing a program's eligibility before an assessment. */
+export function describeGate(ref: GateRef): { id: GateId; label: string; severity: Severity; note?: string } {
+  const { id, severity, note, params } = normaliseRef(ref);
+  const def = GATES[id] as unknown as AnyDef;
+  return { id, label: def.label(params), severity: severity ?? def.severity, note };
+}
+
 export function evaluateGate(ref: GateRef, profile: Profile, ctx: Ctx): GateResult {
   const { id, severity, note, params } = normaliseRef(ref);
   const def = GATES[id] as unknown as AnyDef;

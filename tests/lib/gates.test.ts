@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateGate } from '@/lib/gates';
+import { describeGate, evaluateGate } from '@/lib/gates';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const ev = (ref: Parameters<typeof evaluateGate>[0], profile = {}) => evaluateGate(ref, profile, { now });
@@ -156,5 +156,14 @@ describe('per-ref note', () => {
     expect(ev(ref, { turnover: 'under-1m' }).reason).toBe('Turnover is under $20M');
     expect(ev(ref, {}).reason).toBe('Turnover not answered');
     expect(ev(ref, { turnover: '20m-50m' }).label).toBe('Turnover under $20M');
+  });
+});
+
+describe('describeGate', () => {
+  it('gives the label, effective severity and note without a profile', () => {
+    expect(describeGate('au-entity')).toEqual({ id: 'au-entity', label: 'Australian company (ACN)', severity: 'hard', note: undefined });
+    expect(describeGate({ id: 'cash-match', min: 20_000, severity: 'soft', note: 'Matters for bootstrapped teams' })).toEqual({
+      id: 'cash-match', label: ev({ id: 'cash-match', min: 20_000 }).label, severity: 'soft', note: 'Matters for bootstrapped teams',
+    });
   });
 });
