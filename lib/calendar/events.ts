@@ -27,12 +27,15 @@ export function goalToEvent(goal: DatedGoal, appUrl: string, context?: string): 
   };
 }
 
+/** Keyed by label, not date, so a corrected date updates the same calendar event. */
+export const deadlineUid = (program: Pick<Program, 'slug'>, deadline: Pick<ResolvedDeadline, 'label'>) =>
+  `deadline-${program.slug}-${slugify(deadline.label)}@grant-navigator`;
+
 /** A program deadline: timed when the deadline has a time, otherwise all-day. */
 export function deadlineToEvent(program: Program, deadline: ResolvedDeadline, appUrl: string): CalEvent {
   const when = deadline.time ? ` at ${deadline.time} (${deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time)` : '';
   return {
-    // Keyed by label, not date, so a corrected date updates the same calendar event.
-    uid: `deadline-${program.slug}-${slugify(deadline.label)}@grant-navigator`,
+    uid: deadlineUid(program, deadline),
     title: `${program.name}: ${deadline.label}`,
     description: `${deadline.label}${when}. Check the official guidelines for the current date.`,
     url: `${appUrl}/programs/${program.slug}/`,
