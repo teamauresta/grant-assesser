@@ -2,7 +2,7 @@
   "name": "grant-assesser",
   "version": "1.0.0",
   "private": true,
-  "description": "",
+  "description": "Find, assess and plan Australian grants, tax incentives, credits and accelerators for AI startups. A static Next.js app; all data stays in the browser.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,7 +16,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",

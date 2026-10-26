@@ -34,6 +34,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Never deploy code that fails the checks CI runs on branches.
+      - run: pnpm typecheck && pnpm lint && pnpm test
+
       # Static export (basePath /grant-assesser) into out/.
       - run: pnpm build
 
