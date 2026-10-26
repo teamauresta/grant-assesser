@@ -19,13 +19,15 @@ export type MenuProps = {
   'aria-label'?: string;
   icon?: LucideIcon;
   align?: 'start' | 'end';
+  /** Muted text shown below the items and used as the menu's description, e.g. a caveat. */
+  footer?: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
 };
 
 /** Menu button (WAI-ARIA menu pattern): arrows move, Home/End jump, Escape closes and returns focus. */
-export function Menu({ label, items, icon: Icon, align = 'start', variant = 'secondary', size = 'md', className, ...aria }: MenuProps) {
+export function Menu({ label, items, icon: Icon, align = 'start', variant = 'secondary', size = 'md', footer, className, ...aria }: MenuProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -102,56 +104,62 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
       </button>
       {open && (
         <div
-          id={`${id}-menu`}
-          role="menu"
-          aria-labelledby={`${id}-trigger`}
-          onKeyDown={onMenuKeyDown}
           className={cn(
-            'absolute top-full z-50 mt-1 flex min-w-56 flex-col gap-0.5 rounded-lg border border-border bg-bg p-1',
+            'absolute top-full z-50 mt-1 flex w-max min-w-56 max-w-[min(20rem,calc(100vw-2rem))] flex-col rounded-lg border border-border bg-bg p-1',
             align === 'end' ? 'right-0' : 'left-0',
           )}
         >
-          {items.map((it, i) => {
-            const content = (
-              <>
-                {it.icon && <it.icon aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0 text-muted-fg" />}
-                <span>{it.label}</span>
-              </>
-            );
-            const common = {
-              ref: (el: HTMLElement | null) => { itemRefs.current[i] = el; },
-              role: 'menuitem',
-              tabIndex: -1,
-              className: itemClass(it.disabled),
-            } as const;
-            if (it.href !== undefined) {
+          <div
+            id={`${id}-menu`}
+            role="menu"
+            aria-labelledby={`${id}-trigger`}
+            aria-describedby={footer ? `${id}-footer` : undefined}
+            onKeyDown={onMenuKeyDown}
+            className="flex flex-col gap-0.5"
+          >
+            {items.map((it, i) => {
+              const content = (
+                <>
+                  {it.icon && <it.icon aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0 text-muted-fg" />}
+                  <span>{it.label}</span>
+                </>
+              );
+              const common = {
+                ref: (el: HTMLElement | null) => { itemRefs.current[i] = el; },
+                role: 'menuitem',
+                tabIndex: -1,
+                className: itemClass(it.disabled),
+              } as const;
+              if (it.href !== undefined) {
+                return (
+                  <a
+                    key={it.id}
+                    {...common}
+                    href={it.disabled ? undefined : it.href}
+                    aria-disabled={it.disabled || undefined}
+                    download={it.download === true ? '' : it.download}
+                    target={it.external ? '_blank' : undefined}
+                    rel={it.external ? 'noopener noreferrer' : undefined}
+                    onClick={() => close(false)}
+                  >
+                    {content}
+                  </a>
+                );
+              }
               return (
-                <a
+                <button
                   key={it.id}
                   {...common}
-                  href={it.disabled ? undefined : it.href}
-                  aria-disabled={it.disabled || undefined}
-                  download={it.download === true ? '' : it.download}
-                  target={it.external ? '_blank' : undefined}
-                  rel={it.external ? 'noopener noreferrer' : undefined}
-                  onClick={() => close(false)}
+                  type="button"
+                  disabled={it.disabled}
+                  onClick={() => { it.onSelect(); close(true); }}
                 >
                   {content}
-                </a>
+                </button>
               );
-            }
-            return (
-              <button
-                key={it.id}
-                {...common}
-                type="button"
-                disabled={it.disabled}
-                onClick={() => { it.onSelect(); close(true); }}
-              >
-                {content}
-              </button>
-            );
-          })}
+            })}
+          </div>
+          {footer && <p id={`${id}-footer`} className="px-3 pb-2 pt-1.5 text-xs text-muted-fg">{footer}</p>}
         </div>
       )}
     </div>

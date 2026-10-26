@@ -47,6 +47,7 @@ describe('deadlineToEvent', () => {
     });
     expect(e.at?.toISOString()).toBe('2026-11-27T03:00:00.000Z'); // 14:00 AEDT
     expect(e.title).toContain(worksafe.name);
+    expect(e.description).toContain('Applications close at 14:00 (Melbourne time)');
   });
   it('a deadline without a time is all-day', () => {
     const rdti = getProgram('rdti')!;

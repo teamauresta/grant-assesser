@@ -9,6 +9,7 @@ import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { DeadlineCalendar } from './deadline-calendar';
 import { ProgramEligibility, ProgramPersonaNotes } from './personalised';
 import { NextDeadline, ProgramStatusPill, VerifiedNote } from './program-status';
 
@@ -72,13 +73,16 @@ export function ProgramDetail({ program: p }: { program: Program }) {
           </div>
         </dl>
 
-        {/* Task 18 wires Add to pipeline; Task 17 adds "Add deadline to calendar" beside it. */}
-        <div className="flex flex-col items-start gap-1.5">
-          <Button variant="primary" disabled aria-describedby="pipeline-help">
-            <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
-            Add to pipeline
-          </Button>
-          <p id="pipeline-help" className="text-sm text-muted-fg">Available once your plan is set up.</p>
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
+          {/* Task 18 wires Add to pipeline. */}
+          <div className="flex flex-col items-start gap-1.5">
+            <Button variant="primary" disabled aria-describedby="pipeline-help">
+              <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+              Add to pipeline
+            </Button>
+            <p id="pipeline-help" className="text-sm text-muted-fg">Available once your plan is set up.</p>
+          </div>
+          <DeadlineCalendar program={p} />
         </div>
       </header>
 

@@ -25,7 +25,7 @@ export function goalToEvent(goal: DatedGoal, appUrl: string): CalEvent {
 
 /** A program deadline: timed when the deadline has a time, otherwise all-day. */
 export function deadlineToEvent(program: Program, deadline: ResolvedDeadline, appUrl: string): CalEvent {
-  const when = deadline.time ? ` at ${deadline.time} (${deadline.tz.replace(/_/g, ' ')} time)` : '';
+  const when = deadline.time ? ` at ${deadline.time} (${deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time)` : '';
   return {
     uid: `deadline-${program.slug}-${deadline.date}@grant-navigator`,
     title: `${program.name}: ${deadline.label}`,
