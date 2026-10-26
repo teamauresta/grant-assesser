@@ -83,6 +83,13 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Keeps in-page targets (skip link, anchors) clear of the 56px sticky mobile header. */
+  @media (width < 48rem) {
+    html {
+      scroll-padding-top: 4.5rem;
+    }
+  }
+
   body {
     @apply bg-bg text-fg font-sans antialiased;
     line-height: 1.6;

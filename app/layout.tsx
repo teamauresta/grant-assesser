@@ -5,10 +5,11 @@ import { GeistMono } from 'geist/font/mono';
 import { SkipLink } from '@/components/layout/skip-link';
 import { TopNav } from '@/components/layout/top-nav';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { MobileHeader } from '@/components/layout/mobile-header';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Grant Navigator',
+  title: { default: 'Grant Navigator', template: '%s · Grant Navigator' },
   description: 'Find, assess and track Australian startup funding.',
 };
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SkipLink />
         <TopNav className="hidden md:block" />
+        <MobileHeader className="md:hidden" />
         <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] focus:outline-none md:pt-10 md:pb-12">
           {children}
         </main>
