@@ -36,14 +36,26 @@ export function endOfMonthISO(year: number, month: number): string {
   return toISODate(new Date(Date.UTC(year, month, 0)));
 }
 
+/** Calendar-month arithmetic; the day is clamped to the target month's end. n may be negative. */
+export function addMonthsISO(iso: string, n: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const target = new Date(Date.UTC(y, m - 1 + n, 1));
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  return toISODate(new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), Math.min(d, lastDay))));
+}
+
+/** Whole months elapsed (for display; use addMonthsISO for eligibility cut-offs). */
 export function monthsBetween(fromIso: string, toIso: string): number {
   const [fy, fm, fd] = fromIso.split('-').map(Number);
   const [ty, tm, td] = toIso.split('-').map(Number);
   return (ty - fy) * 12 + (tm - fm) - (td < fd ? 1 : 0);
 }
 
+/** Calendar date of an instant in tz, as 'YYYY-MM-DD'. */
 export function todayISO(now: Date, tz: string = MELBOURNE): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const get = (t: 'year' | 'month' | 'day') => parts.find((p) => p.type === t)!.value;
+  return `${get('year').padStart(4, '0')}-${get('month')}-${get('day')}`;
 }
 
 function tzOffsetMs(at: Date, tz: string): number {

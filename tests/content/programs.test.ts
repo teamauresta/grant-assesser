@@ -34,3 +34,12 @@ describe('program content', () => {
     }
   });
 });
+
+describe('rdti turnover note', () => {
+  it('explains the non-refundable offset when turnover is $20M or more', () => {
+    const rdti = PROGRAMS.find((p) => p.slug === 'rdti')!;
+    const r = evaluateGates(rdti.gates, { turnover: '20m-50m' }, { now }).find((g) => g.id === 'turnover-under')!;
+    expect(r.result).toBe('fail'); expect(r.severity).toBe('soft');
+    expect(r.reason).toMatch(/non-refundable/);
+  });
+});

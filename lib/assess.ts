@@ -37,11 +37,16 @@ const RD_BANDS: Record<NonNullable<Profile['rdSpend']>, [number, number]> = {
   'under-20k': [0, 0], '20k-100k': [20_000, 100_000], '100k-500k': [100_000, 500_000], 'over-500k': [500_000, 1_000_000],
 };
 
-function rdtiRange(a: Assessment, profile: Profile): [number, number] {
-  if (!profile.rdSpend) return [0, 0];
-  const refundable = profile.turnover ? ['under-1m', '1m-10m', '10m-20m'].includes(profile.turnover) : true;
-  const rate = refundable ? 0.435 : 0.335; // 25% + 18.5 pts, or 25% + 8.5 pts (non-refundable, ≤2% intensity)
-  const [lo, hi] = RD_BANDS[profile.rdSpend];
+/** Offset rate = company tax rate + premium. Unknown turnover is treated as under $20M (refundable). */
+const RDTI_RATE: Record<NonNullable<Profile['turnover']>, number> = {
+  'under-1m': 0.435, '1m-10m': 0.435, '10m-20m': 0.435, // refundable: 25% base rate + 18.5 pts
+  '20m-50m': 0.335, // non-refundable: 25% base rate + 8.5 pts (intensity ≤ 2%)
+  'over-50m': 0.385, // non-refundable: 30% company tax + 8.5 pts (intensity ≤ 2%)
+};
+
+function rdtiRange(rdSpend: NonNullable<Profile['rdSpend']>, profile: Profile): [number, number] {
+  const rate = RDTI_RATE[profile.turnover ?? 'under-1m'];
+  const [lo, hi] = RD_BANDS[rdSpend];
   return [Math.round(lo * rate), Math.round(hi * rate)];
 }
 
@@ -54,10 +59,14 @@ export function estimateFunding(assessments: Assessment[], profile: Profile): Fu
     if (a.gates.some((g) => g.severity === 'hard' && g.result !== 'pass')) continue;
     const b = a.program.benefit;
     if (b.consortium) continue;
-    if (b.kind === 'cash' || b.kind === 'tax-offset') {
-      const [lo, hi] = b.estimator === 'rdti' ? rdtiRange(a, profile) : [b.min ?? 0, b.max ?? b.min ?? 0];
+    if ((b.kind === 'cash' || b.kind === 'tax-offset') && b.currency === 'AUD') {
+      let lo: number, hi: number;
+      if (b.estimator === 'rdti') {
+        if (!profile.rdSpend) continue; // nothing to estimate from yet
+        [lo, hi] = rdtiRange(profile.rdSpend, profile);
+      } else [lo, hi] = [b.min ?? 0, b.max ?? b.min ?? 0];
       out.aud.low += lo; out.aud.high += hi; out.includedSlugs.push(a.program.slug);
-    } else if (b.kind === 'credits') {
+    } else if (b.kind === 'credits' && b.currency === 'USD') {
       out.creditsUsd.low += b.min ?? 0; out.creditsUsd.high += b.max ?? b.min ?? 0; out.includedSlugs.push(a.program.slug);
     }
   }

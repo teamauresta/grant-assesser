@@ -1,6 +1,6 @@
-import type { GateId, GateRef, Profile } from '@/lib/schema';
-import { FUNDING_STAGES } from '@/lib/schema';
-import { monthsBetween, todayISO } from '@/lib/dates';
+import type { GateId, GateParams, GateRef, Profile } from '@/lib/schema';
+import { EVIDENCE_LEVELS, FUNDING_STAGES, RESEARCH_LEVELS } from '@/lib/schema';
+import { addMonthsISO, monthsBetween, todayISO } from '@/lib/dates';
 
 export type Severity = 'hard' | 'soft';
 export type GateOutcome = 'pass' | 'fail' | 'unknown';
@@ -10,9 +10,15 @@ export type GateResult = {
 };
 type Eval = Pick<GateResult, 'result' | 'reason' | 'fix' | 'fixable'>;
 type Ctx = { now: Date };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Params = Record<string, any>;
-type Def = { severity: Severity; label: (p: Params) => string; evaluate: (pr: Profile, p: Params, ctx: Ctx) => Eval };
+type Def<G extends GateId> = {
+  severity: Severity;
+  label: (p: GateParams<G>) => string;
+  evaluate: (pr: Profile, p: GateParams<G>, ctx: Ctx) => Eval;
+};
+type Defs = { [G in GateId]: Def<G> };
+/** Params as they arrive at runtime; validated by GateRefSchema when programs are parsed. */
+type LooseParams = Record<string, unknown>;
+type AnyDef = { severity: Severity; label: (p: LooseParams) => string; evaluate: (pr: Profile, p: LooseParams, ctx: Ctx) => Eval };
 
 const pass = (reason: string): Eval => ({ result: 'pass', reason, fixable: false });
 const fail = (reason: string, fix?: string, fixable = false): Eval => ({ result: 'fail', reason, fix, fixable });
@@ -29,8 +35,6 @@ const RD_SPEND: Record<NonNullable<Profile['rdSpend']>, [number, number]> = {
 const CASH: Record<NonNullable<Profile['cashMatch']>, [number, number]> = {
   none: [0, 0], 'under-20k': [0, 2e4], '20k-60k': [2e4, 6e4], '60k-250k': [6e4, 2.5e5], 'over-250k': [2.5e5, Infinity],
 };
-const RESEARCH = ['none', 'informal', 'active', 'formal'] as const;
-const EVIDENCE = ['none', 'interviews', 'pilots', 'revenue'] as const;
 
 function bool(v: boolean | undefined, label: { yes: string; no: string; ask: string }, fix?: string, fixable = true): Eval {
   if (v === undefined) return unknown(label.ask, fix);
@@ -45,13 +49,31 @@ function turnoverUnder(pr: Profile, aud: number): Eval {
   return unknown(`Your turnover band straddles ${money(aud)}`, 'Confirm aggregated turnover with your accountant');
 }
 
+/** "Within N months": date on or after the same calendar day N months ago (inclusive). */
+function withinMonths(date: string, months: number, now: Date): boolean {
+  return date >= addMonthsISO(todayISO(now), -months);
+}
+
+function ageText(date: string, now: Date): string {
+  return `${monthsBetween(date, todayISO(now))} months ago`;
+}
+
 function incorporatedWithin(pr: Profile, months: number, now: Date): Eval {
   if (!pr.incorporatedOn) return unknown('Incorporation date not answered', 'Add your incorporation date');
   const age = monthsBetween(pr.incorporatedOn, todayISO(now));
-  return age <= months ? pass(`Incorporated ${age} months ago`) : fail(`Incorporated ${age} months ago (limit ${months})`);
+  if (withinMonths(pr.incorporatedOn, months, now)) return pass(`Incorporated ${age} months ago`);
+  return fail(age > months ? `Incorporated ${age} months ago (limit ${months})` : `Incorporated more than ${months} months ago`);
 }
 
-export const GATES: Record<GateId, Def> = {
+/** "Under Y years old": incorporated strictly after the same calendar day Y years ago. */
+function youngerThanYears(pr: Profile, years: number, now: Date): Eval {
+  if (!pr.incorporatedOn) return unknown('Incorporation date not answered', 'Add your incorporation date');
+  return pr.incorporatedOn > addMonthsISO(todayISO(now), -years * 12)
+    ? pass(`Incorporated ${ageText(pr.incorporatedOn, now)}`)
+    : fail(`Company is ${years} or more years old`);
+}
+
+export const GATES: Defs = {
   'au-entity': { severity: 'hard', label: () => 'Australian company (ACN)',
     evaluate: (pr) => bool(pr.hasAcn, { yes: 'Has an ACN', no: 'No Australian company yet', ask: 'ACN not answered' }, 'Register a Pty Ltd company') },
   'gst-registered': { severity: 'hard', label: () => 'Registered for GST',
@@ -66,10 +88,11 @@ export const GATES: Record<GateId, Def> = {
   'turnover-or-age': { severity: 'hard', label: (p) => `Turnover under ${money(p.turnoverUnder)} or under ${p.yearsUnder} years old`,
     evaluate: (pr, p, { now }) => {
       const t = turnoverUnder(pr, p.turnoverUnder);
-      const a = incorporatedWithin(pr, p.yearsUnder * 12 - 1, now);
+      const a = youngerThanYears(pr, p.yearsUnder, now);
       if (t.result === 'pass' || a.result === 'pass') return pass(t.result === 'pass' ? t.reason : a.reason);
       if (t.result === 'fail' && a.result === 'fail') return fail(`${t.reason}, and ${a.reason.toLowerCase()}`);
-      return unknown('Need turnover and incorporation date to check', 'Answer turnover and incorporation date');
+      if (t.result === 'unknown' && a.result === 'unknown') return unknown('Need turnover and incorporation date to check', 'Answer turnover and incorporation date');
+      return t.result === 'unknown' ? t : a; // exactly one sub-check is unknown and the other failed
     } },
   'product-company': { severity: 'hard', label: () => 'Owns a software product (not a consultancy)',
     evaluate: (pr) => !pr.businessModel ? unknown('Business model not answered')
@@ -86,7 +109,7 @@ export const GATES: Record<GateId, Def> = {
     } },
   'vc-or-accelerator': { severity: 'hard', label: () => 'Backed by a VC or accelerator partner',
     evaluate: (pr) => {
-      const vc = pr.vcBacked ?? (pr.persona === 'vc-backed' ? true : undefined);
+      const vc = pr.vcBacked ?? (pr.persona ? pr.persona === 'vc-backed' : undefined);
       if (vc || pr.acceleratorMember) return pass('Has a VC or accelerator relationship');
       if (vc === false && pr.acceleratorMember === false)
         return fail('Needs an Org ID from a partner VC or accelerator', 'Join an accelerator or VC that is an Activate Provider', true);
@@ -100,15 +123,21 @@ export const GATES: Record<GateId, Def> = {
     } },
   'last-round-within': { severity: 'hard', label: () => 'Recent qualifying funding round',
     evaluate: (pr, p, { now }) => {
-      if (!pr.fundingStage || !pr.lastRoundOn) return unknown('Funding stage or last round date not answered');
-      const rule = (p.rules as { stages: string[]; months: number }[]).find((r) => r.stages.includes(pr.fundingStage!));
-      if (!rule) return fail(`A ${pr.fundingStage} round does not qualify`);
+      const stage = pr.fundingStage;
+      if (!stage) return unknown('Funding stage not answered', 'Add your funding stage');
+      const rule = p.rules.find((r) => r.stages.includes(stage));
+      if (!rule) {
+        const reason = stage === 'none' ? 'Needs a qualifying funding round' : `A ${stage} round does not qualify`;
+        return pr.persona === 'pre-raise' ? fail(reason, 'Available once you close a qualifying round', true) : fail(reason);
+      }
+      if (!pr.lastRoundOn) return unknown('Last round date not answered', 'Add the date your last round closed');
       const age = monthsBetween(pr.lastRoundOn, todayISO(now));
-      return age <= rule.months ? pass(`Last round ${age} months ago`) : fail(`Last round ${age} months ago (limit ${rule.months})`);
+      if (withinMonths(pr.lastRoundOn, rule.months, now)) return pass(`Last round ${age} months ago`);
+      return fail(age > rule.months ? `Last round ${age} months ago (limit ${rule.months})` : `Last round more than ${rule.months} months ago`);
     } },
   'prior-credits-max': { severity: 'hard', label: (p) => `No more than US$${p.usd.toLocaleString('en-AU')} prior ${p.provider.toUpperCase()} credits`,
     evaluate: (pr, p) => {
-      const v = pr.priorCreditsUsd?.[p.provider as 'aws' | 'azure' | 'gcp'];
+      const v = pr.priorCreditsUsd?.[p.provider];
       if (v === undefined) return unknown(`Prior ${p.provider.toUpperCase()} credits not answered`);
       return v <= p.usd ? pass('Within the prior-credit limit') : fail(`Already received US$${v.toLocaleString('en-AU')} in credits`);
     } },
@@ -135,18 +164,18 @@ export const GATES: Record<GateId, Def> = {
   'research-partner': { severity: 'hard', label: (p) => `Research partner (${p.min} or better)`,
     evaluate: (pr, p) => {
       if (!pr.researchPartner) return unknown('Research partner not answered');
-      return RESEARCH.indexOf(pr.researchPartner) >= RESEARCH.indexOf(p.min)
+      return RESEARCH_LEVELS.indexOf(pr.researchPartner) >= RESEARCH_LEVELS.indexOf(p.min)
         ? pass(`Research relationship: ${pr.researchPartner}`) : fail('Needs a committed research partner', 'Start talks with a university or CSIRO', true);
     } },
   'industry-partners': { severity: 'hard', label: (p) => `At least ${p.count} industry partner(s)`,
     evaluate: (pr, p) => pr.industryPartners === undefined ? unknown('Industry partners not answered')
       : pr.industryPartners >= p.count ? pass(`${pr.industryPartners} industry partner(s)`) : fail(`Needs ${p.count} industry partner(s)`, 'Secure committed partners', true) },
-  'state-is': { severity: 'hard', label: (p) => `Based in ${String(p.state).toUpperCase()}`,
+  'state-is': { severity: 'hard', label: (p) => `Based in ${p.state.toUpperCase()}`,
     evaluate: (pr, p) => !pr.state ? unknown('State not answered')
       : pr.state === p.state ? pass(`Based in ${p.state.toUpperCase()}`) : fail(`Only for ${p.state.toUpperCase()} companies`) },
-  'sector-any': { severity: 'hard', label: (p) => `Sector: ${(p.sectors as string[]).join(' / ')}`,
+  'sector-any': { severity: 'hard', label: (p) => `Sector: ${p.sectors.join(' / ')}`,
     evaluate: (pr, p) => !pr.sectors?.length ? unknown('Sectors not answered')
-      : pr.sectors.some((s) => (p.sectors as string[]).includes(s)) ? pass('Sector matches') : fail('Sector does not match') },
+      : pr.sectors.some((s) => p.sectors.includes(s)) ? pass('Sector matches') : fail('Sector does not match') },
   'women-led': { severity: 'hard', label: () => 'Women-led or women founder',
     evaluate: (pr) => pr.womenLed === 'yes' ? pass('Women-led') : pr.womenLed === 'no' ? fail('Only for women-led startups')
       : unknown('Optional question not answered') },
@@ -156,23 +185,25 @@ export const GATES: Record<GateId, Def> = {
     evaluate: (pr) => bool(pr.hasWebsite, { yes: 'Has a website', no: 'No working website', ask: 'Website not answered' }, 'Publish a simple website on your company domain') },
   'customer-evidence-at-least': { severity: 'hard', label: (p) => `Customer evidence: ${p.level} or better`,
     evaluate: (pr, p) => !pr.customerEvidence ? unknown('Customer evidence not answered')
-      : EVIDENCE.indexOf(pr.customerEvidence) >= EVIDENCE.indexOf(p.level) ? pass(`Evidence: ${pr.customerEvidence}`)
+      : EVIDENCE_LEVELS.indexOf(pr.customerEvidence) >= EVIDENCE_LEVELS.indexOf(p.level) ? pass(`Evidence: ${pr.customerEvidence}`)
       : fail(`Needs ${p.level}`, 'Secure a paid pilot', true) },
   'uses-stack': { severity: 'soft', label: (p) => `Uses ${p.tech}`,
     evaluate: (pr, p) => !pr.stack ? unknown('Tech stack not answered')
       : pr.stack.includes(p.tech) ? pass(`Uses ${p.tech}`) : fail(`Expects ${p.tech} in the product`, `Only worth it if ${p.tech} fits your architecture`, true) },
 };
 
-export function normaliseRef(ref: GateRef): { id: GateId; severity?: Severity; params: Params } {
+export function normaliseRef(ref: GateRef): { id: GateId; severity?: Severity; note?: string; params: LooseParams } {
   if (typeof ref === 'string') return { id: ref, params: {} };
-  const { id, severity, ...params } = ref as { id: GateId; severity?: Severity } & Params;
-  return { id, severity, params };
+  const { id, severity, note, ...params } = ref;
+  return { id, severity, note, params };
 }
 
 export function evaluateGate(ref: GateRef, profile: Profile, ctx: Ctx): GateResult {
-  const { id, severity, params } = normaliseRef(ref);
-  const def = GATES[id];
-  return { id, label: def.label(params), severity: severity ?? def.severity, ...def.evaluate(profile, params, ctx) };
+  const { id, severity, note, params } = normaliseRef(ref);
+  const def = GATES[id] as unknown as AnyDef;
+  const out = def.evaluate(profile, params, ctx);
+  const reason = out.result === 'fail' && note ? `${out.reason}. ${note}` : out.reason;
+  return { id, label: def.label(params), severity: severity ?? def.severity, ...out, reason };
 }
 
 export const evaluateGates = (refs: GateRef[], profile: Profile, ctx: Ctx) => refs.map((r) => evaluateGate(r, profile, ctx));

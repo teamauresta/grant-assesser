@@ -64,3 +64,97 @@ describe('gates', () => {
     expect(r.result).toBe('fail'); expect(r.label).toMatch(/credits/i); expect(r.reason.length).toBeGreaterThan(0);
   });
 });
+
+describe('age gates use calendar-month cut-offs', () => {
+  const within24 = { id: 'incorporated-within' as const, months: 24 };
+  it('incorporated-within fails a day past N calendar months (no month of slack)', () => {
+    const r = ev(within24, { incorporatedOn: '2024-09-28' }); // cut-off is 2024-10-27
+    expect(r.result).toBe('fail');
+    expect(r.reason).toMatch(/24 months/);
+  });
+  it('incorporated-within is inclusive at exactly N months', () => {
+    expect(ev(within24, { incorporatedOn: '2024-10-27' }).result).toBe('pass');
+    expect(ev(within24, { incorporatedOn: '2024-10-26' }).result).toBe('fail');
+  });
+  it('incorporated-within keeps a human-readable age', () => {
+    expect(ev(within24, { incorporatedOn: '2025-04-27' }).reason).toBe('Incorporated 18 months ago');
+  });
+  it('turnover-or-age "under Y years" is strict at exactly Y years', () => {
+    const ref = { id: 'turnover-or-age' as const, turnoverUnder: 10_000_000, yearsUnder: 3 };
+    expect(ev(ref, { turnover: '10m-20m', incorporatedOn: '2023-10-27' }).result).toBe('fail');
+    expect(ev(ref, { turnover: '10m-20m', incorporatedOn: '2023-10-28' }).result).toBe('pass');
+    expect(ev(ref, { turnover: '10m-20m', incorporatedOn: '2023-10-28' }).reason).toBe('Incorporated 35 months ago');
+  });
+  it('last-round-within fails a day past the stage limit', () => {
+    const ref = { id: 'last-round-within' as const, rules: [{ stages: ['pre-seed', 'seed'], months: 60 }] };
+    expect(ev(ref, { fundingStage: 'seed', lastRoundOn: '2021-10-07' }).result).toBe('fail');
+    expect(ev(ref, { fundingStage: 'seed', lastRoundOn: '2021-10-27' }).result).toBe('pass');
+  });
+});
+
+describe('last-round-within looks up the stage rule first', () => {
+  const ref = { id: 'last-round-within' as const, rules: [{ stages: ['pre-seed', 'seed'], months: 60 }, { stages: ['series-a'], months: 12 }] };
+  it('no round raised fails without asking for a round date', () => {
+    const r = ev(ref, { fundingStage: 'none' });
+    expect(r.result).toBe('fail'); expect(r.reason).toBe('Needs a qualifying funding round'); expect(r.fixable).toBe(false);
+  });
+  it('a non-qualifying stage fails without a round date', () => {
+    const r = ev(ref, { fundingStage: 'series-b' });
+    expect(r.result).toBe('fail'); expect(r.reason).toBe('A series-b round does not qualify'); expect(r.fixable).toBe(false);
+  });
+  it('is fixable only for pre-raise', () => {
+    expect(ev(ref, { fundingStage: 'none', persona: 'pre-raise' }).fixable).toBe(true);
+    expect(ev(ref, { fundingStage: 'angel', persona: 'pre-raise' }).fixable).toBe(true);
+    expect(ev(ref, { fundingStage: 'none', persona: 'bootstrapped' }).fixable).toBe(false);
+  });
+  it('asks for the round date only when a rule matches', () => {
+    const r = ev(ref, { fundingStage: 'seed' });
+    expect(r.result).toBe('unknown'); expect(r.reason).toMatch(/round date/i);
+    expect(ev(ref, {}).reason).toMatch(/funding stage/i);
+  });
+});
+
+describe('vc-or-accelerator', () => {
+  it('bootstrapped with no accelerator fails (fixable)', () => {
+    const r = ev('vc-or-accelerator', { persona: 'bootstrapped', acceleratorMember: false });
+    expect(r.result).toBe('fail'); expect(r.fixable).toBe(true);
+  });
+  it('bootstrapped with accelerator unanswered is unknown', () => {
+    expect(ev('vc-or-accelerator', { persona: 'bootstrapped' }).result).toBe('unknown');
+  });
+  it('passes for vc-backed persona or accelerator member; explicit vcBacked wins', () => {
+    expect(ev('vc-or-accelerator', { persona: 'vc-backed' }).result).toBe('pass');
+    expect(ev('vc-or-accelerator', { persona: 'bootstrapped', acceleratorMember: true }).result).toBe('pass');
+    expect(ev('vc-or-accelerator', { persona: 'bootstrapped', vcBacked: true }).result).toBe('pass');
+    expect(ev('vc-or-accelerator', { persona: 'pre-raise', acceleratorMember: false }).result).toBe('fail');
+  });
+});
+
+describe('turnover-or-age surfaces the single unknown sub-check', () => {
+  const ref = { id: 'turnover-or-age' as const, turnoverUnder: 5_000_000, yearsUnder: 3 };
+  it('straddling turnover + too old → unknown with the straddle reason and fix', () => {
+    const r = ev(ref, { turnover: '1m-10m', incorporatedOn: '2020-01-01' });
+    expect(r.result).toBe('unknown');
+    expect(r.reason).toBe('Your turnover band straddles $5M');
+    expect(r.fix).toBe('Confirm aggregated turnover with your accountant');
+  });
+  it('turnover fails + age unanswered → asks for the incorporation date', () => {
+    const r = ev(ref, { turnover: '10m-20m' });
+    expect(r.result).toBe('unknown'); expect(r.reason).toBe('Incorporation date not answered');
+  });
+  it('both unanswered → asks for both', () => {
+    expect(ev(ref, {}).reason).toMatch(/turnover and incorporation date/i);
+  });
+});
+
+describe('per-ref note', () => {
+  const ref = { id: 'turnover-under' as const, aud: 20_000_000, severity: 'soft' as const, note: 'At $20M turnover or more the offset is non-refundable' };
+  it('is appended to the reason when the gate fails', () => {
+    expect(ev(ref, { turnover: '20m-50m' }).reason).toBe('Turnover is $20M or more. At $20M turnover or more the offset is non-refundable');
+  });
+  it('is not appended on pass or unknown, and never leaks into the label', () => {
+    expect(ev(ref, { turnover: 'under-1m' }).reason).toBe('Turnover is under $20M');
+    expect(ev(ref, {}).reason).toBe('Turnover not answered');
+    expect(ev(ref, { turnover: '20m-50m' }).label).toBe('Turnover under $20M');
+  });
+});

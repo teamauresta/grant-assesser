@@ -37,6 +37,15 @@ export function resolveDeadlines(p: Program, now: Date, profile: Profile = {}): 
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
+/**
+ * True when the program has at least one close deadline and none of them is still in the future.
+ * Used by the weekly freshness check to flag programs whose declared state needs a human review.
+ */
+export function hasPastCloseOnly(p: Program, now: Date, profile: Profile = {}): boolean {
+  const closes = resolveDeadlines(p, now, profile).filter((d) => d.kind === 'close');
+  return closes.length > 0 && closes.every((d) => d.at.getTime() <= now.getTime());
+}
+
 export function deriveStatus(p: Program, now: Date, profile: Profile = {}): StatusInfo {
   const declared = p.status.state;
   const deadlines = resolveDeadlines(p, now, profile);
@@ -48,10 +57,14 @@ export function deriveStatus(p: Program, now: Date, profile: Profile = {}): Stat
 
   let state: DerivedState = declared;
   let daysToClose: number | undefined;
+  // Only open/rolling programs auto-close. A past close on an upcoming, paused or unverified program
+  // usually means the next round has not been announced yet, so whether it is closed, reopening or
+  // replaced needs a human decision; the weekly freshness check flags these via hasPastCloseOnly().
   if ((declared === 'open' || declared === 'rolling') && closes.length) {
     if (!futureCloses.length) state = 'closed';
     else {
-      daysToClose = daysBetween(today, futureCloses[0].date);
+      // Count days to the close's Melbourne calendar date, not its local date in a foreign tz.
+      daysToClose = daysBetween(today, todayISO(futureCloses[0].at, MELBOURNE));
       if (daysToClose <= CLOSING_SOON_DAYS) state = 'closing-soon';
     }
   }

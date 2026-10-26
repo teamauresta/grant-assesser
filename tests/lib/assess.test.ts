@@ -46,4 +46,24 @@ describe('estimateFunding', () => {
       benefit: { kind: 'tax-offset', currency: 'AUD', note: '', estimator: 'rdti' } }), {}, now);
     expect(estimateFunding([rdti], { rdSpend: '20k-100k', turnover: 'under-1m' }).aud).toEqual({ low: 8700, high: 43500 });
   });
+  const rdtiProgram = makeProgram({ slug: 'rdti', status: { state: 'rolling' },
+    benefit: { kind: 'tax-offset', currency: 'AUD', note: '', estimator: 'rdti' } });
+  it('RDTI without R&D spend is not counted as included', () => {
+    const e = estimateFunding([assessProgram(rdtiProgram, {}, now)], {});
+    expect(e.aud).toEqual({ low: 0, high: 0 });
+    expect(e.includedSlugs).toEqual([]);
+  });
+  it('RDTI non-refundable rate: 33.5% for 20m-50m, 38.5% for over-50m', () => {
+    const rdti = assessProgram(rdtiProgram, {}, now);
+    expect(estimateFunding([rdti], { rdSpend: '20k-100k', turnover: '20m-50m' }).aud).toEqual({ low: 6700, high: 33500 });
+    expect(estimateFunding([rdti], { rdSpend: '20k-100k', turnover: 'over-50m' }).aud).toEqual({ low: 7700, high: 38500 });
+  });
+  it('only AUD cash goes into aud and only USD credits into creditsUsd', () => {
+    const usdCash = assessProgram(makeProgram({ slug: 'usd-cash', benefit: { kind: 'cash', currency: 'USD', note: '', min: 100_000, max: 100_000 } }), {}, now);
+    const audCredits = assessProgram(makeProgram({ slug: 'aud-credits', benefit: { kind: 'credits', currency: 'AUD', note: '', min: 1000, max: 2000 } }), {}, now);
+    const e = estimateFunding([usdCash, audCredits], {});
+    expect(e.aud).toEqual({ low: 0, high: 0 });
+    expect(e.creditsUsd).toEqual({ low: 0, high: 0 });
+    expect(e.includedSlugs).toEqual([]);
+  });
 });

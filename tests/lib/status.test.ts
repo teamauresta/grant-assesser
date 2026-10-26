@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveStatus, resolveDeadlines } from '@/lib/status';
+import { deriveStatus, hasPastCloseOnly, resolveDeadlines } from '@/lib/status';
 import { makeProgram } from '../helpers/program';
 
 const now = new Date('2026-10-27T00:00:00Z'); // 11:00 AEDT, 27 Oct 2026
@@ -43,5 +43,37 @@ describe('resolveDeadlines', () => {
   });
   it('milestones never close the program', () => {
     expect(deriveStatus(rdti, now).state).toBe('rolling');
+  });
+});
+
+describe('daysToClose uses the deadline\'s Melbourne calendar date', () => {
+  const la = (date: string) => [{ label: 'Close', kind: 'close' as const, date, time: '17:00', tz: 'America/Los_Angeles' }];
+  it('a 17:00 LA close lands on the next Melbourne day', () => {
+    // 2026-11-09 17:00 PST = 2026-11-10 12:00 AEDT → 14 days from 27 Oct
+    const s = deriveStatus(makeProgram({ deadlines: la('2026-11-09') }), now);
+    expect(s.daysToClose).toBe(14); expect(s.state).toBe('closing-soon');
+  });
+  it('one day later is outside the closing-soon window', () => {
+    const s = deriveStatus(makeProgram({ deadlines: la('2026-11-10') }), now);
+    expect(s.daysToClose).toBe(15); expect(s.state).toBe('open');
+  });
+});
+
+describe('hasPastCloseOnly', () => {
+  it('true when every close deadline has passed, whatever the declared state', () => {
+    expect(hasPastCloseOnly(makeProgram({ deadlines: close('2026-10-20') }), now)).toBe(true);
+    expect(hasPastCloseOnly(makeProgram({ status: { state: 'upcoming' }, deadlines: close('2026-09-01') }), now)).toBe(true);
+    expect(hasPastCloseOnly(makeProgram({ status: { state: 'unverified' }, deadlines: close('2026-10-27', '10:00') }), now)).toBe(true);
+  });
+  it('false when a close is still in the future', () => {
+    expect(hasPastCloseOnly(makeProgram({ deadlines: [...close('2026-09-01'), ...close('2026-11-15')] }), now)).toBe(false);
+  });
+  it('false without any close deadline (milestones do not count)', () => {
+    expect(hasPastCloseOnly(makeProgram(), now)).toBe(false);
+    expect(hasPastCloseOnly(makeProgram({ deadlines: [{ label: 'Info session', kind: 'milestone', date: '2026-09-01' }] }), now)).toBe(false);
+  });
+  it('upcoming/paused/unverified with a past close are not auto-closed', () => {
+    for (const state of ['upcoming', 'paused', 'unverified'] as const)
+      expect(deriveStatus(makeProgram({ status: { state }, deadlines: close('2026-09-01') }), now).state).toBe(state);
   });
 });
