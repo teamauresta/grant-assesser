@@ -9,6 +9,18 @@ describe('gates', () => {
     expect(ev('au-entity').result).toBe('unknown');
     expect(ev({ id: 'incorporated-within', months: 24 }).result).toBe('unknown');
   });
+  it('unanswered yes/no gates ask for the answer; only a "no" gets the remedy', () => {
+    const u = ev('gst-registered');
+    expect(u.result).toBe('unknown'); expect(u.fix).toBe('Answer the GST question in the assessment');
+    expect(ev('gst-registered', { gstRegistered: false }).fix).toBe('Register for GST with the ATO');
+    expect(ev('au-entity').fix).toBe('Answer the ACN question in the assessment');
+    expect(ev('has-mvp').fix).toBe('Answer the MVP question in the assessment');
+    expect(ev('has-mvp', { hasMvp: false }).fix).toBe('Ship a working MVP first');
+    expect(ev('has-website').fix).toBe('Answer the website question in the assessment');
+    expect(ev('contemporaneous-records').fix).toBe('Answer the R&D records question in the assessment');
+    expect(ev('experimental-activities').fix).toBe('Answer the experimental work question in the assessment');
+    expect(ev('experimental-activities', { experimental: false }).fix).toBeUndefined();
+  });
   it('au-entity pass / fixable fail', () => {
     expect(ev('au-entity', { hasAcn: true }).result).toBe('pass');
     const r = ev('au-entity', { hasAcn: false });

@@ -40,8 +40,9 @@ const CASH: Record<NonNullable<Profile['cashMatch']>, [number, number]> = {
   none: [0, 0], 'under-20k': [0, 2e4], '20k-60k': [2e4, 6e4], '60k-250k': [6e4, 2.5e5], 'over-250k': [2.5e5, Infinity],
 };
 
-function bool(v: boolean | undefined, label: { yes: string; no: string; ask: string }, fix?: string, fixable = true): Eval {
-  if (v === undefined) return unknown(label.ask, fix);
+/** Unanswered asks for the answer (naming `label.topic`); only a "no" gets the remedy `fix`. */
+function bool(v: boolean | undefined, label: { yes: string; no: string; ask: string; topic: string }, fix?: string, fixable = true): Eval {
+  if (v === undefined) return unknown(label.ask, `Answer the ${label.topic} question in the assessment`);
   return v ? pass(label.yes) : fail(label.no, fix, fixable);
 }
 
@@ -90,9 +91,9 @@ function stageBefore(stage: (typeof FUNDING_STAGES)[number]): string {
 
 export const GATES: Defs = {
   'au-entity': { severity: 'hard', label: () => 'Australian company (ACN)',
-    evaluate: (pr) => bool(pr.hasAcn, { yes: 'Has an ACN', no: 'No Australian company yet', ask: 'ACN not answered' }, 'Register a Pty Ltd company') },
+    evaluate: (pr) => bool(pr.hasAcn, { yes: 'Has an ACN', no: 'No Australian company yet', ask: 'ACN not answered', topic: 'ACN' }, 'Register a Pty Ltd company') },
   'gst-registered': { severity: 'hard', label: () => 'Registered for GST',
-    evaluate: (pr) => bool(pr.gstRegistered, { yes: 'Registered for GST', no: 'Not registered for GST', ask: 'GST not answered' }, 'Register for GST with the ATO') },
+    evaluate: (pr) => bool(pr.gstRegistered, { yes: 'Registered for GST', no: 'Not registered for GST', ask: 'GST not answered', topic: 'GST' }, 'Register for GST with the ATO') },
   'not-foreign-subsidiary': { severity: 'hard', label: () => 'Not a subsidiary of a foreign company',
     evaluate: (pr) => pr.foreignSubsidiary === undefined ? unknown('Ownership not answered')
       : pr.foreignSubsidiary ? fail('Australian subsidiaries of foreign entities are excluded') : pass('Not a foreign subsidiary') },
@@ -175,9 +176,9 @@ export const GATES: Defs = {
       return unknown('R&D spend band straddles the minimum');
     } },
   'experimental-activities': { severity: 'hard', label: () => 'Genuinely experimental activities',
-    evaluate: (pr) => bool(pr.experimental, { yes: 'Has experimental activities', no: 'No technical uncertainty being resolved', ask: 'Experimental work not answered' }, undefined, false) },
+    evaluate: (pr) => bool(pr.experimental, { yes: 'Has experimental activities', no: 'No technical uncertainty being resolved', ask: 'Experimental work not answered', topic: 'experimental work' }, undefined, false) },
   'contemporaneous-records': { severity: 'soft', label: () => 'Keeps R&D records as work happens',
-    evaluate: (pr) => bool(pr.contemporaneousRecords, { yes: 'Keeps contemporaneous records', no: 'No contemporaneous R&D records', ask: 'Record-keeping not answered' }, 'Log hypotheses, experiments and results now') },
+    evaluate: (pr) => bool(pr.contemporaneousRecords, { yes: 'Keeps contemporaneous records', no: 'No contemporaneous R&D records', ask: 'Record-keeping not answered', topic: 'R&D records' }, 'Log hypotheses, experiments and results now') },
   'research-partner': { severity: 'hard',
     label: (p) => `Research partner: ${RESEARCH_LABELS[p.min]}${p.min === 'formal' ? '' : ' or stronger'}`,
     evaluate: (pr, p) => {
@@ -198,9 +199,9 @@ export const GATES: Defs = {
     evaluate: (pr) => pr.womenLed === 'yes' ? pass('Women-led') : pr.womenLed === 'no' ? fail('Only for women-led startups')
       : unknown('Optional question not answered') },
   'has-mvp': { severity: 'hard', label: () => 'Working MVP',
-    evaluate: (pr) => bool(pr.hasMvp, { yes: 'Has a working MVP', no: 'No working MVP yet', ask: 'MVP not answered' }, 'Ship a working MVP first') },
+    evaluate: (pr) => bool(pr.hasMvp, { yes: 'Has a working MVP', no: 'No working MVP yet', ask: 'MVP not answered', topic: 'MVP' }, 'Ship a working MVP first') },
   'has-website': { severity: 'soft', label: () => 'Working website',
-    evaluate: (pr) => bool(pr.hasWebsite, { yes: 'Has a website', no: 'No working website', ask: 'Website not answered' }, 'Publish a simple website on your company domain') },
+    evaluate: (pr) => bool(pr.hasWebsite, { yes: 'Has a website', no: 'No working website', ask: 'Website not answered', topic: 'website' }, 'Publish a simple website on your company domain') },
   'customer-evidence-at-least': { severity: 'hard',
     label: (p) => p.level === 'revenue' ? 'Paying customers' : `${capitalise(EVIDENCE_LABELS[p.level])} or stronger customer evidence`,
     evaluate: (pr, p) => !pr.customerEvidence ? unknown('Customer evidence not answered')
