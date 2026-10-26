@@ -1,4 +1,4 @@
-import type { Persona, Program } from '@/lib/schema';
+import type { Program } from '@/lib/schema';
 
 type Benefit = Program['benefit'];
 type Currency = Benefit['currency'];
@@ -64,8 +64,3 @@ export const LEVEL_LABELS: Record<Program['level'], string> = {
   university: 'University',
 };
 
-export const PERSONA_LABELS: Record<Persona, string> = {
-  bootstrapped: 'Bootstrapped',
-  'pre-raise': 'Pre-raise',
-  'vc-backed': 'VC-backed',
-};

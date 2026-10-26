@@ -3,21 +3,28 @@
 import type { Profile, Program } from '@/lib/schema';
 import { formatDate } from '@/lib/dates';
 import { useProgramStatus } from '@/lib/programs/use-status';
+import { useStoredProfile } from '@/lib/store/use-workspace';
 import { StatusPill } from '@/components/ui/status-pill';
 import { DeadlineText } from './deadline-text';
 import { StaleBadge } from './stale-badge';
 
+/** Without a `profile` prop, the stored profile is used (it matters for profile-relative deadlines). */
 type Props = { program: Program; profile?: Profile };
+
+function useStatus(program: Program, profile?: Profile) {
+  const stored = useStoredProfile();
+  return useProgramStatus(program, profile ?? stored);
+}
 
 /** Status pill: the declared state in static HTML, refined to the derived state once mounted. */
 export function ProgramStatusPill({ program, profile }: Props) {
-  const status = useProgramStatus(program, profile);
+  const status = useStatus(program, profile);
   return <StatusPill declared={program.status.state} derived={status?.state} daysToClose={status?.daysToClose} />;
 }
 
 /** The next upcoming deadline (close or milestone), worked out on the client. */
 export function NextDeadline({ program, profile }: Props) {
-  const status = useProgramStatus(program, profile);
+  const status = useStatus(program, profile);
   if (!program.deadlines.length) return <span>No fixed deadline</span>;
   if (!status) return <span aria-hidden="true" className="text-muted-fg">…</span>;
   if (!status.nextDeadline) return <span>None upcoming</span>;

@@ -9,6 +9,9 @@ import {
   filterPrograms, parseFilters, serializeFilters, type ProgramFilters, type StatusFilter,
 } from '@/lib/programs/filter';
 import { useStatuses } from '@/lib/programs/use-status';
+import { notAFitReasons } from '@/lib/programs/fit';
+import { useStoredProfile } from '@/lib/store/use-workspace';
+import { useNow } from '@/lib/use-now';
 import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,6 +35,8 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
 const STATUS_OPTIONS = STATUS_FILTERS.map((value) => ({ value, label: STATUS_LABELS[value] }));
 const TYPE_OPTIONS = PROGRAM_TYPES.map((value) => ({ value, label: TYPE_LABELS[value] }));
 const LEVEL_OPTIONS = PROGRAM_LEVELS.map((value) => ({ value, label: LEVEL_LABELS[value] }));
+
+const NONE = new Map<string, string>();
 
 const toggle = <T,>(list: readonly T[], v: T): T[] => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
@@ -67,7 +72,10 @@ function UrlDirectory({ programs }: { programs: Program[] }) {
 }
 
 function DirectoryView({ programs, filters, onChange }: { programs: Program[]; filters: Filters; onChange?: (f: Filters) => void }) {
-  const statuses = useStatuses(programs);
+  const profile = useStoredProfile();
+  const now = useNow();
+  const statuses = useStatuses(programs, profile);
+  const notFit = useMemo(() => (now ? notAFitReasons(programs, profile, now) : NONE), [programs, profile, now]);
   const results = useMemo(() => filterPrograms(programs, statuses, filters), [programs, statuses, filters]);
   const set = (patch: Partial<Filters>) => onChange?.({ ...filters, ...patch });
   const isDefault = serializeFilters(filters) === '';
@@ -123,7 +131,7 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {results.map((p) => (
             <li key={p.slug}>
-              <ProgramCard program={p} status={statuses.get(p.slug)} />
+              <ProgramCard program={p} status={statuses.get(p.slug)} notFitReason={notFit.get(p.slug)} />
             </li>
           ))}
         </ul>

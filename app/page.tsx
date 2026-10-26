@@ -1,16 +1,10 @@
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, CircleHelp, Lock, type LucideIcon } from 'lucide-react';
-import type { Persona } from '@/lib/schema';
+import { BadgeCheck, CircleHelp, Lock, type LucideIcon } from 'lucide-react';
 import { PROGRAMS } from '@/content/programs';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
 import { ClosingSoonStrip } from '@/components/programs/closing-soon-strip';
-
-const PERSONAS: { value: Persona; title: string; description: string }[] = [
-  { value: 'bootstrapped', title: 'Bootstrapped', description: 'Self-funded or customer-funded. Start with low-cost wins and matched vouchers.' },
-  { value: 'pre-raise', title: 'Pre-raise', description: 'Getting ready to raise. Build eligibility and evidence before the round.' },
-  { value: 'vc-backed', title: 'VC-backed', description: 'Institutionally funded. Unlock VC-gated credits and larger grants.' },
-];
+import { PersonaCards } from '@/components/home/persona-cards';
 
 const VALUES: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: BadgeCheck, title: 'Verified sources', text: 'Every program links to the official pages and shows the date it was checked.' },
@@ -33,31 +27,7 @@ export default function HomePage() {
           <h2 id="persona-heading" className="text-xl">Where is your company today?</h2>
           <p className="text-sm text-muted-fg">Pick one to start the assessment. You can change it at any time.</p>
         </div>
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {PERSONAS.map(({ value, title, description }) => (
-            <li key={value}>
-              <Link
-                href={`/assess/?persona=${value}`}
-                className={cn(
-                  'group flex h-full min-h-32 flex-col gap-2 rounded-lg border border-border bg-surface p-6',
-                  'transition-[border-color] duration-150 hover:border-accent',
-                  focusRing,
-                )}
-              >
-                <span className="flex items-center justify-between gap-2 text-xl font-semibold tracking-tight">
-                  {title}
-                  <ArrowRight
-                    aria-hidden="true"
-                    size={20}
-                    strokeWidth={1.5}
-                    className="shrink-0 text-muted-fg transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent"
-                  />
-                </span>
-                <span className="text-sm text-muted-fg">{description}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <PersonaCards />
         <p className="text-sm text-muted-fg">
           Not ready to answer questions?{' '}
           <Link href="/programs/" className={cn('rounded-sm text-accent underline-offset-4 hover:underline', focusRing)}>

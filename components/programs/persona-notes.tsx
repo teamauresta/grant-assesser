@@ -1,6 +1,6 @@
 import { UserRound } from 'lucide-react';
 import { PERSONAS, type Persona, type Program } from '@/lib/schema';
-import { PERSONA_LABELS } from '@/lib/format';
+import { PERSONAS_INFO } from '@/lib/personas';
 
 /**
  * Persona-specific advice. With a persona (from the stored profile, wired in Task 13) it is one callout
@@ -11,10 +11,10 @@ export function PersonaNotes({ personas, persona }: { personas: Program['persona
   if (persona) {
     if (!note) return null;
     return (
-      <aside aria-label={`Advice for ${PERSONA_LABELS[persona]} companies`} className="flex gap-3 rounded-lg border border-border bg-surface p-4">
+      <aside aria-label={`Advice for ${PERSONAS_INFO[persona].label} companies`} className="flex gap-3 rounded-lg border border-border bg-surface p-4">
         <UserRound aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
         <p>
-          <span className="font-semibold">For {PERSONA_LABELS[persona]} companies: </span>
+          <span className="font-semibold">For {PERSONAS_INFO[persona].label} companies: </span>
           {note}
         </p>
       </aside>
@@ -32,7 +32,7 @@ export function PersonaNotes({ personas, persona }: { personas: Program['persona
       <dl className="flex flex-col gap-2">
         {entries.map(([p, text]) => (
           <div key={p} className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
-            <dt className="shrink-0 text-sm font-medium sm:w-28">{PERSONA_LABELS[p]}</dt>
+            <dt className="shrink-0 text-sm font-medium sm:w-28">{PERSONAS_INFO[p].label}</dt>
             <dd className="text-sm text-muted-fg">{text}</dd>
           </div>
         ))}

@@ -9,10 +9,14 @@ export type Assessment = { program: Program; status: StatusInfo; gates: GateResu
 
 export const GROUP_ORDER: Group[] = ['act-now', 'prepare', 'watch', 'not-a-fit'];
 
+/** The first required check that fails and cannot be fixed: why a program is not a fit. */
+export const blockingGate = (gates: GateResult[]): GateResult | undefined =>
+  gates.find((g) => g.severity === 'hard' && g.result === 'fail' && !g.fixable);
+
 export function groupFor(state: DerivedState, gates: GateResult[]): Group | null {
   if (state === 'closed') return null;
   const hard = gates.filter((g) => g.severity === 'hard');
-  if (hard.some((g) => g.result === 'fail' && !g.fixable)) return 'not-a-fit';
+  if (blockingGate(gates)) return 'not-a-fit';
   if (state === 'upcoming' || state === 'paused' || state === 'unverified') return 'watch';
   const blocked = hard.some((g) => g.result !== 'pass') || gates.some((g) => g.severity === 'soft' && g.result === 'fail');
   return blocked ? 'prepare' : 'act-now';

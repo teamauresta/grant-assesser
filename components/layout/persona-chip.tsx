@@ -5,12 +5,18 @@ import { usePathname } from 'next/navigation';
 import { UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
+import { PERSONAS_INFO } from '@/lib/personas';
+import { useWorkspace } from '@/lib/store/use-workspace';
 import { isActivePath } from './nav-items';
 
-/** Links to settings and names the current persona. Task 13 replaces the placeholder with the store's persona. */
+/**
+ * Links to settings and names the stored persona. Shows "Choose persona" on the server and until the
+ * workspace has loaded, so the static HTML and first client render match.
+ */
 export function PersonaChip({ className }: { className?: string }) {
   const pathname = usePathname();
   const active = isActivePath(pathname, '/settings/');
+  const persona = useWorkspace((s) => (s.ready ? s.ws.profile.persona : undefined));
   return (
     <Link
       href="/settings/"
@@ -23,7 +29,14 @@ export function PersonaChip({ className }: { className?: string }) {
       )}
     >
       <UserRound aria-hidden="true" size={16} strokeWidth={1.5} />
-      Choose persona
+      {persona ? (
+        <>
+          <span className="sr-only">Persona: </span>
+          {PERSONAS_INFO[persona].label}
+        </>
+      ) : (
+        'Choose persona'
+      )}
     </Link>
   );
 }

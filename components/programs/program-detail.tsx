@@ -9,8 +9,7 @@ import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
-import { EligibilityList } from './eligibility-list';
-import { PersonaNotes } from './persona-notes';
+import { ProgramEligibility, ProgramPersonaNotes } from './personalised';
 import { NextDeadline, ProgramStatusPill, VerifiedNote } from './program-status';
 
 const linkClasses = cn('rounded-sm text-accent underline underline-offset-4 hover:no-underline', focusRing);
@@ -28,7 +27,10 @@ function hostname(url: string): string {
   return new URL(url).hostname.replace(/^www\./, '');
 }
 
-/** Full program page. Server-rendered; status, deadlines, staleness and eligibility results refine on the client. */
+/**
+ * Full program page. Server-rendered; status, deadlines, staleness, persona advice and eligibility
+ * results refine on the client from the stored profile.
+ */
 export function ProgramDetail({ program: p }: { program: Program }) {
   const { content } = p;
   return (
@@ -80,7 +82,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
         </div>
       </header>
 
-      <PersonaNotes personas={p.personas} />
+      <ProgramPersonaNotes personas={p.personas} />
 
       <Section id="what" title="What it is">
         <p>{content.summary}</p>
@@ -88,7 +90,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
       </Section>
 
       <Section id="eligibility" title="Eligibility">
-        <EligibilityList gates={p.gates} />
+        <ProgramEligibility gates={p.gates} />
       </Section>
 
       {content.howToApply.length > 0 && (
