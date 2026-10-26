@@ -11,6 +11,7 @@ import {
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
+import { downloadFile } from '@/lib/download';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
 import { ReportPreview } from './report-preview';
@@ -35,21 +36,6 @@ async function renderPdf(data: ReportData): Promise<Blob> {
   } catch {
     return await pdf(<ReportDocument data={data} font="Helvetica" />).toBlob();
   }
-}
-
-/**
- * Saves a blob as a file. Kept local for now: lib/download.ts (from the Settings work) does the same
- * and should replace this once both have landed.
- */
-function saveBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** The report builder: section checkboxes, an HTML preview and Download PDF. */
@@ -79,7 +65,7 @@ function BuilderView({ now }: { now: Date }) {
     setSaved(null);
     try {
       const filename = reportFilename(data.companyName, now);
-      saveBlob(await renderPdf(data), filename);
+      downloadFile(filename, await renderPdf(data));
       setSaved(filename);
     } catch (e) {
       setError(e instanceof Error && e.message ? e.message : 'Something went wrong while making the PDF.');
