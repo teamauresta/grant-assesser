@@ -3,7 +3,11 @@ import aea from './aea';
 import aiAdoptCentres from './ai-adopt-centres';
 import aprIntern from './apr-intern';
 import arenaAdvancingRenewables from './arena-advancing-renewables';
+import awsActivateFounders from './aws-activate-founders';
+import awsActivatePortfolio from './aws-activate-portfolio';
 import brii from './brii';
+import claudeStartups from './claude-startups';
+import cloudflareStartups from './cloudflare-startups';
 import crcAiAccelerator from './crc-ai-accelerator';
 import crcP from './crc-p';
 import csiroInnovateToGrow from './csiro-innovate-to-grow';
@@ -11,8 +15,13 @@ import csiroKickStart from './csiro-kick-start';
 import defenceIndustryDevelopment from './defence-industry-development';
 import emdg from './emdg';
 import esic from './esic';
+import googleCloudAi from './google-cloud-ai';
+import googleCloudStart from './google-cloud-start';
 import industryGrowthProgram from './industry-growth-program';
+import microsoftForStartups from './microsoft-for-startups';
 import nationalIndustryPhd from './national-industry-phd';
+import nvidiaInception from './nvidia-inception';
+import openaiStartups from './openai-startups';
 import rdti from './rdti';
 
 const raw = [
@@ -20,7 +29,11 @@ const raw = [
   aiAdoptCentres,
   aprIntern,
   arenaAdvancingRenewables,
+  awsActivateFounders,
+  awsActivatePortfolio,
   brii,
+  claudeStartups,
+  cloudflareStartups,
   crcAiAccelerator,
   crcP,
   csiroInnovateToGrow,
@@ -28,8 +41,13 @@ const raw = [
   defenceIndustryDevelopment,
   emdg,
   esic,
+  googleCloudAi,
+  googleCloudStart,
   industryGrowthProgram,
+  microsoftForStartups,
   nationalIndustryPhd,
+  nvidiaInception,
+  openaiStartups,
   rdti,
 ];
 
