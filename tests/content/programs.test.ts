@@ -24,6 +24,14 @@ describe('program content', () => {
     const slugs = new Set(PROGRAMS.map((p) => p.slug));
     for (const p of PROGRAMS) for (const s of p.stacking) expect(slugs.has(s.with), `${p.slug} → ${s.with}`).toBe(true);
   });
+  it('exclusive groups have at least two members of the same benefit kind and currency', () => {
+    const groups = Map.groupBy(PROGRAMS.filter((p) => p.exclusiveGroup), (p) => p.exclusiveGroup!);
+    expect([...groups.keys()].sort()).toEqual(['aws-activate', 'google-cloud']);
+    for (const [g, ps] of groups) {
+      expect(ps.length, g).toBeGreaterThanOrEqual(2);
+      expect(new Set(ps.map((p) => `${p.benefit.kind}/${p.benefit.currency}`)).size, g).toBe(1);
+    }
+  });
   it('benefit min ≤ max', () => {
     for (const p of PROGRAMS) if (p.benefit.min !== undefined && p.benefit.max !== undefined) expect(p.benefit.min, p.slug).toBeLessThanOrEqual(p.benefit.max);
   });

@@ -56,23 +56,42 @@ function rdtiRange(rdSpend: NonNullable<Profile['rdSpend']>, profile: Profile): 
 
 export type FundingEstimate = { aud: { low: number; high: number }; creditsUsd: { low: number; high: number }; includedSlugs: string[] };
 
+type Contribution = { slug: string; bucket: 'aud' | 'creditsUsd'; low: number; high: number; group?: string };
+
+function contribution(a: Assessment, profile: Profile): Contribution | null {
+  if (a.group !== 'act-now' && a.group !== 'prepare') return null;
+  if (a.gates.some((g) => g.severity === 'hard' && g.result !== 'pass')) return null;
+  const b = a.program.benefit;
+  if (b.consortium) return null;
+  const base = { slug: a.program.slug, group: a.program.exclusiveGroup };
+  if ((b.kind === 'cash' || b.kind === 'tax-offset') && b.currency === 'AUD') {
+    if (b.estimator === 'rdti') {
+      if (!profile.rdSpend) return null; // nothing to estimate from yet
+      const [low, high] = rdtiRange(profile.rdSpend, profile);
+      return { ...base, bucket: 'aud', low, high };
+    }
+    return { ...base, bucket: 'aud', low: b.min ?? 0, high: b.max ?? b.min ?? 0 };
+  }
+  if (b.kind === 'credits' && b.currency === 'USD') return { ...base, bucket: 'creditsUsd', low: b.min ?? 0, high: b.max ?? b.min ?? 0 };
+  return null;
+}
+
+/**
+ * Sums the countable programs. Within an exclusiveGroup only the eligible program
+ * with the highest max counts (ties go to the higher min); the others are alternatives.
+ */
 export function estimateFunding(assessments: Assessment[], profile: Profile): FundingEstimate {
   const out: FundingEstimate = { aud: { low: 0, high: 0 }, creditsUsd: { low: 0, high: 0 }, includedSlugs: [] };
-  for (const a of assessments) {
-    if (a.group !== 'act-now' && a.group !== 'prepare') continue;
-    if (a.gates.some((g) => g.severity === 'hard' && g.result !== 'pass')) continue;
-    const b = a.program.benefit;
-    if (b.consortium) continue;
-    if ((b.kind === 'cash' || b.kind === 'tax-offset') && b.currency === 'AUD') {
-      let lo: number, hi: number;
-      if (b.estimator === 'rdti') {
-        if (!profile.rdSpend) continue; // nothing to estimate from yet
-        [lo, hi] = rdtiRange(profile.rdSpend, profile);
-      } else [lo, hi] = [b.min ?? 0, b.max ?? b.min ?? 0];
-      out.aud.low += lo; out.aud.high += hi; out.includedSlugs.push(a.program.slug);
-    } else if (b.kind === 'credits' && b.currency === 'USD') {
-      out.creditsUsd.low += b.min ?? 0; out.creditsUsd.high += b.max ?? b.min ?? 0; out.includedSlugs.push(a.program.slug);
-    }
+  const items = assessments.map((a) => contribution(a, profile)).filter((c): c is Contribution => c !== null);
+  const best = new Map<string, Contribution>();
+  for (const c of items) {
+    if (!c.group) continue;
+    const cur = best.get(c.group);
+    if (!cur || c.high > cur.high || (c.high === cur.high && c.low > cur.low)) best.set(c.group, c);
+  }
+  for (const c of items) {
+    if (c.group && best.get(c.group) !== c) continue;
+    out[c.bucket].low += c.low; out[c.bucket].high += c.high; out.includedSlugs.push(c.slug);
   }
   return out;
 }

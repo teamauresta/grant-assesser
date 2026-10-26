@@ -62,6 +62,7 @@ const program: ProgramInput = {
       { url: 'https://cloud.google.com/startup/ai', title: 'Google for Startups Cloud Program for AI startups', official: true },
     ],
   },
+  exclusiveGroup: 'google-cloud',
   changelog: [
     { date: '2026-10-26', note: 'Initial verified record' },
     { date: '2026-10-27', note: 'Added the product-company check: the AI tier page excludes dev shops, consultancies and agencies' },

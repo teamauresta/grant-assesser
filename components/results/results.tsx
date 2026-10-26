@@ -8,6 +8,7 @@ import { PROGRAMS } from '@/content/programs';
 import { assessAll, estimateFunding, type Track } from '@/lib/assess';
 import { GROUP_INFO, TRACK_INFO, countedPrograms, groupsForTrack, type ResultGroup } from '@/lib/assessment/results';
 import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS } from '@/lib/personas';
+import { DISCLAIMER } from '@/lib/copy';
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
@@ -20,8 +21,6 @@ import { AssessmentRow } from './assessment-row';
 import { FundingSummary } from './funding-summary';
 
 const TRACKS: Track[] = ['funding', 'quick-wins'];
-
-export const DISCLAIMER = "General information, not financial or tax advice. Check each program's official guidelines before applying.";
 
 /**
  * Assessment results from the stored profile. Needs the loaded workspace and "now", so the static

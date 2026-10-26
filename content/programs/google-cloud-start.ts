@@ -58,6 +58,7 @@ const program: ProgramInput = {
       { url: 'https://cloud.google.com/startup/pre-funded', title: 'Google for Startups Cloud Program: Start tier', official: true },
     ],
   },
+  exclusiveGroup: 'google-cloud',
   changelog: [
     { date: '2026-10-26', note: 'Initial verified record' },
     { date: '2026-10-27', note: 'Corrected the Workspace caveat: the paid-Workspace exclusion applies to the free Workspace offer, not to the credits' },

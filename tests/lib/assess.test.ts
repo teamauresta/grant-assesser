@@ -66,4 +66,31 @@ describe('estimateFunding', () => {
     expect(e.creditsUsd).toEqual({ low: 0, high: 0 });
     expect(e.includedSlugs).toEqual([]);
   });
+  describe('exclusive groups', () => {
+    const credit = (slug: string, min: number | undefined, max: number, exclusiveGroup?: string) =>
+      assessProgram(makeProgram({ slug, exclusiveGroup, benefit: { kind: 'credits', currency: 'USD', note: '', min, max } }), {}, now);
+    it('counts only the eligible program with the highest max in a group', () => {
+      const founders = credit('aws-founders', 1_000, 5_000, 'aws');
+      const portfolio = credit('aws-portfolio', undefined, 200_000, 'aws');
+      const other = credit('other', 1_000, 10_000);
+      const e = estimateFunding([founders, portfolio, other], {});
+      expect(e.creditsUsd).toEqual({ low: 1_000, high: 210_000 });
+      expect(e.includedSlugs).toEqual(['aws-portfolio', 'other']);
+    });
+    it('ties on max go to the higher min', () => {
+      const a = credit('a', 1_000, 5_000, 'g');
+      const b = credit('b', 2_000, 5_000, 'g');
+      const e = estimateFunding([a, b], {});
+      expect(e.creditsUsd).toEqual({ low: 2_000, high: 5_000 });
+      expect(e.includedSlugs).toEqual(['b']);
+    });
+    it('an ineligible program does not displace an eligible alternative', () => {
+      const small = credit('small', 1_000, 5_000, 'aws');
+      const big = assessProgram(makeProgram({ slug: 'big', exclusiveGroup: 'aws', gates: ['au-entity'],
+        benefit: { kind: 'credits', currency: 'USD', note: '', max: 200_000 } }), {}, now);
+      const e = estimateFunding([small, big], {});
+      expect(e.creditsUsd).toEqual({ low: 1_000, high: 5_000 });
+      expect(e.includedSlugs).toEqual(['small']);
+    });
+  });
 });

@@ -61,6 +61,7 @@ const program: ProgramInput = {
       { url: 'https://aws.amazon.com/aws-startups/learn/applying-for-aws-activate-credits-a-step-by-step-guide/', title: 'Applying for AWS Activate Credits: a step-by-step guide', official: true },
     ],
   },
+  exclusiveGroup: 'aws-activate',
   changelog: [
     { date: '2026-10-26', note: 'Initial verified record' },
     { date: '2026-10-27', note: 'Added caveat on the self-funded and prior-credit wording in the AWS application guide' },

@@ -136,6 +136,8 @@ export const ProgramSchema = z.object({
     sources: z.array(z.object({ url: httpUrl, title: z.string(), official: z.boolean() })).min(1),
   }),
   changelog: z.array(z.object({ date: isoDate, note: z.string() })).default([]),
+  /** Programs sharing a group are alternatives; only the best one counts toward estimates. */
+  exclusiveGroup: z.string().optional(),
 });
 export type Program = z.infer<typeof ProgramSchema>;
 export type ProgramInput = z.input<typeof ProgramSchema>;
