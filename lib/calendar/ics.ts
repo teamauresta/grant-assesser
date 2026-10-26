@@ -1,4 +1,5 @@
 import { addDays } from '@/lib/dates';
+import { downloadFile } from '@/lib/download';
 
 /** One calendar event. All-day events use `date`; timed events use `at` (an instant) and `durationMinutes`. */
 export type CalEvent = {
@@ -54,11 +55,5 @@ export function buildIcs(events: CalEvent[], now: Date): string {
 
 /** Saves an .ics file in the browser. Client only. */
 export function downloadIcs(filename: string, ics: string) {
-  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-  document.body.append(a);
-  a.click();
-  a.remove();
-  // Revoking synchronously can cancel the download in some browsers (notably Safari and Firefox).
-  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  downloadFile(filename, ics, 'text/calendar;charset=utf-8');
 }
