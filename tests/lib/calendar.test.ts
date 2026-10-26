@@ -36,3 +36,15 @@ describe('links', () => {
     expect(u.searchParams.get('text')).toBe('Submit EOI');
   });
 });
+
+describe('ics line injection', () => {
+  it('strips CR and LF from UID and URL so a value cannot start a new property', () => {
+    const evil = { ...allDay, uid: 'g1\r\nX-INJECTED:1@grant-navigator', url: 'https://x.test/\nX-INJECTED:2' };
+    const out = buildIcs([evil], now);
+    const lines = out.split('\r\n');
+    expect(lines.some((l) => l.startsWith('X-INJECTED'))).toBe(false);
+    expect(out).not.toMatch(/[^\r]\n/); // every line break is CRLF from the builder itself
+    expect(lines).toContain('UID:g1X-INJECTED:1@grant-navigator');
+    expect(out).toContain('URL:https://x.test/X-INJECTED:2');
+  });
+});

@@ -35,5 +35,6 @@ export function parseAmount(text: string): number | undefined {
   if (!t) return undefined;
   const m = /^(\d+(?:\.\d+)?)([km]?)$/.exec(t);
   if (!m) return NaN;
-  return Math.round(Number(m[1]) * (m[2] === 'k' ? 1_000 : m[2] === 'm' ? 1_000_000 : 1));
+  const n = Math.round(Number(m[1]) * (m[2] === 'k' ? 1_000 : m[2] === 'm' ? 1_000_000 : 1));
+  return Number.isFinite(n) ? n : NaN;
 }

@@ -8,6 +8,12 @@ const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:MM betwe
 const httpUrl = z.url({ protocol: /^https?$/ });
 const score = z.number().min(0).max(5);
 
+/**
+ * Limits on user-entered workspace data. Inputs set these as `maxLength`, because a stored value
+ * that breaks the schema makes the whole workspace unreadable on the next load.
+ */
+export const LIMITS = { title: 200, name: 200, notes: 5000, reminders: 5, reminderDays: 365 } as const;
+
 export const PERSONAS = ['bootstrapped', 'pre-raise', 'vc-backed'] as const;
 export const Persona = z.enum(PERSONAS);
 export type Persona = z.infer<typeof Persona>;
@@ -144,7 +150,7 @@ export type ProgramInput = z.input<typeof ProgramSchema>;
 
 export const ProfileSchema = z.object({
   persona: Persona.optional(),
-  companyName: z.string().optional(),
+  companyName: z.string().max(LIMITS.name).optional(),
   hasAcn: z.boolean().optional(),
   gstRegistered: z.boolean().optional(),
   incorporatedOn: isoDate.optional(),
@@ -176,35 +182,44 @@ export const ProfileSchema = z.object({
 export type Profile = z.infer<typeof ProfileSchema>;
 
 export const STAGES = ['considering', 'preparing', 'submitted', 'awarded', 'declined', 'withdrawn'] as const;
-const timestamps = { createdAt: z.string(), updatedAt: z.string() };
+
+/** A UTC instant as written by `Date.prototype.toISOString()`, e.g. 2026-10-27T00:00:00.000Z. */
+const isoDateTime = z.iso.datetime().refine((s) => Number.isFinite(Date.parse(s)), 'Not a real date and time');
+/** `newId()` output (a UUID) or a short hand-made id. Ids end up in calendar UIDs and URLs. */
+const id = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, 'Expected 1–64 letters, digits, _ or -');
+/** Distinct whole days before a due date, as calendar alarms. */
+const reminderDays = z.array(z.number().int().nonnegative().max(LIMITS.reminderDays))
+  .max(LIMITS.reminders)
+  .refine((days) => new Set(days).size === days.length, 'Reminders must not repeat');
+const timestamps = { createdAt: isoDateTime, updatedAt: isoDateTime };
 
 export const ApplicationSchema = z.object({
-  id: z.string(), programSlug: z.string().optional(), customName: z.string().optional(),
-  stage: z.enum(STAGES), expectedAmount: z.number().optional(), notes: z.string().default(''), ...timestamps,
+  id, programSlug: z.string().regex(/^[a-z0-9-]{1,100}$/).optional(), customName: z.string().max(LIMITS.name).optional(),
+  stage: z.enum(STAGES), expectedAmount: z.number().optional(), notes: z.string().max(LIMITS.notes).default(''), ...timestamps,
 });
 export type Application = z.infer<typeof ApplicationSchema>;
 
 export const GoalSchema = z.object({
-  id: z.string(), applicationId: z.string().optional(), title: z.string(), dueDate: isoDate.optional(),
+  id, applicationId: id.optional(), title: z.string().max(LIMITS.title), dueDate: isoDate.optional(),
   status: z.enum(['todo', 'doing', 'done', 'blocked']),
-  steps: z.array(z.object({ id: z.string(), title: z.string(), done: z.boolean() })).default([]),
-  reminderOffsetsDays: z.array(z.number().int().nonnegative()).default([7, 1]),
+  steps: z.array(z.object({ id, title: z.string().max(LIMITS.title), done: z.boolean() })).default([]),
+  reminderOffsetsDays: reminderDays.default([7, 1]),
   source: z.enum(['template', 'user', 'persona']), sequence: z.number().int().default(0), ...timestamps,
 });
 export type Goal = z.infer<typeof GoalSchema>;
 
 export const WorkspaceSchema = z.object({
   schemaVersion: z.literal(1),
-  workspaceId: z.string(),
+  workspaceId: id,
   profile: ProfileSchema,
   pipeline: z.array(ApplicationSchema),
   goals: z.array(GoalSchema),
   settings: z.object({
     theme: z.enum(['system', 'light', 'dark']).default('system'),
-    remindersDefault: z.array(z.number().int()).default([7, 1]),
+    remindersDefault: reminderDays.default([7, 1]),
   }),
-  lastExportedAt: z.string().optional(),
-  lastCalendarExportAt: z.string().optional(),
+  lastExportedAt: isoDateTime.optional(),
+  lastCalendarExportAt: isoDateTime.optional(),
   changesSinceCalendarExport: z.number().int().default(0),
   ...timestamps,
 });

@@ -70,6 +70,15 @@ describe('Settings', () => {
     expect(screen.getByText(/Keep at least one reminder/)).toBeInTheDocument();
   });
 
+  it('keeps at most 5 default reminders, counting ones from an imported file', async () => {
+    const user = userEvent.setup();
+    useWorkspace.setState({ ws: { ...emptyWorkspace(now), settings: { theme: 'system', remindersDefault: [30, 21, 2, 7, 1] } } });
+    render(<Settings />);
+    await user.click(screen.getByRole('checkbox', { name: '14 days before' }));
+    expect(useWorkspace.getState().ws.settings.remindersDefault).toEqual([30, 21, 2, 7, 1]);
+    expect(screen.getByText(/at most 5 reminders/i)).toBeInTheDocument();
+  });
+
   it('exports and records the export', async () => {
     const user = userEvent.setup();
     render(<Settings />);

@@ -16,6 +16,9 @@ export function escapeText(s: string): string {
   return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 }
 
+/** For values that are not TEXT (UID, URL): drops CR and LF so a value can never start a new line. */
+const oneLine = (s: string) => s.replace(/[\r\n]/g, '');
+
 /** Folds a content line to at most 75 octets per line, never splitting a character. */
 export function foldLine(line: string): string {
   const enc = new TextEncoder();
@@ -35,7 +38,7 @@ export function foldLine(line: string): string {
 export function buildIcs(events: CalEvent[], now: Date): string {
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Grant Navigator//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
   for (const e of events) {
-    lines.push('BEGIN:VEVENT', `UID:${e.uid}`, `DTSTAMP:${utc(now)}`, `SEQUENCE:${e.sequence}`, `SUMMARY:${escapeText(e.title)}`);
+    lines.push('BEGIN:VEVENT', `UID:${oneLine(e.uid)}`, `DTSTAMP:${utc(now)}`, `SEQUENCE:${e.sequence}`, `SUMMARY:${escapeText(e.title)}`);
     if (e.allDay || !e.at) {
       lines.push(`DTSTART;VALUE=DATE:${compactDate(e.date)}`, `DTEND;VALUE=DATE:${compactDate(addDays(e.date, 1))}`);
     } else {
@@ -43,7 +46,7 @@ export function buildIcs(events: CalEvent[], now: Date): string {
     }
     const desc = [e.description, e.url].filter(Boolean).join('\n\n');
     if (desc) lines.push(`DESCRIPTION:${escapeText(desc)}`);
-    if (e.url) lines.push(`URL:${e.url}`);
+    if (e.url) lines.push(`URL:${oneLine(e.url)}`);
     for (const d of e.alarmsDaysBefore) {
       lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapeText(`Reminder: ${e.title}`)}`, `TRIGGER:-P${d}D`, 'END:VALARM');
     }

@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Download, RotateCcw, ShieldCheck } from 'lucide-react';
-import { PERSONAS } from '@/lib/schema';
+import { LIMITS, PERSONAS } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { QUESTIONS } from '@/lib/assessment/questions';
 import { formatDate, todayISO } from '@/lib/dates';
@@ -149,10 +149,15 @@ function RemindersSection() {
       setError('Keep at least one reminder. Turn another on before turning this one off.');
       return;
     }
-    setError(undefined);
     // Keep any non-standard offsets (e.g. from an imported file) that this form doesn't show.
     const extras = current.filter((d) => !standard.has(d));
-    setSettings({ remindersDefault: [...new Set([...extras, ...values.map(Number)])].sort((a, b) => b - a) });
+    const next = [...new Set([...extras, ...values.map(Number)])].sort((a, b) => b - a);
+    if (next.length > LIMITS.reminders) {
+      setError(`Choose at most ${LIMITS.reminders} reminders. Turn one off before turning this one on.`);
+      return;
+    }
+    setError(undefined);
+    setSettings({ remindersDefault: next });
   };
   return (
     <Section id="reminders" title="Reminders">

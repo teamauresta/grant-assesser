@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Goal } from '@/lib/schema';
+import { LIMITS, type Goal } from '@/lib/schema';
 import { newId } from '@/lib/id';
 import { applicationName } from '@/lib/plan/applications';
 import { useWorkspace } from '@/lib/store/use-workspace';
@@ -63,6 +63,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
   const [steps, setSteps] = useState<Step[]>(() => goal?.steps.map((s) => ({ ...s })) ?? []);
   const [reminders, setReminders] = useState<string[]>(() => (goal?.reminderOffsetsDays ?? remindersDefault).map(String));
   const [error, setError] = useState<string>();
+  const [reminderError, setReminderError] = useState<string>();
   const stepRefs = useRef<(HTMLInputElement | null)[]>([]);
   const focusStep = useRef<number | null>(null);
 
@@ -75,6 +76,10 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
     if (!trimmed) {
       setError('Enter a title, for example "Draft the project budget".');
       titleRef.current?.focus();
+      return;
+    }
+    if (reminders.length > LIMITS.reminders) {
+      setReminderError(`Choose at most ${LIMITS.reminders} reminders.`);
       return;
     }
     const fields = {
@@ -108,6 +113,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
             {...control}
             ref={titleRef}
             value={title}
+            maxLength={LIMITS.title}
             autoComplete="off"
             onChange={(e) => { setTitle(e.target.value); if (error && e.target.value.trim()) setError(undefined); }}
           />
@@ -141,6 +147,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
                   }}
                   aria-label={`Step ${i + 1}`}
                   value={s.title}
+                  maxLength={LIMITS.title}
                   onChange={(e) => setSteps((all) => all.map((x) => (x.id === s.id ? { ...x, title: e.target.value } : x)))}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addStep(); } }}
                 />
@@ -173,7 +180,8 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
         help="Alarms on the calendar event before the due date."
         columns={2}
         value={reminders}
-        onChange={setReminders}
+        onChange={(v) => { setReminders(v); if (v.length <= LIMITS.reminders) setReminderError(undefined); }}
+        error={reminderError}
         options={reminderValues.map((v) => ({ value: v, label: `${v} ${v === '1' ? 'day' : 'days'} before` }))}
       />
     </form>

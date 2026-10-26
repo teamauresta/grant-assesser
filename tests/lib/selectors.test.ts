@@ -156,4 +156,7 @@ describe('parseAmount', () => {
     expect(parseAmount('1.2M')).toBe(1_200_000);
     expect(parseAmount('lots')).toBeNaN();
   });
+  it('rejects amounts too large to store (the workspace schema refuses Infinity)', () => {
+    expect(parseAmount('9'.repeat(400))).toBeNaN();
+  });
 });

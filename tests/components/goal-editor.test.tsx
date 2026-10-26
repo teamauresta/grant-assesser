@@ -96,4 +96,22 @@ describe('parsePlanTab', () => {
     expect(parsePlanTab('nonsense', null)).toBe('pipeline');
     expect(parsePlanTab('calendar', 'g1')).toBe('goals');
   });
+
+  it('caps text to what the workspace schema accepts and refuses more than 5 reminders', async () => {
+    const id = useWorkspace.getState().addGoal({ title: 'Many reminders', reminderOffsetsDays: [30, 21, 2, 7, 1] });
+    const goal = useWorkspace.getState().ws.goals.find((g) => g.id === id)!;
+    const onClose = vi.fn();
+    render(<GoalEditor open goal={goal} onClose={onClose} />);
+    const user = userEvent.setup();
+    expect(screen.getByRole('textbox', { name: /title/i })).toHaveAttribute('maxLength', '200');
+    await user.click(screen.getByRole('button', { name: 'Add step' }));
+    expect(screen.getAllByRole('textbox').at(-1)).toHaveAttribute('maxLength', '200');
+
+    const reminders = within(screen.getByRole('group', { name: /calendar reminders/i }));
+    await user.click(reminders.getByRole('checkbox', { name: '14 days before' }));
+    await user.click(screen.getByRole('button', { name: /save/i }));
+    expect(screen.getByText(/at most 5 reminders/i)).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(useWorkspace.getState().ws.goals.find((g) => g.id === id)!.reminderOffsetsDays).toEqual([30, 21, 2, 7, 1]);
+  });
 });

@@ -3,7 +3,7 @@
 import { useCallback, useId, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CircleX, Plus, SquareKanban, Trophy, Undo2 } from 'lucide-react';
-import type { Application } from '@/lib/schema';
+import { LIMITS, type Application } from '@/lib/schema';
 import { BOARD_COLUMNS, STAGE_LABELS, applicationName, columnOf, type BoardColumn, type Stage } from '@/lib/plan/applications';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
@@ -244,7 +244,7 @@ function NotesDialog({ application, name, onClose }: { application: Application;
     >
       <form id={formId} onSubmit={save}>
         <Field label="Notes" help="Contacts, reference numbers, what the assessor asked. Saved in this browser only.">
-          {(control) => <Textarea {...control} rows={6} value={notes} onChange={(e) => setNotes(e.target.value)} />}
+          {(control) => <Textarea {...control} rows={6} maxLength={LIMITS.notes} value={notes} onChange={(e) => setNotes(e.target.value)} />}
         </Field>
       </form>
     </Dialog>
@@ -283,7 +283,7 @@ function AddCustomDialog({ open, onClose, onAdded }: { open: boolean; onClose: (
       <form id={formId} noValidate onSubmit={save}>
         <Field label="Name" required error={error}>
           {(control) => (
-            <Input {...control} ref={inputRef} value={name} autoComplete="off" onChange={(e) => { setName(e.target.value); if (error && e.target.value.trim()) setError(undefined); }} />
+            <Input {...control} ref={inputRef} value={name} maxLength={LIMITS.name} autoComplete="off" onChange={(e) => { setName(e.target.value); if (error && e.target.value.trim()) setError(undefined); }} />
           )}
         </Field>
       </form>

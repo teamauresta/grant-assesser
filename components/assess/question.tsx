@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Profile } from '@/lib/schema';
-import { CREDIT_PROVIDERS, ProfileSchema } from '@/lib/schema';
+import { CREDIT_PROVIDERS, LIMITS, ProfileSchema } from '@/lib/schema';
 import { hasUnsure, type OptionValue, type Question as QuestionDef } from '@/lib/assessment/questions';
 import { STACK_LABELS } from '@/lib/format';
 import { ChoiceGroup, type ChoiceOption } from '@/components/ui/choice-group';
@@ -195,6 +195,7 @@ function TextInput({ question: q, profile, onAnswer }: QuestionProps) {
         <Input
           {...control}
           type="text"
+          maxLength={LIMITS.name}
           autoComplete="organization"
           value={(profile[q.id] as string | undefined) ?? ''}
           onChange={(e) => onAnswer({ [q.id]: e.currentTarget.value || undefined })}
