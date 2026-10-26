@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveStatus, hasPastCloseOnly, resolveDeadlines } from '@/lib/status';
+import { deriveStatus, hasPastCloseOnly, resolveDeadlines, statusLabel } from '@/lib/status';
 import { makeProgram } from '../helpers/program';
 
 const now = new Date('2026-10-27T00:00:00Z'); // 11:00 AEDT, 27 Oct 2026
@@ -75,5 +75,15 @@ describe('hasPastCloseOnly', () => {
   it('upcoming/paused/unverified with a past close are not auto-closed', () => {
     for (const state of ['upcoming', 'paused', 'unverified'] as const)
       expect(deriveStatus(makeProgram({ status: { state }, deadlines: close('2026-09-01') }), now).state).toBe(state);
+  });
+});
+
+describe('statusLabel', () => {
+  it('lives in lib so reports can word statuses without importing a component', () => {
+    expect(statusLabel('open')).toBe('Open');
+    expect(statusLabel('closing-soon')).toBe('Closing soon');
+    expect(statusLabel('closing-soon', 0)).toBe('Closes today');
+    expect(statusLabel('closing-soon', 1)).toBe('Closes tomorrow');
+    expect(statusLabel('closing-soon', 5)).toBe('Closes in 5 days');
   });
 });

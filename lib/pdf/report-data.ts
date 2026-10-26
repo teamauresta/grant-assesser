@@ -6,8 +6,7 @@ import { DEFAULT_RESULTS, PERSONAS_INFO, PERSONA_RESULTS } from '@/lib/personas'
 import { DISCLAIMER } from '@/lib/copy';
 import { formatDate, todayISO } from '@/lib/dates';
 import { TYPE_LABELS, formatBenefit, formatMoney } from '@/lib/format';
-import { deriveStatus, type DerivedState } from '@/lib/status';
-import { statusLabel } from '@/components/ui/status-pill';
+import { deriveStatus, statusLabel, type DerivedState } from '@/lib/status';
 import { STAGE_LABELS, applicationName, isDropped } from '@/lib/plan/applications';
 import { agenda, applicationProgress } from '@/lib/plan/selectors';
 import { hasAnswers } from '@/lib/profile';

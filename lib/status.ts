@@ -10,6 +10,24 @@ export type StatusInfo = {
   nextDeadline?: ResolvedDeadline; daysToClose?: number; stale: boolean; daysSinceVerified: number;
 };
 
+const LABELS: Record<Exclude<DerivedState, 'closing-soon'>, string> = {
+  open: 'Open',
+  rolling: 'Rolling',
+  upcoming: 'Upcoming',
+  unverified: 'Unverified',
+  paused: 'Paused',
+  closed: 'Closed',
+};
+
+/** The text a pill shows for a state. Exported so lists and reports word statuses the same way. */
+export function statusLabel(state: DerivedState, daysToClose?: number): string {
+  if (state !== 'closing-soon') return LABELS[state];
+  if (daysToClose === undefined) return 'Closing soon';
+  if (daysToClose <= 0) return 'Closes today';
+  if (daysToClose === 1) return 'Closes tomorrow';
+  return `Closes in ${daysToClose} days`;
+}
+
 export const CLOSING_SOON_DAYS = 14;
 export const STALE_DAYS = 60;
 

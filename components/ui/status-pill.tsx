@@ -1,7 +1,10 @@
 import { CircleCheck, CircleDashed, CirclePause, CircleQuestionMark, CircleX, Clock, type LucideIcon } from 'lucide-react';
 import type { Program } from '@/lib/schema';
-import type { DerivedState } from '@/lib/status';
+import { statusLabel, type DerivedState } from '@/lib/status';
 import { cn } from '@/lib/cn';
+
+/** Re-exported for callers that already import it from here. */
+export { statusLabel };
 
 export type StatusState = Program['status']['state'];
 
@@ -30,24 +33,6 @@ const TONES: Record<Tone, string> = {
   neutral: 'bg-neutral-bg text-neutral-fg border-transparent',
   outline: 'bg-transparent text-neutral-fg border-border-strong',
 };
-
-const LABELS: Record<Exclude<DerivedState, 'closing-soon'>, string> = {
-  open: 'Open',
-  rolling: 'Rolling',
-  upcoming: 'Upcoming',
-  unverified: 'Unverified',
-  paused: 'Paused',
-  closed: 'Closed',
-};
-
-/** The text a pill shows for a state. Exported so lists and reports word statuses the same way. */
-export function statusLabel(state: DerivedState, daysToClose?: number): string {
-  if (state !== 'closing-soon') return LABELS[state];
-  if (daysToClose === undefined) return 'Closing soon';
-  if (daysToClose <= 0) return 'Closes today';
-  if (daysToClose === 1) return 'Closes tomorrow';
-  return `Closes in ${daysToClose} days`;
-}
 
 /** Program status: always an icon plus a text label, never colour alone. */
 export function StatusPill({ declared, derived, daysToClose, className }: StatusPillProps) {
