@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/dates';
 import { resolveDeadlines } from '@/lib/status';
 import { appBaseUrl, deadlineFilename, deadlineToEvent } from '@/lib/calendar/events';
 import { useNow } from '@/lib/use-now';
-import { useStoredProfile } from '@/lib/store/use-workspace';
+import { useDeadlineProfile } from '@/lib/store/use-workspace';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
 
 /**
@@ -15,7 +15,7 @@ import { AddToCalendar } from '@/components/calendar/add-to-calendar';
  */
 export function DeadlineCalendar({ program }: { program: Program }) {
   const now = useNow();
-  const profile = useStoredProfile();
+  const profile = useDeadlineProfile();
   const deadlines = useMemo(() => {
     if (!now) return [];
     const appUrl = appBaseUrl();

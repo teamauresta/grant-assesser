@@ -1,5 +1,6 @@
 import { ZodError } from 'zod';
-import type { Profile, Workspace } from '@/lib/schema';
+import type { Workspace } from '@/lib/schema';
+import { hasProfileData } from '@/lib/profile';
 import { todayISO } from '@/lib/dates';
 import { downloadFile } from '@/lib/download';
 import { migrate } from './workspace-store';
@@ -36,10 +37,8 @@ export function exportWorkspaceFile(ws: Workspace, now: Date) {
   downloadFile(workspaceFilename(now), serializeWorkspace({ ...ws, lastExportedAt: now.toISOString() }), 'application/json');
 }
 
-export const hasProfile = (p: Profile) => Object.values(p).some((v) => v !== undefined);
-
 export function summarise(ws: Workspace): ImportSummary {
-  return { hasProfile: hasProfile(ws.profile), applications: ws.pipeline.length, goals: ws.goals.length };
+  return { hasProfile: hasProfileData(ws.profile), applications: ws.pipeline.length, goals: ws.goals.length };
 }
 
 /** `pipeline[0].stage` from Zod's `['pipeline', 0, 'stage']`. */

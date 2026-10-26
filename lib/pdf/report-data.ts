@@ -10,6 +10,7 @@ import { deriveStatus, type DerivedState } from '@/lib/status';
 import { statusLabel } from '@/components/ui/status-pill';
 import { STAGE_LABELS, applicationName, isDropped } from '@/lib/plan/applications';
 import { agenda, applicationProgress } from '@/lib/plan/selectors';
+import { hasAnswers } from '@/lib/profile';
 
 export const REPORT_SECTIONS = ['cover', 'summary', 'programs', 'funding', 'pipeline', 'upcoming', 'gaps', 'stacking', 'sources'] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
@@ -90,8 +91,6 @@ export type ReportData = {
 
 /** The results intro without sentences about on-screen styling, which the printed report does not have. */
 const printIntro = (intro: string) => intro.split(/(?<=\.)\s+/).filter((x) => !/greyed out/i.test(x)).join(' ');
-
-const hasAnswers = (p: Profile) => Object.values(p).some((v) => v !== undefined);
 
 /** "Acme AI Pty. Ltd!" → "acme-ai-pty-ltd". */
 export function slugify(text: string): string {

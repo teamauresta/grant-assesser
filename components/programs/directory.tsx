@@ -10,7 +10,7 @@ import {
 } from '@/lib/programs/filter';
 import { useStatuses } from '@/lib/programs/use-status';
 import { notAFitReasons } from '@/lib/programs/fit';
-import { useStoredProfile } from '@/lib/store/use-workspace';
+import { useDeadlineProfile, useStoredProfile } from '@/lib/store/use-workspace';
 import { useNow } from '@/lib/use-now';
 import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { Button } from '@/components/ui/button';
@@ -73,8 +73,9 @@ function UrlDirectory({ programs }: { programs: Program[] }) {
 
 function DirectoryView({ programs, filters, onChange }: { programs: Program[]; filters: Filters; onChange?: (f: Filters) => void }) {
   const profile = useStoredProfile();
+  const deadlineProfile = useDeadlineProfile();
   const now = useNow();
-  const statuses = useStatuses(programs, profile);
+  const statuses = useStatuses(programs, deadlineProfile);
   const notFit = useMemo(() => (now ? notAFitReasons(programs, profile, now) : NONE), [programs, profile, now]);
   const results = useMemo(() => filterPrograms(programs, statuses, filters), [programs, statuses, filters]);
   const set = (patch: Partial<Filters>) => onChange?.({ ...filters, ...patch });

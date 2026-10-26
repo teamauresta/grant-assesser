@@ -128,7 +128,8 @@ describe('readiness gaps', () => {
       makeProgram({ slug: 'p3', name: 'P3', status: { state: 'upcoming' }, gates: ['women-led'] }),
       makeProgram({ slug: 'p4', name: 'P4', gates: [{ id: 'state-is', state: 'nsw' }] }),
     ];
-    const data = buildReportData(workspace({ profile: { state: 'vic' } }), programs, now, DEFAULT_SECTIONS);
+    // A partial assessment: three answers (hasAnswers' minimum), none of them about these programs' gates.
+    const data = buildReportData(workspace({ profile: { state: 'vic', turnover: 'under-1m', fyEndMonth: 6 } }), programs, now, DEFAULT_SECTIONS);
     expect(data.gaps!.map((g) => [g.gateId, [...g.programs].sort()])).toEqual([['gst-registered', ['P1', 'P2']]]);
   });
 });

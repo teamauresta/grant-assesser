@@ -3,7 +3,7 @@
 import type { Profile, Program } from '@/lib/schema';
 import { formatDate } from '@/lib/dates';
 import { useProgramStatus } from '@/lib/programs/use-status';
-import { useStoredProfile } from '@/lib/store/use-workspace';
+import { useDeadlineProfile } from '@/lib/store/use-workspace';
 import { StatusPill } from '@/components/ui/status-pill';
 import { DeadlineText } from './deadline-text';
 import { StaleBadge } from './stale-badge';
@@ -12,7 +12,7 @@ import { StaleBadge } from './stale-badge';
 type Props = { program: Program; profile?: Profile };
 
 function useStatus(program: Program, profile?: Profile) {
-  const stored = useStoredProfile();
+  const stored = useDeadlineProfile();
   return useProgramStatus(program, profile ?? stored);
 }
 

@@ -4,6 +4,7 @@ import { getProgram } from '@/content/programs';
 import { goalsFromTemplate } from '@/lib/plan/goals';
 import { PERSONA_DEFAULTS } from '@/lib/personas';
 import { newId } from '@/lib/id';
+import { hasAnswers } from '@/lib/profile';
 import { emptyWorkspace, LocalWorkspaceStore, migrate, type WorkspaceStore } from './workspace-store';
 
 export const SAVE_DEBOUNCE_MS = 500;
@@ -214,12 +215,25 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
 /** The app-wide workspace, persisted to localStorage. Use only in client components. */
 export const useWorkspace = createWorkspaceStore(new LocalWorkspaceStore());
 
-const hasAnswers = (p: Profile) => Object.values(p).some((v) => v !== undefined);
+/** The stored profile once loaded and assessed (see `hasAnswers`), else undefined. */
+export const selectAssessedProfile = (s: WorkspaceState): Profile | undefined =>
+  (s.ready && hasAnswers(s.ws.profile) ? s.ws.profile : undefined);
 
 /**
- * The stored profile once loaded and non-empty, else undefined (also on the server and during
+ * The stored profile once loaded, whatever it holds, else undefined. For profile-relative deadlines:
+ * a financial-year end set from Settings moves them even before any assessment.
+ */
+export const selectDeadlineProfile = (s: WorkspaceState): Profile | undefined => (s.ready ? s.ws.profile : undefined);
+
+/**
+ * The stored profile once loaded and assessed, else undefined (also on the server and during
  * hydration). Returns the stored object itself, so its identity changes only when the profile does.
  */
 export function useStoredProfile(): Profile | undefined {
-  return useWorkspace((s) => (s.ready && hasAnswers(s.ws.profile) ? s.ws.profile : undefined));
+  return useWorkspace(selectAssessedProfile);
+}
+
+/** The stored profile for working out deadlines (see `selectDeadlineProfile`). */
+export function useDeadlineProfile(): Profile | undefined {
+  return useWorkspace(selectDeadlineProfile);
 }
