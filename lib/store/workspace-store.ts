@@ -7,7 +7,8 @@ export const CORRUPT_KEY_PREFIX = 'gn-workspace-corrupt-';
 export interface WorkspaceStore {
   available(): boolean;
   load(): Promise<Workspace | null>;
-  save(ws: Workspace): Promise<void>;
+  /** Resolves false when the workspace could not be written (e.g. the storage quota is full). */
+  save(ws: Workspace): Promise<boolean>;
   clear(): Promise<void>;
   /**
    * Called when `load()` returned null. If stored data exists but cannot be read, copies the raw
@@ -15,6 +16,8 @@ export interface WorkspaceStore {
    * that key. Returns null when there was nothing to rescue.
    */
   rescueCorrupt?(now: Date): Promise<string | null>;
+  /** Deletes every copy kept by `rescueCorrupt`, e.g. when the user resets the workspace. */
+  clearRescues?(): Promise<void>;
 }
 
 export function emptyWorkspace(now: Date): Workspace {
@@ -40,7 +43,10 @@ export class LocalWorkspaceStore implements WorkspaceStore {
   async load() {
     try { const s = this.storage?.getItem(STORAGE_KEY); return s ? migrate(JSON.parse(s)) : null; } catch { return null; }
   }
-  async save(ws: Workspace) { try { this.storage?.setItem(STORAGE_KEY, JSON.stringify(ws)); } catch { /* surfaced via available() */ } }
+  async save(ws: Workspace) {
+    if (!this.storage) return false;
+    try { this.storage.setItem(STORAGE_KEY, JSON.stringify(ws)); return true; } catch { return false; }
+  }
   async clear() { try { this.storage?.removeItem(STORAGE_KEY); } catch { /* ignore */ } }
   async rescueCorrupt(now: Date) {
     try {
@@ -54,12 +60,24 @@ export class LocalWorkspaceStore implements WorkspaceStore {
       return null;
     }
   }
+  async clearRescues() {
+    try {
+      const s = this.storage;
+      if (!s) return;
+      const keys: string[] = [];
+      for (let i = 0; i < s.length; i++) {
+        const k = s.key(i);
+        if (k?.startsWith(CORRUPT_KEY_PREFIX)) keys.push(k);
+      }
+      for (const k of keys) s.removeItem(k);
+    } catch { /* blocked storage: nothing to clear */ }
+  }
 }
 
 export class MemoryWorkspaceStore implements WorkspaceStore {
   private ws: Workspace | null = null;
   available() { return true; }
   async load() { return this.ws; }
-  async save(ws: Workspace) { this.ws = structuredClone(ws); }
+  async save(ws: Workspace) { this.ws = structuredClone(ws); return true; }
   async clear() { this.ws = null; }
 }

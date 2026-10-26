@@ -26,6 +26,12 @@ export type WorkspaceState = {
   init(): Promise<void>;
   /** Saves a pending change now instead of waiting for the debounce (e.g. when the page is hidden). */
   flush(): Promise<void>;
+  /**
+   * Replaces the workspace with the stored one, e.g. after another tab saved. Cancels a pending save
+   * (the other tab's write wins) and does not write the loaded data back. Returns true if the
+   * workspace was replaced; false when nothing readable is stored or init() has not run.
+   */
+  syncFromStorage(): Promise<boolean>;
 
   setProfile(patch: Partial<Profile>): void;
   /** Returns the new application's id, or undefined when the slug is unknown or already in the pipeline. */
@@ -61,6 +67,14 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
   return create<WorkspaceState>()((set, get, api) => {
     let initPromise: Promise<void> | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // The workspace last loaded from storage by syncFromStorage, which must not be saved back.
+    let synced: Workspace | null = null;
+
+    /** Saves, and shows the "can't save" banner while saving fails (e.g. a full quota). */
+    const save = async (ws: Workspace) => {
+      const ok = await store.save(ws);
+      if (get().storageAvailable !== ok) set({ storageAvailable: ok });
+    };
 
     /**
      * Applies fn to the workspace. fn returns null for a no-op (e.g. unknown id). `calendar` marks
@@ -98,12 +112,14 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
         const loaded = await store.load();
         const corruptBackupKey = loaded ? null : (await store.rescueCorrupt?.(clock())) ?? null;
         set({ ws: loaded ?? emptyWorkspace(clock()), ready: true, storageAvailable: store.available(), corruptBackupKey });
+        // Replace the unreadable data now (its copy is kept), or every load would rescue it again.
+        if (corruptBackupKey) await save(get().ws);
         api.subscribe((s, prev) => {
-          if (s.ws === prev.ws) return;
+          if (s.ws === prev.ws || s.ws === synced) return;
           clearTimeout(timer);
           timer = setTimeout(() => {
             timer = undefined;
-            void store.save(get().ws);
+            void save(get().ws);
           }, SAVE_DEBOUNCE_MS);
         });
       })()),
@@ -112,7 +128,18 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
         if (timer === undefined) return;
         clearTimeout(timer);
         timer = undefined;
-        await store.save(get().ws);
+        await save(get().ws);
+      },
+
+      syncFromStorage: async () => {
+        if (!get().ready) return false;
+        const loaded = await store.load();
+        if (!loaded) return false;
+        clearTimeout(timer);
+        timer = undefined;
+        synced = loaded;
+        set({ ws: loaded });
+        return true;
       },
 
       setProfile: (patch) => {
@@ -173,7 +200,10 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
         : null, true),
 
       importWorkspace: (ws) => set({ ws: migrate(ws) }),
-      reset: () => set({ ws: emptyWorkspace(clock()) }),
+      reset: () => {
+        set({ ws: emptyWorkspace(clock()), corruptBackupKey: null });
+        void store.clearRescues?.();
+      },
       markExported: () => mutate((ws, stamp) => ({ ...ws, lastExportedAt: stamp })),
       markCalendarExported: () => mutate((ws, stamp) => ({ ...ws, lastCalendarExportAt: stamp, changesSinceCalendarExport: 0 })),
       setSettings: (patch) => mutate((ws) => ({ ...ws, settings: { ...ws.settings, ...patch } })),
