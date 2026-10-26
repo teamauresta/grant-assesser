@@ -13,6 +13,7 @@ import { useStatuses } from '@/lib/programs/use-status';
 import { notAFitReasons } from '@/lib/programs/fit';
 import { useDeadlineProfile, useStoredProfile } from '@/lib/store/use-workspace';
 import { useNow } from '@/lib/use-now';
+import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -38,6 +39,7 @@ const TYPE_OPTIONS = PROGRAM_TYPES.map((value) => ({ value, label: TYPE_LABELS[v
 const LEVEL_OPTIONS = PROGRAM_LEVELS.map((value) => ({ value, label: LEVEL_LABELS[value] }));
 
 const NONE = new Map<string, string>();
+const ANNOUNCE_DELAY_MS = 500;
 
 const toggle = <T,>(list: readonly T[], v: T): T[] => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
@@ -83,6 +85,8 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
   const statuses = useStatuses(programs, deadlineProfile);
   const notFit = useMemo(() => (now ? notAFitReasons(programs, profile, now) : NONE), [programs, profile, now]);
   const results = useMemo(() => filterPrograms(programs, statuses, filters), [programs, statuses, filters]);
+  const countText = `Showing ${results.length} of ${programs.length} programs`;
+  const announced = useDebouncedValue(countText, ANNOUNCE_DELAY_MS);
   const set = (patch: Partial<Filters>) => onChange?.({ ...filters, ...patch });
   const isDefault = serializeFilters(filters) === '';
   const clear = () => onChange?.(DEFAULT_FILTERS);
@@ -123,9 +127,9 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
       </div>
 
       <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-4">
-        <p role="status" aria-live="polite" className="num text-sm text-muted-fg">
-          Showing {results.length} of {programs.length} programs
-        </p>
+        <p className="num text-sm text-muted-fg">{countText}</p>
+        {/* Announced once typing or toggling has paused, not after every keystroke. */}
+        <p role="status" aria-live="polite" className="sr-only">{announced}</p>
         {!isDefault && (
           <Button variant="ghost" onClick={clear}>
             Clear filters
