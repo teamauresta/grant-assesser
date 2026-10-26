@@ -20,25 +20,14 @@ A self-assessment tool for Australian AI startups to discover government grant e
 
 ## Deploy to GitHub Pages
 
-### Option 1: GitHub UI
+The site is deployed by GitHub Actions (`.github/workflows/deploy.yml`) on every push to `main`: it runs `pnpm build` and publishes the static export in `out/`.
 
-1. Go to your repository on GitHub
-2. Navigate to **Settings** > **Pages**
-3. Under "Source", select **Deploy from a branch**
-4. Select the `main` branch and `/ (root)` folder
-5. Click **Save**
-6. Your site will be available at `https://<username>.github.io/<repo-name>/`
+**One-time setup (repo owner):** go to **Settings** > **Pages** > **Build and deployment** and set **Source** to **GitHub Actions**. The workflow does not change this setting itself.
 
-### Option 2: Command Line
+Other workflows:
 
-```bash
-# Ensure you're on main branch with latest changes
-git add .
-git commit -m "Add grant assessment website"
-git push origin main
-
-# Then configure GitHub Pages via Settings > Pages as above
-```
+- `.github/workflows/ci.yml` runs type check, lint, unit tests and end-to-end tests on pull requests and pushes to other branches.
+- `.github/workflows/freshness.yml` runs `pnpm freshness` every Monday morning (Melbourne) and updates a single "Program data freshness" issue listing stale programs, closes within 30 days, past closes that need a decision, and broken or blocked source links. It never changes the site.
 
 ### Custom Domain (Optional)
 

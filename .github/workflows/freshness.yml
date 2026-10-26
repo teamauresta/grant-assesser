@@ -1,0 +1,56 @@
+name: Program data freshness
+
+# Weekly report on stale programs, closes within 30 days, past closes needing a decision and
+# source links. It only reads the repo and writes one issue; it never changes the site or the code.
+on:
+  schedule:
+    # 22:00 UTC Sunday = Monday 9:00 Melbourne during AEDT (UTC+11, Oct-Apr);
+    # 8:00 Melbourne during AEST (UTC+10, Apr-Oct).
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: freshness
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Reads the pnpm version from devEngines.packageManager in package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Writes the report to the runner's temp dir, outside the checkout.
+      - name: Run freshness check
+        run: pnpm --silent freshness > "$RUNNER_TEMP/report.md"
+
+      - name: Create or update the freshness issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: Program data freshness
+          REPORT: ${{ runner.temp }}/report.md
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"$TITLE\"" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body-file "$REPORT"
+            echo "Updated issue #$number"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file "$REPORT"
+          fi
+          cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
