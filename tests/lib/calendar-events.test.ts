@@ -4,7 +4,7 @@ import { getProgram } from '@/content/programs';
 import { resolveDeadlines } from '@/lib/status';
 import { buildIcs, foldLine } from '@/lib/calendar/ics';
 import { googleCalendarUrl, outlookCalendarUrl } from '@/lib/calendar/links';
-import { deadlineFilename, deadlineToEvent, goalFilename, goalToEvent, slugify, workspaceEvents } from '@/lib/calendar/events';
+import { deadlineFilename, deadlineToEvent, goalFilename, goalToEvent, workspaceEvents } from '@/lib/calendar/events';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const appUrl = 'https://x.test/grant-assesser';
@@ -116,9 +116,9 @@ describe('workspaceEvents', () => {
 });
 
 describe('filenames', () => {
-  it('slugify keeps ascii letters and digits', () => {
-    expect(slugify('Submit the R&D  registration — café!')).toBe('submit-the-r-d-registration-cafe');
-    expect(slugify('!!!')).toBe('event');
+  it('file names keep ascii letters and digits, and fall back to "event"', () => {
+    expect(goalFilename(goal({ title: 'Submit the R&D  registration — café!' }))).toBe('submit-the-r-d-registration-cafe.ics');
+    expect(goalFilename(goal({ title: '!!!' }))).toBe('event.ics');
   });
   it('deadline files are <slug>-<label-slug>.ics; goal files are <title-slug>.ics', () => {
     const [d] = resolveDeadlines(worksafe, now);

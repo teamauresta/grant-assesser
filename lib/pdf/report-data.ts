@@ -11,6 +11,7 @@ import { statusLabel } from '@/components/ui/status-pill';
 import { STAGE_LABELS, applicationName, isDropped } from '@/lib/plan/applications';
 import { agenda, applicationProgress } from '@/lib/plan/selectors';
 import { hasAnswers } from '@/lib/profile';
+import { slugify } from '@/lib/slug';
 
 export const REPORT_SECTIONS = ['cover', 'summary', 'programs', 'funding', 'pipeline', 'upcoming', 'gaps', 'stacking', 'sources'] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
@@ -92,14 +93,9 @@ export type ReportData = {
 /** The results intro without sentences about on-screen styling, which the printed report does not have. */
 const printIntro = (intro: string) => intro.split(/(?<=\.)\s+/).filter((x) => !/greyed out/i.test(x)).join(' ');
 
-/** "Acme AI Pty. Ltd!" → "acme-ai-pty-ltd". */
-export function slugify(text: string): string {
-  return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
 /** `{company}-funding-report-{YYYY-MM-DD}.pdf`, dated in Melbourne. */
 export function reportFilename(companyName: string | undefined, now: Date): string {
-  return `${slugify(companyName ?? '') || 'startup'}-funding-report-${todayISO(now)}.pdf`;
+  return `${slugify(companyName ?? '', { fallback: 'startup' })}-funding-report-${todayISO(now)}.pdf`;
 }
 
 /** The wizard's wording for an answer, e.g. turnover 'under-1m' → "Under $1M". */

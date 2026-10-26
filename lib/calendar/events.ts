@@ -2,9 +2,12 @@ import type { Goal, Program, Workspace } from '@/lib/schema';
 import { getProgram } from '@/content/programs';
 import { resolveDeadlines, type ResolvedDeadline } from '@/lib/status';
 import { applicationName, isDropped } from '@/lib/plan/applications';
+import { slugify } from '@/lib/slug';
 import type { CalEvent } from './ics';
 
 export const DEADLINE_ALARM_DAYS = [14, 7, 1];
+
+const eventSlug = (s: string) => slugify(s, { fallback: 'event' });
 
 export type DatedGoal = Goal & { dueDate: string };
 export const hasDueDate = (g: Goal): g is DatedGoal => g.dueDate !== undefined;
@@ -29,7 +32,7 @@ export function goalToEvent(goal: DatedGoal, appUrl: string, context?: string): 
 
 /** Keyed by label, not date, so a corrected date updates the same calendar event. */
 export const deadlineUid = (program: Pick<Program, 'slug'>, deadline: Pick<ResolvedDeadline, 'label'>) =>
-  `deadline-${program.slug}-${slugify(deadline.label)}@grant-navigator`;
+  `deadline-${program.slug}-${eventSlug(deadline.label)}@grant-navigator`;
 
 /** A program deadline: timed when the deadline has a time, otherwise all-day. */
 export function deadlineToEvent(program: Program, deadline: ResolvedDeadline, appUrl: string): CalEvent {
@@ -85,15 +88,8 @@ export function workspaceEvents(ws: Workspace, now: Date, appUrl: string): CalEv
   return events.sort((a, b) => a.date.localeCompare(b.date) || sortKey(a).localeCompare(sortKey(b)) || a.title.localeCompare(b.title));
 }
 
-/** Lowercase ASCII words joined by hyphens, for file names. */
-export function slugify(s: string, max = 60): string {
-  const slug = s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, max).replace(/-+$/, '');
-  return slug || 'event';
-}
-
-export const deadlineFilename = (program: Program, deadline: ResolvedDeadline) => `${program.slug}-${slugify(deadline.label)}.ics`;
-export const goalFilename = (goal: Goal) => `${slugify(goal.title)}.ics`;
+export const deadlineFilename = (program: Program, deadline: ResolvedDeadline) => `${program.slug}-${eventSlug(deadline.label)}.ics`;
+export const goalFilename = (goal: Goal) => `${eventSlug(goal.title)}.ics`;
 
 /** The app's absolute base URL, e.g. https://example.github.io/grant-assesser. Client only. */
 export function appBaseUrl(): string {

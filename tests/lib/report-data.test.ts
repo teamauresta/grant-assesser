@@ -3,8 +3,9 @@ import { WorkspaceSchema, type Application, type Goal, type Profile, type Worksp
 import { PROGRAMS } from '@/content/programs';
 import { deriveStatus } from '@/lib/status';
 import {
-  DEFAULT_SECTIONS, REPORT_SECTIONS, buildReportData, reportFilename, slugify, type ReportSections,
+  DEFAULT_SECTIONS, REPORT_SECTIONS, buildReportData, reportFilename, type ReportSections,
 } from '@/lib/pdf/report-data';
+import { slugify } from '@/lib/slug';
 import { makeProgram } from '../helpers/program';
 
 // 11:00 on 27 Oct 2026 in Melbourne.
