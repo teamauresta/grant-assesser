@@ -1,14 +1,16 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ComponentProps } from 'react';
 import { cn } from '@/lib/cn';
 import { focusRing } from './focus-ring';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-on-primary border border-primary hover:opacity-90',
   secondary: 'bg-bg text-fg border border-border hover:border-border-strong hover:bg-surface',
   ghost: 'bg-transparent text-fg border border-transparent hover:bg-surface',
+  // Destructive confirmations only (e.g. the Remove button inside a confirmation dialog).
+  danger: 'bg-danger text-on-primary border border-danger hover:opacity-90',
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -17,28 +19,33 @@ const SIZES: Record<ButtonSize, string> = {
   sm: 'min-h-9 px-3 text-sm',
 };
 
+// Square buttons that hold only an icon (they still need an accessible name).
+const ICON_SIZES: Record<ButtonSize, string> = { md: 'size-11', sm: 'size-9' };
+
 /** Classes for anything that should look like a button, e.g. a `next/link` call to action. */
 export function buttonClasses({
   variant = 'secondary',
   size = 'md',
+  iconOnly = false,
   className,
-}: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}): string {
+}: { variant?: ButtonVariant; size?: ButtonSize; iconOnly?: boolean; className?: string } = {}): string {
   return cn(
     'inline-flex select-none items-center justify-center gap-2 rounded-md font-medium',
     'transition-[opacity,background-color,border-color] duration-150',
     'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
     focusRing,
     VARIANTS[variant],
-    SIZES[size],
+    iconOnly ? ICON_SIZES[size] : SIZES[size],
     className,
   );
 }
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = ComponentProps<'button'> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  iconOnly?: boolean;
 };
 
-export function Button({ variant, size, className, type = 'button', ...rest }: ButtonProps) {
-  return <button type={type} className={buttonClasses({ variant, size, className })} {...rest} />;
+export function Button({ variant, size, iconOnly, className, type = 'button', ...rest }: ButtonProps) {
+  return <button type={type} className={buttonClasses({ variant, size, iconOnly, className })} {...rest} />;
 }

@@ -5,6 +5,7 @@ import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
 import { ClosingSoonStrip } from '@/components/programs/closing-soon-strip';
 import { PersonaCards } from '@/components/home/persona-cards';
+import { DueThisWeek } from '@/components/plan/due-this-week';
 
 const VALUES: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: BadgeCheck, title: 'Verified sources', text: 'Every program links to the official pages and shows the date it was checked.' },
@@ -21,6 +22,8 @@ export default function HomePage() {
           Grants, tax incentives, credits and accelerators, checked against official sources and matched to your situation.
         </p>
       </header>
+
+      <DueThisWeek />
 
       <section aria-labelledby="persona-heading" className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

@@ -23,11 +23,13 @@ export type MenuProps = {
   footer?: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Icon-only trigger: a square button without the chevron. Needs `aria-label` (or an sr-only label). */
+  iconOnly?: boolean;
   className?: string;
 };
 
 /** Menu button (WAI-ARIA menu pattern): arrows move, Home/End jump, Escape closes and returns focus. */
-export function Menu({ label, items, icon: Icon, align = 'start', variant = 'secondary', size = 'md', footer, className, ...aria }: MenuProps) {
+export function Menu({ label, items, icon: Icon, align = 'start', variant = 'secondary', size = 'md', iconOnly = false, footer, className, ...aria }: MenuProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -96,11 +98,11 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
         aria-label={aria['aria-label']}
         onClick={() => (open ? close(false) : openAt(enabled[0]))}
         onKeyDown={onTriggerKeyDown}
-        className={buttonClasses({ variant, size })}
+        className={buttonClasses({ variant, size, iconOnly })}
       >
         {Icon && <Icon aria-hidden="true" size={16} strokeWidth={1.5} />}
         {label}
-        <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
+        {!iconOnly && <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />}
       </button>
       {open && (
         <div

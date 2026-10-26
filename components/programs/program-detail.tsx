@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronRight, ExternalLink, Plus, ShieldCheck, TriangleAlert } from 'lucide-react';
+import { ChevronRight, ExternalLink, ShieldCheck, TriangleAlert } from 'lucide-react';
 import type { Program } from '@/lib/schema';
 import { getProgram } from '@/content/programs';
 import { formatDate } from '@/lib/dates';
 import { formatBenefit, LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { AddToPipeline } from './add-to-pipeline';
 import { DeadlineCalendar } from './deadline-calendar';
 import { ProgramEligibility, ProgramPersonaNotes } from './personalised';
 import { NextDeadline, ProgramStatusPill, VerifiedNote } from './program-status';
@@ -74,14 +74,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
         </dl>
 
         <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
-          {/* Task 18 wires Add to pipeline. */}
-          <div className="flex flex-col items-start gap-1.5">
-            <Button variant="primary" disabled aria-describedby="pipeline-help">
-              <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
-              Add to pipeline
-            </Button>
-            <p id="pipeline-help" className="text-sm text-muted-fg">Available once your plan is set up.</p>
-          </div>
+          <AddToPipeline program={p} />
           <DeadlineCalendar program={p} />
         </div>
       </header>

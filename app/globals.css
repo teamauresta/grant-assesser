@@ -21,6 +21,7 @@
   --on-primary: #ffffff;
   --accent: #0f766e;
   --danger: #b91c1c;
+  --scrim: rgb(9 9 11 / 0.5);
 
   --ok-bg: #f0fdf4;
   --ok-fg: #166534;
@@ -42,6 +43,7 @@
   --on-primary: #09090b;
   --accent: #2dd4bf;
   --danger: #f87171;
+  --scrim: rgb(0 0 0 / 0.7);
 
   --ok-bg: #052e16;
   --ok-fg: #86efac;
@@ -62,6 +64,7 @@
   --color-on-primary: var(--on-primary);
   --color-accent: var(--accent);
   --color-danger: var(--danger);
+  --color-scrim: var(--scrim);
 
   --color-ok-bg: var(--ok-bg);
   --color-ok-fg: var(--ok-fg);

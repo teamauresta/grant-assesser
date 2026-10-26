@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useId, type ComponentProps, type ReactNode } from 'react';
 import { CircleAlert } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { focusRing } from './focus-ring';
@@ -65,14 +65,14 @@ export const controlClasses = cn(
   focusRing,
 );
 
-export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...rest }: ComponentProps<'input'>) {
   return <input className={cn(controlClasses, className)} {...rest} />;
 }
 
-export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className, ...rest }: ComponentProps<'textarea'>) {
   return <textarea className={cn(controlClasses, 'min-h-24', className)} {...rest} />;
 }
 
-export function Select({ className, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+export function Select({ className, ...rest }: ComponentProps<'select'>) {
   return <select className={cn(controlClasses, className)} {...rest} />;
 }
