@@ -19,6 +19,7 @@ const program: ProgramInput = {
       note: 'The consortium must include industry or sector bodies, union representation and trial workplaces' },
     { id: 'research-partner', min: 'active', severity: 'soft',
       note: 'Every consortium needs an independent evaluation partner' },
+    { id: 'gst-registered', note: 'The lead applicant needs an ABN and GST registration' },
   ],
   scores: { funding: 5, value: 4, effort: 1, speed: 2 },
   personas: {
@@ -64,7 +65,10 @@ const program: ProgramInput = {
       { url: 'https://www.worksafe.vic.gov.au/return-work-innovations-trials', title: 'Return to Work Innovation Trials (WorkSafe Victoria)', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Added the GST registration check from the "Who can apply?" FAQ on the WorkSafe page' },
+  ],
 };
 
 export default program;

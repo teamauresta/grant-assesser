@@ -40,7 +40,7 @@ const program: ProgramInput = {
       'A plan showing how you will repay the loan',
     ],
     mistakes: [
-      'Treating venture credit as non-dilutive free money: it is debt with interest',
+      'Treating venture credit as free money: it avoids dilution, but it is debt you repay with interest',
       'Borrowing before revenue can support repayments',
     ],
     caveats: [

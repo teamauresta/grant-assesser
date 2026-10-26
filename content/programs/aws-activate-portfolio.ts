@@ -14,6 +14,7 @@ const program: ProgramInput = {
     { id: 'incorporated-within', months: 120 },
     { id: 'funding-stage-before', stage: 'series-b' },
     { id: 'vc-or-accelerator', note: 'Activate Providers include accelerators, angel investors and VC firms' },
+    'has-website',
   ],
   scores: { funding: 3, value: 3, effort: 4, speed: 3 },
   personas: {
@@ -60,7 +61,10 @@ const program: ProgramInput = {
       { url: 'https://aws.amazon.com/aws-startups/learn/applying-for-aws-activate-credits-a-step-by-step-guide/', title: 'Applying for AWS Activate Credits: a step-by-step guide', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Added the website check: the AWS guide requires a fully functioning company website for Portfolio' },
+  ],
 };
 
 export default program;

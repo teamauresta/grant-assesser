@@ -51,6 +51,7 @@ const program: ProgramInput = {
     caveats: [
       'AWS does not publish a product-company or consultancy exclusion for Activate, so that check is soft here.',
       'The AWS application guide gives 7–10 business days for processing; the credits page says 5–10.',
+      'AWS describes Founders as for self-funded startups that are new to Activate credits, but its guide also says any startup without a provider Org ID starts on Founders. If you have already received Activate credits, you can only apply for more than you had before.',
     ],
   },
   verification: {
@@ -60,7 +61,10 @@ const program: ProgramInput = {
       { url: 'https://aws.amazon.com/aws-startups/learn/applying-for-aws-activate-credits-a-step-by-step-guide/', title: 'Applying for AWS Activate Credits: a step-by-step guide', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Added caveat on the self-funded and prior-credit wording in the AWS application guide' },
+  ],
 };
 
 export default program;

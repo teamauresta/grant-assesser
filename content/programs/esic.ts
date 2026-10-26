@@ -11,6 +11,7 @@ const program: ProgramInput = {
   status: { state: 'rolling', note: 'Ongoing. Companies self-assess; there is no application round.' },
   deadlines: [],
   gates: [
+    { id: 'au-entity', note: 'An ESIC cannot be a foreign company under the Corporations Act' },
     { id: 'incorporated-within', months: 36, severity: 'soft' },
   ],
   scores: { funding: 2, value: 3, effort: 4, speed: 3 },
@@ -24,7 +25,7 @@ const program: ProgramInput = {
     { title: 'Tell investors the company\'s ESIC position before shares are issued', offsetDays: 21 },
   ],
   stacking: [
-    { with: 'rdti', note: 'Spending that counts for the R&D Tax Incentive earns points in the ESIC 100-point innovation test.' },
+    { with: 'rdti', note: 'If R&D Tax Incentive spending is at least 15% of last year\'s total expenses, it earns points in the ESIC 100-point innovation test.' },
   ],
   content: {
     summary: 'A tax incentive for people who invest in you, not money for your company. Qualifying investors get a 20% tax offset, which can make your round easier to raise.',
@@ -63,6 +64,7 @@ const program: ProgramInput = {
   changelog: [
     { date: '2026-10-26', note: 'Initial verified record' },
     { date: '2026-10-27', note: 'Company eligibility tests checked on the ATO qualifying page' },
+    { date: '2026-10-27', note: 'Added the Australian company check (not a foreign company) and the 15% threshold for R&D points, from the ATO qualifying page' },
   ],
 };
 

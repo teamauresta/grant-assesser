@@ -19,6 +19,7 @@ const program: ProgramInput = {
     ] },
     { id: 'prior-credits-max', provider: 'gcp', usd: 5_000 },
     { id: 'uses-stack', tech: 'gemini', note: 'Gemini must be a foundation of your primary product' },
+    'product-company',
   ],
   scores: { funding: 5, value: 3, effort: 4, speed: 3 },
   personas: {
@@ -61,7 +62,10 @@ const program: ProgramInput = {
       { url: 'https://cloud.google.com/startup/ai', title: 'Google for Startups Cloud Program for AI startups', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Added the product-company check: the AI tier page excludes dev shops, consultancies and agencies' },
+  ],
 };
 
 export default program;

@@ -44,3 +44,21 @@ describe('rdti turnover note', () => {
     expect(r.reason).toMatch(/non-refundable/);
   });
 });
+
+describe('accuracy review (27 Oct 2026)', () => {
+  const get = (slug: string) => PROGRAMS.find((p) => p.slug === slug)!;
+  it('Alice Anderson Fund is not shown as accepting applications', () => {
+    expect(['open', 'rolling']).not.toContain(get('alice-anderson-fund').status.state);
+  });
+  it('ESIC requires an Australian company', () => {
+    const r = evaluateGates(get('esic').gates, { hasAcn: false }, { now }).find((g) => g.id === 'au-entity')!;
+    expect(r.result).toBe('fail');
+  });
+  it('Google Cloud AI tier excludes consultancies', () => {
+    const r = evaluateGates(get('google-cloud-ai').gates, { businessModel: 'services' }, { now }).find((g) => g.id === 'product-company')!;
+    expect(r.result).toBe('fail');
+  });
+  it('WorkSafe trials require GST registration', () => {
+    expect(get('worksafe-rtw-trials').gates.some((g) => (typeof g === 'string' ? g : g.id) === 'gst-registered')).toBe(true);
+  });
+});

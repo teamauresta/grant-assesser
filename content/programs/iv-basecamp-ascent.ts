@@ -42,7 +42,7 @@ const program: ProgramInput = {
       'Missing the Dealroom profile requirement',
     ],
     caveats: [
-      'Appendix A of our fact-check recorded no close date. The program page (checked 27 October 2026) gives applications closing 1pm, 29 October 2026.',
+      'The Innovation Victoria programs list shows no close date, but the program page (checked 27 October 2026) says applications close at 1pm on 29 October 2026.',
     ],
   },
   verification: {

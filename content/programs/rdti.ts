@@ -27,7 +27,7 @@ const program: ProgramInput = {
     { title: 'Split this year\'s work into core and supporting R&D activities', offsetDays: 30 },
     { title: 'Reconcile R&D costs: payroll, invoices and time allocations', beforeDeadlineBusinessDays: 40 },
     { title: 'Register R&D activities with the department', beforeDeadlineBusinessDays: 10 },
-    { title: 'Claim the offset in the company tax return', beforeDeadlineBusinessDays: 0 },
+    { title: 'After registering, claim the offset in the company tax return by its own due date', beforeDeadlineBusinessDays: 0 },
   ],
   stacking: [
     { with: 'csiro-kick-start', note: 'Possible. Grants and recoupments can trigger a clawback adjustment to the offset. Get advice.' },

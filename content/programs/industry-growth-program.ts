@@ -7,7 +7,7 @@ const program: ProgramInput = {
   level: 'federal',
   type: 'grant',
   benefit: { kind: 'cash', min: 50_000, max: 5_000_000, currency: 'AUD',
-    note: 'After an adviser service: grants of $50K–$250K for early-stage commercialisation, or $100K–$5M for commercialisation and growth.' },
+    note: 'After an adviser service: matched grants of $50K–$250K for early-stage commercialisation, or $100K–$5M for commercialisation and growth.' },
   status: { state: 'paused', note: 'Paused to new applications. No reopening date.' },
   deadlines: [],
   gates: [
@@ -51,7 +51,10 @@ const program: ProgramInput = {
       { url: 'https://business.gov.au/grants-and-programs/industry-growth-program', title: 'Industry Growth Program (business.gov.au)', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Benefit note now says the grants are matched, as the business.gov.au page states' },
+  ],
 };
 
 export default program;

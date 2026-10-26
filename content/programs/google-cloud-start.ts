@@ -7,7 +7,7 @@ const program: ProgramInput = {
   level: 'industry',
   type: 'credits',
   benefit: { kind: 'credits', min: 2_000, max: 2_000, currency: 'USD',
-    note: 'US$2K in Google Cloud credits, valid for 12 months, for pre-funded startups.' },
+    note: 'US$2K in Google Cloud credits, valid for 12 months, for pre-funded startups. The tier also lists 12 months of free Google Workspace Business Plus, which has its own conditions.' },
   status: { state: 'rolling', note: 'Apply any time. Acceptance is at Google Cloud\'s discretion.' },
   deadlines: [],
   gates: [
@@ -22,7 +22,7 @@ const program: ProgramInput = {
   },
   goalTemplate: [
     { title: 'Check billing history: no Google Cloud credits beyond the free trial', offsetDays: 2 },
-    { title: 'Check the company domain has no paid Google Workspace plan', offsetDays: 2 },
+    { title: 'If you want the free Workspace offer, check the domain has no paid Workspace plan', offsetDays: 2 },
     { title: 'Apply with your 18-character billing account ID', offsetDays: 5 },
     { title: 'Note the 12-month credit expiry', offsetDays: 20 },
   ],
@@ -49,7 +49,7 @@ const program: ProgramInput = {
       'Applying as a dev shop, consultancy or agency',
     ],
     caveats: [
-      'Your company domain must not be on a paid Google Workspace plan, or have subscribed within 31 days of applying. This tool does not check that.',
+      'The free Google Workspace Business Plus offer needs a company domain that is not on a paid Workspace plan and has not subscribed within 31 days of applying. Google lists this condition for the Workspace offer, not for the cloud credits. This tool does not check it.',
     ],
   },
   verification: {
@@ -58,7 +58,10 @@ const program: ProgramInput = {
       { url: 'https://cloud.google.com/startup/pre-funded', title: 'Google for Startups Cloud Program: Start tier', official: true },
     ],
   },
-  changelog: [{ date: '2026-10-26', note: 'Initial verified record' }],
+  changelog: [
+    { date: '2026-10-26', note: 'Initial verified record' },
+    { date: '2026-10-27', note: 'Corrected the Workspace caveat: the paid-Workspace exclusion applies to the free Workspace offer, not to the credits' },
+  ],
 };
 
 export default program;
