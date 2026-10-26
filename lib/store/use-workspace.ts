@@ -115,7 +115,13 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
         await store.save(get().ws);
       },
 
-      setProfile: (patch) => mutate((ws) => ({ ...ws, profile: withPersonaDefaults(ws.profile, patch) })),
+      setProfile: (patch) => {
+        const ws = get().ws;
+        // RDTI-style deadlines count from the financial-year end (unset means 30 June), so moving it
+        // moves pipeline deadlines and the user's exported calendar is out of date.
+        const fyMoved = 'fyEndMonth' in patch && (patch.fyEndMonth ?? 6) !== (ws.profile.fyEndMonth ?? 6) && ws.pipeline.length > 0;
+        mutate((w) => ({ ...w, profile: withPersonaDefaults(w.profile, patch) }), fyMoved);
+      },
 
       addApplication: (slug) => {
         const program = getProgram(slug);

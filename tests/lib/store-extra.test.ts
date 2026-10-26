@@ -174,3 +174,31 @@ describe('workspace actions (more)', () => {
     expect(ws().workspaceId).not.toBe(id);
   });
 });
+
+describe('financial-year end changes move calendar deadlines', () => {
+  let useWs: ReturnType<typeof createWorkspaceStore>;
+  const count = () => useWs.getState().ws.changesSinceCalendarExport;
+  beforeEach(async () => { useWs = createWorkspaceStore(new MemoryWorkspaceStore(), clock); await useWs.getState().init(); });
+
+  it('counts a change when fyEndMonth changes and the pipeline has entries', () => {
+    useWs.getState().addApplication('rdti');
+    const before = count();
+    useWs.getState().setProfile({ fyEndMonth: 12 });
+    expect(count()).toBe(before + 1);
+    useWs.getState().setProfile({ fyEndMonth: undefined });
+    expect(count()).toBe(before + 2);
+  });
+  it('does not count when the effective month is unchanged (unset means 30 June)', () => {
+    useWs.getState().addApplication('rdti');
+    const before = count();
+    useWs.getState().setProfile({ fyEndMonth: 6 });
+    useWs.getState().setProfile({ fyEndMonth: 6 });
+    useWs.getState().setProfile({ companyName: 'Acme' });
+    expect(count()).toBe(before);
+  });
+  it('does not count with an empty pipeline', () => {
+    useWs.getState().setProfile({ fyEndMonth: 3 });
+    expect(count()).toBe(0);
+    expect(useWs.getState().ws.profile.fyEndMonth).toBe(3);
+  });
+});

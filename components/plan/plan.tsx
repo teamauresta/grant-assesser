@@ -6,6 +6,7 @@ import { parsePlanTab, type PlanTab } from '@/lib/plan/routes';
 import { useNow } from '@/lib/use-now';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { Tabs } from '@/components/ui/tabs';
+import { BackupPrompt } from '@/components/layout/backup-prompt';
 import { CalendarView } from './calendar-view';
 import { DueThisWeek } from './due-this-week';
 import { GoalList } from './goal-list';
@@ -54,6 +55,8 @@ function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Da
         <h1 className="text-3xl">My plan</h1>
         <p className="text-muted-fg">Track the programs you are applying for, the goals that get each application done, and the dates that matter.</p>
       </header>
+
+      <BackupPrompt />
 
       <DueThisWeek />
 

@@ -6,6 +6,8 @@ import { SkipLink } from '@/components/layout/skip-link';
 import { TopNav } from '@/components/layout/top-nav';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { MobileHeader } from '@/components/layout/mobile-header';
+import { StorageBanner } from '@/components/layout/storage-banner';
+import { ThemeWatcher } from '@/components/layout/theme-watcher';
 import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
 
@@ -32,9 +34,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <WorkspaceProvider />
+        <ThemeWatcher />
         <SkipLink />
         <TopNav className="hidden md:block" />
         <MobileHeader className="md:hidden" />
+        <StorageBanner />
         <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] focus:outline-none md:pt-10 md:pb-12">
           {children}
         </main>
