@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { formatDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { focusRing } from '@/components/ui/focus-ring';
 import {
   PREPARED_WITH, SECTION_INFO, UPCOMING_DAYS, hasAnySection,
   type FundingData, type GapRow, type PipelineRow, type ProgramGroup, type Range, type ReportData,
@@ -31,10 +32,13 @@ function Empty({ children }: { children: ReactNode }) {
   return <p className="rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-fg">{children}</p>;
 }
 
-/** A bordered table that scrolls sideways inside the preview on narrow screens. */
-function Table({ head, children, minWidth = 560 }: { head: string[]; children: ReactNode; minWidth?: number }) {
+/**
+ * A bordered table that scrolls sideways inside the preview on narrow screens. The scroll box is a
+ * focusable, named region so keyboard users can scroll it too.
+ */
+function Table({ label, head, children, minWidth = 560 }: { label: string; head: string[]; children: ReactNode; minWidth?: number }) {
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
+    <div role="region" aria-label={label} tabIndex={0} className={cn('overflow-x-auto rounded-md border border-border', focusRing)}>
       <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
         <thead className="bg-surface text-xs uppercase tracking-wide text-muted-fg">
           <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr>
@@ -109,7 +113,7 @@ function Programs({ groups, directory }: { groups: ProgramGroup[]; directory: bo
             <p className="text-xs text-muted-fg">{g.description}</p>
           </div>
           {g.programs.length === 0 ? <Empty>Nothing here for now.</Empty> : (
-            <Table head={['Program', 'Benefit', 'Status', 'Verified']}>
+            <Table label={g.label} head={['Program', 'Benefit', 'Status', 'Verified']}>
               {g.programs.map((p) => (
                 <tr key={p.slug}>
                   <td className={td}>
@@ -159,7 +163,7 @@ function Pipeline({ rows }: { rows: PipelineRow[] }) {
   return (
     <Section id="preview-pipeline" title={SECTION_INFO.pipeline.label} lead="Every application you are tracking, including ones you are no longer pursuing.">
       {rows.length === 0 ? <Empty>No applications in your pipeline yet.</Empty> : (
-        <Table head={['Application', 'Stage', 'Expected', 'Progress and next step']}>
+        <Table label={SECTION_INFO.pipeline.label} head={['Application', 'Stage', 'Expected', 'Progress and next step']}>
           {rows.map((r) => (
             <tr key={r.id} className={cn(r.dropped && 'text-muted-fg')}>
               <td className={cn(td, !r.dropped && 'font-medium')}>{r.name}</td>
@@ -182,7 +186,7 @@ function Upcoming({ rows }: { rows: UpcomingRow[] }) {
   return (
     <Section id="preview-upcoming" title={SECTION_INFO.upcoming.label} lead={`Open goals and program deadlines due in the next ${UPCOMING_DAYS} days, with anything overdue.`}>
       {rows.length === 0 ? <Empty>Nothing due in the next {UPCOMING_DAYS} days.</Empty> : (
-        <Table head={['Date', 'Item', 'Type']} minWidth={480}>
+        <Table label={SECTION_INFO.upcoming.label} head={['Date', 'Item', 'Type']} minWidth={480}>
           {rows.map((r) => (
             <tr key={r.id}>
               <td className={cn(td, 'num whitespace-nowrap')}>{formatDate(r.date)}</td>
@@ -200,7 +204,7 @@ function Gaps({ rows }: { rows: GapRow[] }) {
   return (
     <Section id="preview-gaps" title={SECTION_INFO.gaps.label} lead="Required checks that are unanswered or not yet met, across the programs to act on or prepare for.">
       {rows.length === 0 ? <Empty>No gaps: you meet every required check for the programs you can act on.</Empty> : (
-        <Table head={['Check', 'Status', 'What to do', 'Needed for']}>
+        <Table label={SECTION_INFO.gaps.label} head={['Check', 'Status', 'What to do', 'Needed for']}>
           {rows.map((r) => (
             <tr key={`${r.gateId}|${r.label}`}>
               <td className={td}><span className="font-medium">{r.label}</span><span className="block text-xs text-muted-fg">{r.reason}</span></td>
