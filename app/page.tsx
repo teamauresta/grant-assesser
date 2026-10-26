@@ -33,7 +33,7 @@ export default function HomePage() {
         <PersonaCards />
         <p className="text-sm text-muted-fg">
           Not ready to answer questions?{' '}
-          <Link href="/programs/" className={cn('rounded-sm text-accent underline-offset-4 hover:underline', focusRing)}>
+          <Link href="/programs/" className={cn('rounded-sm text-accent underline underline-offset-4', focusRing)}>
             Browse all {PROGRAMS.length} programs
           </Link>
           .
