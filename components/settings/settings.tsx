@@ -125,10 +125,10 @@ function CompanySection() {
 function AppearanceSection() {
   const stored = useWorkspace((s) => s.ws.settings.theme);
   const setSettings = useWorkspace((s) => s.setSettings);
-  // What this browser actually applies (the pre-paint script reads it); the workspace copy is a fallback.
-  const [theme, setTheme] = useState<ThemePreference>(() => getStoredTheme() ?? stored);
+  // What this browser actually applies (the pre-paint script reads it); the workspace copy is a
+  // fallback. Read on every render: choosing a theme or importing a workspace changes both together.
+  const theme = getStoredTheme() ?? stored;
   const choose = (next: ThemePreference) => {
-    setTheme(next);
     applyTheme(next);
     setSettings({ theme: next });
   };
@@ -220,6 +220,8 @@ function DataSection() {
   const confirmImport = () => {
     if (!pending) return;
     importWorkspace(pending.ws);
+    // The file's theme becomes this browser's choice too, as if it had been picked here.
+    applyTheme(pending.ws.settings.theme);
     setMessage(`Workspace imported: ${describeSummary(pending.summary)}.`);
     setPending(null);
   };

@@ -122,6 +122,20 @@ describe('Settings', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Workspace imported: 1 profile, 1 application, 1 goal.');
   });
 
+  it('applies and remembers the imported theme', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(THEME_KEY, 'light');
+    render(<Settings />);
+    expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
+    const incoming = { ...filled(), settings: { theme: 'dark' as const, remindersDefault: [7, 1] } };
+    await user.upload(screen.getByLabelText('Choose a workspace file (.json)'), jsonFile(serializeWorkspace(incoming)));
+    const dialog = await screen.findByRole('dialog', { name: 'Replace your workspace?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Replace workspace' }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(window.localStorage.getItem(THEME_KEY)).toBe('dark');
+    expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
+  });
+
   it('cancelling an import changes nothing', async () => {
     const user = userEvent.setup();
     render(<Settings />);
