@@ -90,7 +90,7 @@ The 26 October 2026 research report (`australian-ai-startup-funding-report.md`) 
 
 ## 2. Program data and eligibility rules
 
-### Program schema (`content/programs/<slug>.ts`, validated by `content/schema.ts`)
+### Program schema (`content/programs/<slug>.ts`, validated by `lib/schema.ts`)
 
 ```ts
 {
@@ -141,7 +141,7 @@ The 26 October 2026 research report (`australian-ai-startup-funding-report.md`) 
 - **Capacity and evidence:** cash available for matching; research partner; industry partners; sectors; customer evidence; founder hours per week; urgency.
 - **Optional:** women-led (with "prefer not to say").
 
-### Scoring (`lib/scoring/`)
+### Scoring (`lib/scoring.ts`, `lib/assess.ts`)
 
 - The five dimensions, each 0–5:
   - **Funding** and **Value** come from the program file.
@@ -161,7 +161,7 @@ The 26 October 2026 research report (`australian-ai-startup-funding-report.md`) 
   - Credits are shown separately, in USD.
   - Consortium totals are never counted; CRC-P shows the company share only.
 
-### Status worked out in the browser (`lib/status/`)
+### Status worked out in the browser (`lib/status.ts`)
 
 - A closing date in the past makes the program **closed**.
 - A closing date within 14 days makes it **closing soon**.
