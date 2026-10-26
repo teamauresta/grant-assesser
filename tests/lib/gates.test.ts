@@ -100,7 +100,7 @@ describe('last-round-within looks up the stage rule first', () => {
   });
   it('a non-qualifying stage fails without a round date', () => {
     const r = ev(ref, { fundingStage: 'series-b' });
-    expect(r.result).toBe('fail'); expect(r.reason).toBe('A series-b round does not qualify'); expect(r.fixable).toBe(false);
+    expect(r.result).toBe('fail'); expect(r.reason).toBe('A Series B round does not qualify'); expect(r.fixable).toBe(false);
   });
   it('is fixable only for pre-raise', () => {
     expect(ev(ref, { fundingStage: 'none', persona: 'pre-raise' }).fixable).toBe(true);
@@ -165,5 +165,46 @@ describe('describeGate', () => {
     expect(describeGate({ id: 'cash-match', min: 20_000, severity: 'soft', note: 'Matters for bootstrapped teams' })).toEqual({
       id: 'cash-match', label: ev({ id: 'cash-match', min: 20_000 }).label, severity: 'soft', note: 'Matters for bootstrapped teams',
     });
+  });
+});
+
+describe('human-readable labels and reasons', () => {
+  const label = (ref: Parameters<typeof describeGate>[0]) => describeGate(ref).label;
+  it('names stack and credit providers properly', () => {
+    expect(label({ id: 'uses-stack', tech: 'gemini' })).toBe('Uses Gemini');
+    expect(ev({ id: 'uses-stack', tech: 'gcp' }, { stack: ['aws'] }).reason).toBe('Expects Google Cloud in the product');
+    expect(label({ id: 'prior-credits-max', provider: 'gcp', usd: 5_000 })).toBe('No more than US$5,000 in prior Google Cloud credits');
+    expect(label({ id: 'prior-credits-max', provider: 'azure', usd: 0 })).toBe('No prior Azure credits');
+  });
+  it('names funding stages properly', () => {
+    expect(label({ id: 'funding-stage-before', stage: 'series-b' })).toBe('Funding stage: Series A or earlier');
+    expect(label({ id: 'funding-stage-before', stage: 'series-c-plus' })).toBe('Funding stage: Series B or earlier');
+    expect(ev({ id: 'funding-stage-before', stage: 'series-b' }, { fundingStage: 'series-c-plus' }).reason).toBe('Only for companies at Series A or earlier');
+    expect(ev({ id: 'funding-stage-before', stage: 'series-b' }, { fundingStage: 'pre-seed' }).reason).toBe('Funding stage: pre-seed');
+    const rounds = { id: 'last-round-within' as const, rules: [{ stages: ['series-a' as const], months: 12 }] };
+    expect(ev(rounds, { fundingStage: 'angel' }).reason).toBe('An angel round does not qualify');
+  });
+  it('names evidence and research levels properly', () => {
+    expect(label({ id: 'customer-evidence-at-least', level: 'revenue' })).toBe('Paying customers');
+    expect(label({ id: 'customer-evidence-at-least', level: 'pilots' })).toBe('Pilots or stronger customer evidence');
+    expect(ev({ id: 'customer-evidence-at-least', level: 'revenue' }, { customerEvidence: 'pilots' }).reason).toBe('Needs paying customers');
+    expect(label({ id: 'research-partner', min: 'active' })).toBe('Research partner: active collaboration or stronger');
+    expect(label({ id: 'research-partner', min: 'formal' })).toBe('Research partner: formal agreement');
+  });
+  it('names states and sectors properly', () => {
+    expect(label({ id: 'state-is', state: 'vic' })).toBe('Based in Victoria');
+    expect(label({ id: 'state-is', state: 'nt' })).toBe('Based in the Northern Territory');
+    expect(ev({ id: 'state-is', state: 'vic' }, { state: 'nsw' }).reason).toBe('Only for companies based in Victoria');
+    expect(label({ id: 'sector-any', sectors: ['construction', 'manufacturing', 'social-impact'] })).toBe('Sector: construction, manufacturing or social impact');
+    expect(label({ id: 'sector-any', sectors: ['defence'] })).toBe('Sector: defence');
+  });
+});
+
+describe('counts and durations read naturally', () => {
+  it('pluralises partners and shows whole years', () => {
+    expect(describeGate({ id: 'industry-partners', count: 1 }).label).toBe('At least 1 industry partner');
+    expect(describeGate({ id: 'industry-partners', count: 2 }).label).toBe('At least 2 industry partners');
+    expect(describeGate({ id: 'incorporated-within', months: 120 }).label).toBe('Incorporated within 10 years');
+    expect(describeGate({ id: 'incorporated-within', months: 18 }).label).toBe('Incorporated within 18 months');
   });
 });

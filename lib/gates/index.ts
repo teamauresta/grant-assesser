@@ -1,6 +1,10 @@
 import type { GateId, GateParams, GateRef, Profile } from '@/lib/schema';
 import { EVIDENCE_LEVELS, FUNDING_STAGES, RESEARCH_LEVELS } from '@/lib/schema';
 import { addMonthsISO, monthsBetween, todayISO } from '@/lib/dates';
+import {
+  EVIDENCE_LABELS, FUNDING_STAGE_LABELS, RESEARCH_LABELS, SECTOR_LABELS, STACK_LABELS,
+  capitalise, inState, listOr,
+} from '@/lib/format';
 
 export type Severity = 'hard' | 'soft';
 export type GateOutcome = 'pass' | 'fail' | 'unknown';
@@ -73,6 +77,17 @@ function youngerThanYears(pr: Profile, years: number, now: Date): Eval {
     : fail(`Company is ${years} or more years old`);
 }
 
+/** Whole years read better than months: "5 years", "18 months". */
+const monthsText = (m: number) => (m >= 24 && m % 12 === 0 ? `${m / 12} years` : `${m} months`);
+const partners = (n: number) => `${n} industry partner${n === 1 ? '' : 's'}`;
+const withArticle = (s: string) => `${/^[aeiou]/i.test(s) ? 'an' : 'a'} ${s}`;
+
+/** The stage just before `stage`, as "Series A or earlier"; "no funding yet" when nothing comes before. */
+function stageBefore(stage: (typeof FUNDING_STAGES)[number]): string {
+  const prev = FUNDING_STAGES[FUNDING_STAGES.indexOf(stage) - 1];
+  return !prev || prev === 'none' ? 'no funding yet' : `${FUNDING_STAGE_LABELS[prev]} or earlier`;
+}
+
 export const GATES: Defs = {
   'au-entity': { severity: 'hard', label: () => 'Australian company (ACN)',
     evaluate: (pr) => bool(pr.hasAcn, { yes: 'Has an ACN', no: 'No Australian company yet', ask: 'ACN not answered' }, 'Register a Pty Ltd company') },
@@ -81,7 +96,7 @@ export const GATES: Defs = {
   'not-foreign-subsidiary': { severity: 'hard', label: () => 'Not a subsidiary of a foreign company',
     evaluate: (pr) => pr.foreignSubsidiary === undefined ? unknown('Ownership not answered')
       : pr.foreignSubsidiary ? fail('Australian subsidiaries of foreign entities are excluded') : pass('Not a foreign subsidiary') },
-  'incorporated-within': { severity: 'hard', label: (p) => `Incorporated within ${p.months} months`,
+  'incorporated-within': { severity: 'hard', label: (p) => `Incorporated within ${monthsText(p.months)}`,
     evaluate: (pr, p, { now }) => incorporatedWithin(pr, p.months, now) },
   'turnover-under': { severity: 'hard', label: (p) => `Turnover under ${money(p.aud)}`,
     evaluate: (pr, p) => turnoverUnder(pr, p.aud) },
@@ -115,11 +130,11 @@ export const GATES: Defs = {
         return fail('Needs an Org ID from a partner VC or accelerator', 'Join an accelerator or VC that is an Activate Provider', true);
       return unknown('VC or accelerator membership not answered');
     } },
-  'funding-stage-before': { severity: 'hard', label: (p) => `Raised less than ${p.stage}`,
+  'funding-stage-before': { severity: 'hard', label: (p) => `Funding stage: ${stageBefore(p.stage)}`,
     evaluate: (pr, p) => {
       if (!pr.fundingStage) return unknown('Funding stage not answered');
       return FUNDING_STAGES.indexOf(pr.fundingStage) < FUNDING_STAGES.indexOf(p.stage)
-        ? pass(`Stage: ${pr.fundingStage}`) : fail(`Must be before ${p.stage}`);
+        ? pass(`Funding stage: ${FUNDING_STAGE_LABELS[pr.fundingStage]}`) : fail(`Only for companies at ${stageBefore(p.stage)}`);
     } },
   'last-round-within': { severity: 'hard', label: () => 'Recent qualifying funding round',
     evaluate: (pr, p, { now }) => {
@@ -127,7 +142,7 @@ export const GATES: Defs = {
       if (!stage) return unknown('Funding stage not answered', 'Add your funding stage');
       const rule = p.rules.find((r) => r.stages.includes(stage));
       if (!rule) {
-        const reason = stage === 'none' ? 'Needs a qualifying funding round' : `A ${stage} round does not qualify`;
+        const reason = stage === 'none' ? 'Needs a qualifying funding round' : `${capitalise(withArticle(FUNDING_STAGE_LABELS[stage]))} round does not qualify`;
         return pr.persona === 'pre-raise' ? fail(reason, 'Available once you close a qualifying round', true) : fail(reason);
       }
       if (!pr.lastRoundOn) return unknown('Last round date not answered', 'Add the date your last round closed');
@@ -135,10 +150,12 @@ export const GATES: Defs = {
       if (withinMonths(pr.lastRoundOn, rule.months, now)) return pass(`Last round ${age} months ago`);
       return fail(age > rule.months ? `Last round ${age} months ago (limit ${rule.months})` : `Last round more than ${rule.months} months ago`);
     } },
-  'prior-credits-max': { severity: 'hard', label: (p) => `No more than US$${p.usd.toLocaleString('en-AU')} prior ${p.provider.toUpperCase()} credits`,
+  'prior-credits-max': { severity: 'hard',
+    label: (p) => p.usd === 0 ? `No prior ${STACK_LABELS[p.provider]} credits`
+      : `No more than US$${p.usd.toLocaleString('en-AU')} in prior ${STACK_LABELS[p.provider]} credits`,
     evaluate: (pr, p) => {
       const v = pr.priorCreditsUsd?.[p.provider];
-      if (v === undefined) return unknown(`Prior ${p.provider.toUpperCase()} credits not answered`);
+      if (v === undefined) return unknown(`Prior ${STACK_LABELS[p.provider]} credits not answered`);
       return v <= p.usd ? pass('Within the prior-credit limit') : fail(`Already received US$${v.toLocaleString('en-AU')} in credits`);
     } },
   'cash-match': { severity: 'hard', label: (p) => `Cash to match at least ${money(p.min)}`,
@@ -161,19 +178,20 @@ export const GATES: Defs = {
     evaluate: (pr) => bool(pr.experimental, { yes: 'Has experimental activities', no: 'No technical uncertainty being resolved', ask: 'Experimental work not answered' }, undefined, false) },
   'contemporaneous-records': { severity: 'soft', label: () => 'Keeps R&D records as work happens',
     evaluate: (pr) => bool(pr.contemporaneousRecords, { yes: 'Keeps contemporaneous records', no: 'No contemporaneous R&D records', ask: 'Record-keeping not answered' }, 'Log hypotheses, experiments and results now') },
-  'research-partner': { severity: 'hard', label: (p) => `Research partner (${p.min} or better)`,
+  'research-partner': { severity: 'hard',
+    label: (p) => `Research partner: ${RESEARCH_LABELS[p.min]}${p.min === 'formal' ? '' : ' or stronger'}`,
     evaluate: (pr, p) => {
       if (!pr.researchPartner) return unknown('Research partner not answered');
       return RESEARCH_LEVELS.indexOf(pr.researchPartner) >= RESEARCH_LEVELS.indexOf(p.min)
-        ? pass(`Research relationship: ${pr.researchPartner}`) : fail('Needs a committed research partner', 'Start talks with a university or CSIRO', true);
+        ? pass(`Research relationship: ${RESEARCH_LABELS[pr.researchPartner]}`) : fail('Needs a committed research partner', 'Start talks with a university or CSIRO', true);
     } },
-  'industry-partners': { severity: 'hard', label: (p) => `At least ${p.count} industry partner(s)`,
+  'industry-partners': { severity: 'hard', label: (p) => `At least ${partners(p.count)}`,
     evaluate: (pr, p) => pr.industryPartners === undefined ? unknown('Industry partners not answered')
-      : pr.industryPartners >= p.count ? pass(`${pr.industryPartners} industry partner(s)`) : fail(`Needs ${p.count} industry partner(s)`, 'Secure committed partners', true) },
-  'state-is': { severity: 'hard', label: (p) => `Based in ${p.state.toUpperCase()}`,
+      : pr.industryPartners >= p.count ? pass(partners(pr.industryPartners)) : fail(`Needs ${partners(p.count)}`, 'Secure committed partners', true) },
+  'state-is': { severity: 'hard', label: (p) => `Based ${inState(p.state)}`,
     evaluate: (pr, p) => !pr.state ? unknown('State not answered')
-      : pr.state === p.state ? pass(`Based in ${p.state.toUpperCase()}`) : fail(`Only for ${p.state.toUpperCase()} companies`) },
-  'sector-any': { severity: 'hard', label: (p) => `Sector: ${p.sectors.join(' / ')}`,
+      : pr.state === p.state ? pass(`Based ${inState(p.state)}`) : fail(`Only for companies based ${inState(p.state)}`) },
+  'sector-any': { severity: 'hard', label: (p) => `Sector: ${listOr(p.sectors.map((s) => SECTOR_LABELS[s]))}`,
     evaluate: (pr, p) => !pr.sectors?.length ? unknown('Sectors not answered')
       : pr.sectors.some((s) => p.sectors.includes(s)) ? pass('Sector matches') : fail('Sector does not match') },
   'women-led': { severity: 'hard', label: () => 'Women-led or women founder',
@@ -183,13 +201,17 @@ export const GATES: Defs = {
     evaluate: (pr) => bool(pr.hasMvp, { yes: 'Has a working MVP', no: 'No working MVP yet', ask: 'MVP not answered' }, 'Ship a working MVP first') },
   'has-website': { severity: 'soft', label: () => 'Working website',
     evaluate: (pr) => bool(pr.hasWebsite, { yes: 'Has a website', no: 'No working website', ask: 'Website not answered' }, 'Publish a simple website on your company domain') },
-  'customer-evidence-at-least': { severity: 'hard', label: (p) => `Customer evidence: ${p.level} or better`,
+  'customer-evidence-at-least': { severity: 'hard',
+    label: (p) => p.level === 'revenue' ? 'Paying customers' : `${capitalise(EVIDENCE_LABELS[p.level])} or stronger customer evidence`,
     evaluate: (pr, p) => !pr.customerEvidence ? unknown('Customer evidence not answered')
-      : EVIDENCE_LEVELS.indexOf(pr.customerEvidence) >= EVIDENCE_LEVELS.indexOf(p.level) ? pass(`Evidence: ${pr.customerEvidence}`)
-      : fail(`Needs ${p.level}`, 'Secure a paid pilot', true) },
-  'uses-stack': { severity: 'soft', label: (p) => `Uses ${p.tech}`,
-    evaluate: (pr, p) => !pr.stack ? unknown('Tech stack not answered')
-      : pr.stack.includes(p.tech) ? pass(`Uses ${p.tech}`) : fail(`Expects ${p.tech} in the product`, `Only worth it if ${p.tech} fits your architecture`, true) },
+      : EVIDENCE_LEVELS.indexOf(pr.customerEvidence) >= EVIDENCE_LEVELS.indexOf(p.level) ? pass(`Customer evidence: ${EVIDENCE_LABELS[pr.customerEvidence]}`)
+      : fail(`Needs ${EVIDENCE_LABELS[p.level]}`, 'Secure a paid pilot', true) },
+  'uses-stack': { severity: 'soft', label: (p) => `Uses ${STACK_LABELS[p.tech]}`,
+    evaluate: (pr, p) => {
+      const tech = STACK_LABELS[p.tech];
+      return !pr.stack ? unknown('Tech stack not answered')
+        : pr.stack.includes(p.tech) ? pass(`Uses ${tech}`) : fail(`Expects ${tech} in the product`, `Only worth it if ${tech} fits your architecture`, true);
+    } },
 };
 
 export function normaliseRef(ref: GateRef): { id: GateId; severity?: Severity; note?: string; params: LooseParams } {

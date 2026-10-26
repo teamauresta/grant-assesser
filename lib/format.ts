@@ -1,4 +1,5 @@
 import type { Program } from '@/lib/schema';
+import type { EVIDENCE_LEVELS, FUNDING_STAGES, RESEARCH_LEVELS, SECTORS, STACK, STATES } from '@/lib/schema';
 
 type Benefit = Program['benefit'];
 type Currency = Benefit['currency'];
@@ -64,3 +65,51 @@ export const LEVEL_LABELS: Record<Program['level'], string> = {
   university: 'University',
 };
 
+
+type Stack = (typeof STACK)[number];
+type FundingStage = (typeof FUNDING_STAGES)[number];
+type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
+type ResearchLevel = (typeof RESEARCH_LEVELS)[number];
+type State = (typeof STATES)[number];
+type Sector = (typeof SECTORS)[number];
+
+/** Product names for stack and credit-provider ids. */
+export const STACK_LABELS: Record<Stack, string> = {
+  aws: 'AWS', azure: 'Azure', gcp: 'Google Cloud', gemini: 'Gemini',
+  nvidia: 'NVIDIA', cloudflare: 'Cloudflare', openai: 'OpenAI', anthropic: 'Anthropic',
+};
+
+/** Funding stages as they read mid-sentence ("Funding stage: Series A"). */
+export const FUNDING_STAGE_LABELS: Record<FundingStage, string> = {
+  none: 'no funding', angel: 'angel', 'pre-seed': 'pre-seed', seed: 'seed',
+  'series-a': 'Series A', 'series-b': 'Series B', 'series-c-plus': 'Series C+',
+};
+
+export const EVIDENCE_LABELS: Record<EvidenceLevel, string> = {
+  none: 'no customer evidence', interviews: 'customer interviews', pilots: 'pilots', revenue: 'paying customers',
+};
+
+export const RESEARCH_LABELS: Record<ResearchLevel, string> = {
+  none: 'none', informal: 'informal contact', active: 'active collaboration', formal: 'formal agreement',
+};
+
+export const STATE_LABELS: Record<State, string> = {
+  vic: 'Victoria', nsw: 'New South Wales', qld: 'Queensland', wa: 'Western Australia', sa: 'South Australia',
+  tas: 'Tasmania', act: 'Australian Capital Territory', nt: 'Northern Territory',
+};
+
+/** "in Victoria", "in the Northern Territory". */
+export const inState = (s: State) => `in ${s === 'act' || s === 'nt' ? 'the ' : ''}${STATE_LABELS[s]}`;
+
+export const SECTOR_LABELS: Record<Sector, string> = {
+  energy: 'energy', health: 'health', manufacturing: 'manufacturing', construction: 'construction',
+  agriculture: 'agriculture', defence: 'defence', fintech: 'fintech', education: 'education',
+  'social-impact': 'social impact', other: 'other',
+};
+
+/** "a, b or c". */
+export function listOr(items: string[]): string {
+  return items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} or ${items[items.length - 1]}`;
+}
+
+export const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

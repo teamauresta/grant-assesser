@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PROGRAMS } from '@/content/programs';
-import { evaluateGates } from '@/lib/gates';
-import type { Profile } from '@/lib/schema';
+import { describeGate, evaluateGates } from '@/lib/gates';
+import { EVIDENCE_LEVELS, FUNDING_STAGES, RESEARCH_LEVELS, SECTORS, STACK, type Profile } from '@/lib/schema';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const answered: Profile = {
@@ -32,6 +32,26 @@ describe('program content', () => {
       const results = evaluateGates(p.gates, profile, { now });
       expect(results, p.slug).toHaveLength(p.gates.length);
       for (const r of results) expect(r.label, `${p.slug} → ${r.id}`).not.toMatch(/undefined|NaN/);
+    }
+  });
+});
+
+describe('gate wording', () => {
+  // 'pre-seed' is the ordinary English spelling, so it is allowed through.
+  const hyphenated = [...FUNDING_STAGES, ...SECTORS, ...EVIDENCE_LEVELS, ...RESEARCH_LEVELS].filter((v) => v.includes('-') && v !== 'pre-seed');
+  const rawToken = new RegExp(`(${hyphenated.join('|')})|\\b(${STACK.join('|')})\\b|\\b(VIC|NSW|QLD|WA|SA|TAS|ACT|NT)\\b`);
+  it('no label or reason shows a raw enum token, lowercase stack id or state code', () => {
+    expect(rawToken.test('Raised less than series-a')).toBe(true);
+    expect(rawToken.test('Uses gemini')).toBe(true);
+    expect(rawToken.test('Based in VIC')).toBe(true);
+    for (const p of PROGRAMS) {
+      for (const ref of p.gates) expect(describeGate(ref).label, p.slug).not.toMatch(rawToken);
+      for (const profile of [{}, answered, { ...answered, fundingStage: 'series-c-plus' as const, state: 'nsw' as const, stack: [] }]) {
+        for (const r of evaluateGates(p.gates, profile, { now })) {
+          expect(r.label, `${p.slug} → ${r.id}`).not.toMatch(rawToken);
+          expect(r.reason, `${p.slug} → ${r.id}`).not.toMatch(rawToken);
+        }
+      }
     }
   });
 });
