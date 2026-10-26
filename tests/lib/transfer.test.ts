@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
-import { exportWorkspaceFile, parseImport, serializeWorkspace, workspaceFilename } from '@/lib/store/transfer';
+import { MAX_IMPORT_BYTES, exportWorkspaceFile, importSizeError, parseImport, serializeWorkspace, workspaceFilename } from '@/lib/store/transfer';
 import * as download from '@/lib/download';
 import type { Workspace } from '@/lib/schema';
 
@@ -107,5 +107,17 @@ describe('exportWorkspaceFile', () => {
     const r = parseImport(text as string);
     expect(r.ok && r.ws).toEqual({ ...ws, lastExportedAt: now.toISOString() });
     spy.mockRestore();
+  });
+});
+
+describe('importSizeError', () => {
+  it('allows files up to 2 MB and explains why a larger one is refused', () => {
+    expect(MAX_IMPORT_BYTES).toBe(2 * 1024 * 1024);
+    expect(importSizeError(serializeWorkspace(sample()).length)).toBeUndefined();
+    expect(importSizeError(MAX_IMPORT_BYTES)).toBeUndefined();
+    const error = importSizeError(MAX_IMPORT_BYTES + 1);
+    expect(error).toMatch(/too large/);
+    expect(error).toMatch(/2 MB/);
+    expect(error).toMatch(/Choose the \.json file you exported/);
   });
 });

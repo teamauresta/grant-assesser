@@ -9,7 +9,7 @@ import { QUESTIONS } from '@/lib/assessment/questions';
 import { formatDate, todayISO } from '@/lib/dates';
 import { cn } from '@/lib/cn';
 import { applyTheme, getStoredTheme, type ThemePreference } from '@/lib/theme';
-import { exportWorkspaceFile, parseImport, type ImportSummary } from '@/lib/store/transfer';
+import { exportWorkspaceFile, importSizeError, parseImport, type ImportSummary } from '@/lib/store/transfer';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import type { Workspace } from '@/lib/schema';
 import { BackupPrompt } from '@/components/layout/backup-prompt';
@@ -202,6 +202,8 @@ function DataSection() {
     input.value = '';
     if (!file) return;
     setMessage('');
+    const tooLarge = importSizeError(file.size);
+    if (tooLarge) { setImportError(tooLarge); return; }
     let text: string;
     try {
       text = await file.text();

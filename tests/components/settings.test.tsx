@@ -97,6 +97,17 @@ describe('Settings', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('refuses a file over 2 MB without reading it', async () => {
+    const user = userEvent.setup();
+    render(<Settings />);
+    const big = jsonFile('x'.repeat(2 * 1024 * 1024 + 1));
+    const read = vi.spyOn(big, 'text');
+    await user.upload(screen.getByLabelText('Choose a workspace file (.json)'), big);
+    expect(await screen.findByText(/too large/)).toBeInTheDocument();
+    expect(read).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('imports a valid file only after confirming the summary', async () => {
     const user = userEvent.setup();
     render(<Settings />);

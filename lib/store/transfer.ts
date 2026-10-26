@@ -9,6 +9,14 @@ export type ImportResult = { ok: true; ws: Workspace; summary: ImportSummary } |
 
 const CURRENT_VERSION = 1;
 const MAX_PATHS = 3;
+/** Real exports are a few kilobytes; anything near this is not one, and reading it would stall the page. */
+export const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+
+/** An error for a file too large to be a workspace export, checked before the file is read. */
+export function importSizeError(bytes: number): string | undefined {
+  if (bytes <= MAX_IMPORT_BYTES) return undefined;
+  return "This file is too large to be a Grant Navigator workspace (the limit is 2 MB). Choose the .json file you exported from Settings.";
+}
 
 /** Pretty-printed JSON, so an exported file is readable and diffable. */
 export function serializeWorkspace(ws: Workspace): string {
