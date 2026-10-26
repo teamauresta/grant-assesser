@@ -53,6 +53,9 @@ describe('vcBackedSeed', () => {
     expect(groupOf(vcBackedSeed, 'iv-office-hours')).toBe('prepare');
     // A hard Victoria check (live in Victoria or a Victorian-based company); the program is still open on `now`.
     expect(groupOf(vcBackedSeed, 'iv-basecamp-ascent')).toBe('not-a-fit');
+    // Turnover of $1M-$10M fails ESIC's early stage test (income $200K or less, expenses $1M or less last year),
+    // and turnover is not something the company can fix, so it is a hard, unfixable fail.
+    expect(groupOf(vcBackedSeed, 'esic')).toBe('not-a-fit');
   });
 });
 
@@ -158,7 +161,7 @@ describe('persona snapshots (regression net for program data edits)', () => {
         "csiro-kick-start": "act-now",
         "defence-industry-development": "not-a-fit",
         "emdg": "watch",
-        "esic": "prepare",
+        "esic": "not-a-fit",
         "google-cloud-ai": "act-now",
         "google-cloud-start": "not-a-fit",
         "industry-growth-program": "watch",

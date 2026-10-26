@@ -13,6 +13,7 @@ const program: ProgramInput = {
   gates: [
     { id: 'au-entity', note: 'An ESIC cannot be a foreign company under the Corporations Act' },
     { id: 'incorporated-within', months: 36, severity: 'soft' },
+    { id: 'turnover-under', aud: 1_000_000, note: 'ESIC also requires assessable income of $200K or less and expenses of $1M or less last income year.' },
   ],
   scores: { funding: 2, value: 3, effort: 4, speed: 3 },
   personas: {
@@ -49,7 +50,7 @@ const program: ProgramInput = {
     ],
     caveats: [
       'Company tests checked on the ATO page "Qualifying as an early stage innovation company" (last updated 9 September 2024): not a foreign company; incorporated or registered on the ABR within the last 3 income years (or within 6 income years with expenses of $1M or less across the previous 3); previous-year expenses $1M or less; previous-year assessable income $200K or less; not listed; plus an innovation test.',
-      'The incorporation check here is an approximation of the 3-income-year rule and is soft. This tool does not check the expenses, income or innovation tests.',
+      'The incorporation check here is an approximation of the 3-income-year rule and is soft. The turnover check only rules out turnover of $1M or more: this tool does not check the $200K income test, the $1M expenses test or the innovation tests.',
       'The investor carries the onus of confirming the company qualifies. Get tax advice before promoting ESIC status.',
     ],
   },
@@ -65,6 +66,7 @@ const program: ProgramInput = {
     { date: '2026-10-26', note: 'Initial verified record' },
     { date: '2026-10-27', note: 'Company eligibility tests checked on the ATO qualifying page' },
     { date: '2026-10-27', note: 'Added the Australian company check (not a foreign company) and the 15% threshold for R&D points, from the ATO qualifying page' },
+    { date: '2026-10-27', note: 'Added turnover gate for the early-stage test' },
   ],
 };
 
