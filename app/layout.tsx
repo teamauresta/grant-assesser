@@ -6,6 +6,7 @@ import { SkipLink } from '@/components/layout/skip-link';
 import { TopNav } from '@/components/layout/top-nav';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { MobileHeader } from '@/components/layout/mobile-header';
+import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
+        <WorkspaceProvider />
         <SkipLink />
         <TopNav className="hidden md:block" />
         <MobileHeader className="md:hidden" />
