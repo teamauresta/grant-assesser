@@ -2073,11 +2073,12 @@ A menu button labelled "Add to calendar" with three items: Google Calendar (open
   | `bootstrappedVic` | `rdti` | act-now | |
   | `bootstrappedVic` | `press-play` | not-a-fit | womenLed is no |
   | `bootstrappedVic` | `crc-p` | watch | Research-partner and industry-partner fails are fixable, and the status is unverified |
-  | `preRaiseVic` | `google-cloud-ai` | not-a-fit | An angel round doesn't qualify under last-round-within, which is unfixable |
+  | `preRaiseVic` | `google-cloud-ai` | prepare | The vc-funded and last-round-within fails are both fixable for Pre-raise (they apply once the round closes) |
   | `preRaiseVic` | `press-play` | act-now | Open until 15 Nov; women-led; Victorian |
   | `vcBackedSeed` | `google-cloud-ai` | act-now | |
   | `vcBackedSeed` | `google-cloud-start` | not-a-fit | Incorporated 43 months ago |
-  | `vcBackedSeed` | `iv-office-hours` | not-a-fit | Based in NSW |
+  | `vcBackedSeed` | `iv-office-hours` | prepare | The Victoria check is soft ("meaningful connection to Victoria"), so NSW founders can still ask |
+  | `vcBackedSeed` | `iv-basecamp-ascent` | not-a-fit | A hard Victoria check (live in Victoria or a Victorian-based company), if the program is still open on the test's `now` |
 - Snapshot the full `{slug: group}` map for each persona with `toMatchInlineSnapshot()`, generated on the first run and reviewed by hand before committing. This snapshot is the regression net for data edits.
 
 **Commit:** `test: persona snapshot tests over real program data`
