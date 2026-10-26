@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SearchX } from 'lucide-react';
 import type { Program } from '@/lib/schema';
+import { PROGRAMS } from '@/content/programs';
 import {
   DEFAULT_FILTERS, PROGRAM_LEVELS, PROGRAM_TYPES, STATUS_FILTERS,
   filterPrograms, parseFilters, serializeFilters, type ProgramFilters, type StatusFilter,
@@ -41,11 +42,15 @@ const NONE = new Map<string, string>();
 const toggle = <T,>(list: readonly T[], v: T): T[] => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
 /**
- * Searchable, filterable program grid. Filters live in the URL query so the back button and shared
- * links keep them. The static HTML renders the default view (useSearchParams needs a Suspense boundary
- * under static export); the client then applies the URL's filters.
+ * Searchable, filterable grid of every program in `content/programs`. Filters live in the URL query
+ * so the back button and shared links keep them. The static HTML renders the default view
+ * (useSearchParams needs a Suspense boundary under static export); the client then applies the URL's
+ * filters.
  */
-export function Directory({ programs }: { programs: Program[] }) {
+export function Directory() {
+  // Imported here, not passed from the server page: a prop would serialise every record into the
+  // page's RSC payload, duplicating data the client bundle already has.
+  const programs = PROGRAMS;
   return (
     <Suspense fallback={<DirectoryView programs={programs} filters={DEFAULT_FILTERS} />}>
       <UrlDirectory programs={programs} />

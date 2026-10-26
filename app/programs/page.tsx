@@ -16,7 +16,7 @@ export default function ProgramsPage() {
           {PROGRAMS.length} grants, tax incentives, credits and accelerators for Australian startups, each checked against official sources.
         </p>
       </header>
-      <Directory programs={PROGRAMS} />
+      <Directory />
     </div>
   );
 }
