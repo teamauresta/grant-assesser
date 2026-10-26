@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CircleCheck, CircleDot, CircleHelp, CircleX, type LucideIcon } from 'lucide-react';
 import type { GateRef, Profile } from '@/lib/schema';
-import { describeGate, evaluateGates, type GateOutcome, type GateResult } from '@/lib/gates';
+import { describeGate, evaluateGates, type GateOutcome, type GateResult, type Severity } from '@/lib/gates';
 import { useNow } from '@/lib/use-now';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
@@ -43,28 +43,7 @@ export function EligibilityList({ gates, profile }: EligibilityListProps) {
       <ul className="divide-y divide-border rounded-lg border border-border">
         {gates.map((ref, i) => {
           const { label, severity, note } = describeGate(ref);
-          const r = results?.[i];
-          const { icon: Icon, text } = r ? OUTCOME[r.result] : { icon: CircleDot, text: undefined };
-          return (
-            <li key={i} className="flex gap-3 px-4 py-3">
-              <Icon aria-hidden="true" size={20} strokeWidth={1.5} className={cn('mt-0.5 shrink-0', r ? 'text-fg' : 'text-muted-fg')} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="font-medium">{label}</span>
-                  {severity === 'soft' && <Badge>Helps, not required</Badge>}
-                  {text && <span className="text-sm font-medium">{text}</span>}
-                </div>
-                {r ? (
-                  <>
-                    <p className="text-sm text-muted-fg">{r.reason}</p>
-                    {r.fix && r.result !== 'pass' && <p className="text-sm"><span className="font-medium">To fix: </span>{r.fix}</p>}
-                  </>
-                ) : (
-                  note && <p className="text-sm text-muted-fg">{note}</p>
-                )}
-              </div>
-            </li>
-          );
+          return <GateRow key={i} label={label} severity={severity} note={note} result={results?.[i]} />;
         })}
       </ul>
       {!profile && (
@@ -77,5 +56,38 @@ export function EligibilityList({ gates, profile }: EligibilityListProps) {
         </div>
       )}
     </div>
+  );
+}
+
+export type GateRowProps = {
+  label: string;
+  severity: Severity;
+  /** The evaluated check. Without one, the row shows what is checked and the program's note. */
+  result?: GateResult;
+  note?: string;
+};
+
+/** One eligibility check as a list item: outcome icon and text, reason, and how to fix it. */
+export function GateRow({ label, severity, result: r, note }: GateRowProps) {
+  const { icon: Icon, text } = r ? OUTCOME[r.result] : { icon: CircleDot, text: undefined };
+  return (
+    <li className="flex gap-3 px-4 py-3">
+      <Icon aria-hidden="true" size={20} strokeWidth={1.5} className={cn('mt-0.5 shrink-0', r ? 'text-fg' : 'text-muted-fg')} />
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-medium">{label}</span>
+          {severity === 'soft' && <Badge>Helps, not required</Badge>}
+          {text && <span className="text-sm font-medium">{text}</span>}
+        </div>
+        {r ? (
+          <>
+            <p className="text-sm text-muted-fg">{r.reason}</p>
+            {r.fix && r.result !== 'pass' && <p className="text-sm"><span className="font-medium">To fix: </span>{r.fix}</p>}
+          </>
+        ) : (
+          note && <p className="text-sm text-muted-fg">{note}</p>
+        )}
+      </div>
+    </li>
   );
 }

@@ -11,7 +11,7 @@ const program: ProgramInput = {
   status: { state: 'rolling', note: 'Apply any time. Acceptance is at Google Cloud\'s discretion.' },
   deadlines: [],
   gates: [
-    { id: 'vc-funded', note: 'Angel funding, government grants and crowdfunding don\'t qualify' },
+    { id: 'vc-funded', note: 'Crowdfunded rounds do not qualify' },
     { id: 'incorporated-within', months: 60 },
     { id: 'last-round-within', rules: [
       { stages: ['pre-seed', 'seed'], months: 60 },
