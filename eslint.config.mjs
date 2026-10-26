@@ -5,8 +5,8 @@ import nextTs from 'eslint-config-next/typescript';
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // base.jsx is the legacy app; Task 24 moves it into legacy/.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'legacy/**', 'next-env.d.ts', 'base.jsx']),
+  // legacy/ holds the old single-file app, kept for reference only.
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'legacy/**', 'next-env.d.ts']),
 ]);
 
 export default eslintConfig;
