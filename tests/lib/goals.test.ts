@@ -19,4 +19,10 @@ describe('goalsFromTemplate', () => {
     const p = makeProgram({ status: { state: 'rolling' }, goalTemplate: [{ title: 'Do it' }] });
     expect(goalsFromTemplate(p, 'a', now, {})[0].dueDate).toBe('2026-11-10');
   });
+  it('uses the reminders it is given (the workspace default)', () => {
+    const p = makeProgram({ status: { state: 'rolling' }, goalTemplate: [{ title: 'A' }, { title: 'B' }] });
+    const goals = goalsFromTemplate(p, 'a', now, {}, [14, 3]);
+    expect(goals.map((g) => g.reminderOffsetsDays)).toEqual([[14, 3], [14, 3]]);
+    expect(goals[0].reminderOffsetsDays).not.toBe(goals[1].reminderOffsetsDays);
+  });
 });

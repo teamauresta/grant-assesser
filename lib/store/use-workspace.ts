@@ -157,7 +157,7 @@ export function createWorkspaceStore(store: WorkspaceStore, clock: () => Date = 
         mutate((ws) => ({
           ...ws,
           pipeline: [...ws.pipeline, app],
-          goals: [...ws.goals, ...goalsFromTemplate(program, app.id, clock(), ws.profile)],
+          goals: [...ws.goals, ...goalsFromTemplate(program, app.id, clock(), ws.profile, ws.settings.remindersDefault)],
         }), true);
         return app.id;
       },

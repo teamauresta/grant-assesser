@@ -129,6 +129,12 @@ describe('workspace actions (more)', () => {
     expect(ws().pipeline[0]).toMatchObject({ programSlug: 'csiro-kick-start', stage: 'considering' });
     expect(ws().changesSinceCalendarExport).toBe(1);
   });
+  it('template goals use the workspace default reminders', () => {
+    useWs.getState().setSettings({ remindersDefault: [14, 3] });
+    useWs.getState().addApplication('csiro-kick-start');
+    expect(ws().goals.length).toBeGreaterThan(0);
+    for (const g of ws().goals) expect(g.reminderOffsetsDays).toEqual([14, 3]);
+  });
   it('addCustomApplication and updateApplication', () => {
     const id = useWs.getState().addCustomApplication('Local council grant');
     useWs.getState().updateApplication(id, { expectedAmount: 5000, notes: 'Ask about timing' });
