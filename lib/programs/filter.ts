@@ -1,6 +1,6 @@
 import type { Program } from '@/lib/schema';
 import { MELBOURNE, daysBetween, todayISO } from '@/lib/dates';
-import { resolveDeadlines, type DerivedState, type ResolvedDeadline, type StatusInfo } from '@/lib/status';
+import { deriveStatus, resolveDeadlines, type DerivedState, type ResolvedDeadline, type StatusInfo } from '@/lib/status';
 
 export type StatusFilter = 'open-upcoming' | 'all' | DerivedState;
 export type ProgramFilters = {
@@ -58,18 +58,25 @@ export function filterPrograms(programs: Program[], statuses: Map<string, Status
     });
 }
 
-export type ClosingSoonItem = { program: Program; deadline: ResolvedDeadline; daysLeft: number };
+export type ClosingSoonItem = { program: Program; deadline: ResolvedDeadline; daysLeft: number; status: StatusInfo };
 
-/** Programs with a future close deadline within `withinDays` Melbourne calendar days, soonest first. */
+const ACCEPTING = new Set<DerivedState>(['open', 'rolling', 'closing-soon']);
+
+/**
+ * Programs taking applications (derived state open, rolling or closing soon) whose next close is
+ * within `withinDays` Melbourne calendar days, soonest first. Upcoming, unverified, paused and closed
+ * programs are left out even with a near close date, so the strip never contradicts their status.
+ */
 export function closingSoon(programs: Program[], now: Date, withinDays = 30): ClosingSoonItem[] {
   const today = todayISO(now);
   const out: ClosingSoonItem[] = [];
   for (const program of programs) {
-    if (program.status.state === 'paused' || program.status.state === 'closed') continue;
+    const status = deriveStatus(program, now);
+    if (!ACCEPTING.has(status.state)) continue;
     const deadline = resolveDeadlines(program, now).find((d) => d.kind === 'close' && d.at.getTime() > now.getTime());
     if (!deadline) continue;
     const daysLeft = daysBetween(today, todayISO(deadline.at, MELBOURNE));
-    if (daysLeft <= withinDays) out.push({ program, deadline, daysLeft });
+    if (daysLeft <= withinDays) out.push({ program, deadline, daysLeft, status });
   }
   return out.sort((a, b) => a.deadline.at.getTime() - b.deadline.at.getTime());
 }

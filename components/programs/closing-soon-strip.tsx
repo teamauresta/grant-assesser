@@ -8,7 +8,6 @@ import { closingSoon } from '@/lib/programs/filter';
 import { formatDate } from '@/lib/dates';
 import { formatBenefit } from '@/lib/format';
 import { useNow } from '@/lib/use-now';
-import { CLOSING_SOON_DAYS } from '@/lib/status';
 import { StatusPill } from '@/components/ui/status-pill';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
@@ -40,7 +39,7 @@ export function ClosingSoonStrip({ programs, className }: { programs: Program[];
         </p>
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border">
-          {items.map(({ program, deadline, daysLeft }) => (
+          {items.map(({ program, deadline, daysLeft, status }) => (
             <li key={program.slug} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
               <div className="min-w-0">
                 <Link
@@ -53,11 +52,8 @@ export function ClosingSoonStrip({ programs, className }: { programs: Program[];
               </div>
               <div className="flex items-center gap-3">
                 <time dateTime={deadline.date} className="num font-mono text-sm">{formatDate(deadline.date)}</time>
-                {daysLeft <= CLOSING_SOON_DAYS ? (
-                  <StatusPill declared={program.status.state} derived="closing-soon" daysToClose={daysLeft} />
-                ) : (
-                  <span className="num text-xs text-muted-fg">In {daysLeft} days</span>
-                )}
+                {status.state !== 'closing-soon' && <span className="num text-xs text-muted-fg">In {daysLeft} days</span>}
+                <StatusPill declared={status.declared} derived={status.state} daysToClose={status.daysToClose} />
               </div>
             </li>
           ))}

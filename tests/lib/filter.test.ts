@@ -81,6 +81,18 @@ describe('closingSoon', () => {
     ];
     expect(closingSoon([...programs, ...extra], now).map((c) => c.program.slug)).toEqual(['soon-a', 'soon-b']);
   });
+  it('lists only programs whose derived status is open, rolling or closing soon', () => {
+    const extra = [
+      // An unverified or upcoming program with a near close must not show a "Closes in 2 days" pill.
+      makeProgram({ slug: 'unv-near', status: { state: 'unverified' }, deadlines: close('2026-10-29') }),
+      makeProgram({ slug: 'up-near', status: { state: 'upcoming' }, deadlines: close('2026-10-29') }),
+      makeProgram({ slug: 'roll-later', status: { state: 'rolling' }, deadlines: close('2026-11-20') }),
+    ];
+    const out = closingSoon([...programs, ...extra], now);
+    expect(out.map((c) => c.program.slug)).toEqual(['soon-a', 'soon-b', 'roll-later']);
+    expect(out.map((c) => c.status.state)).toEqual(['closing-soon', 'closing-soon', 'rolling']);
+    expect(out[0].status.daysToClose).toBe(3);
+  });
 });
 
 describe('URL filters', () => {
