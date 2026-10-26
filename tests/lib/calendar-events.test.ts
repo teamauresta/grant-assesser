@@ -23,6 +23,9 @@ const workspace = (over: Partial<Workspace> = {}): Workspace => WorkspaceSchema.
 });
 
 describe('goalToEvent', () => {
+  it('prefixes the title with the program or application name when given', () => {
+    expect(goalToEvent({ ...goal(), dueDate: '2026-11-20' }, appUrl, 'CSIRO Kick-Start').title).toBe('CSIRO Kick-Start: Submit EOI');
+  });
   it('is an all-day event on the due date with a stable UID, sequence, alarms and a deep link', () => {
     const e = goalToEvent({ ...goal(), dueDate: '2026-11-20' }, appUrl);
     expect(e).toMatchObject({
@@ -42,7 +45,7 @@ describe('deadlineToEvent', () => {
     const [d] = resolveDeadlines(worksafe, now);
     const e = deadlineToEvent(worksafe, d, appUrl);
     expect(e).toMatchObject({
-      uid: 'deadline-worksafe-rtw-trials-2026-11-27@grant-navigator', allDay: false, date: '2026-11-27',
+      uid: 'deadline-worksafe-rtw-trials-applications-close@grant-navigator', allDay: false, date: '2026-11-27',
       alarmsDaysBefore: [14, 7, 1], url: 'https://x.test/grant-assesser/programs/worksafe-rtw-trials/',
     });
     expect(e.at?.toISOString()).toBe('2026-11-27T03:00:00.000Z'); // 14:00 AEDT
@@ -52,7 +55,14 @@ describe('deadlineToEvent', () => {
   it('a deadline without a time is all-day', () => {
     const rdti = getProgram('rdti')!;
     const [d] = resolveDeadlines(rdti, now, { fyEndMonth: 6 });
-    expect(deadlineToEvent(rdti, d, appUrl)).toMatchObject({ allDay: true, date: '2027-04-30', uid: 'deadline-rdti-2027-04-30@grant-navigator' });
+    expect(deadlineToEvent(rdti, d, appUrl)).toMatchObject({ allDay: true, date: '2027-04-30', uid: 'deadline-rdti-r-d-registration-due@grant-navigator' });
+  });
+  it('keeps the same UID when the date is corrected, and the sequence follows the changelog', () => {
+    const [d] = resolveDeadlines(worksafe, now);
+    const a = deadlineToEvent(worksafe, d, appUrl);
+    const b = deadlineToEvent({ ...worksafe, changelog: [...worksafe.changelog, { date: '2026-11-01', note: 'Date moved' }] }, { ...d, date: '2026-12-04' }, appUrl);
+    expect(b.uid).toBe(a.uid);
+    expect(b.sequence).toBe(a.sequence + 1);
   });
 });
 
@@ -64,7 +74,7 @@ describe('workspaceEvents', () => {
     });
     const events = workspaceEvents(ws, now, appUrl);
     expect(events.filter((e) => e.uid.startsWith('deadline-'))).toHaveLength(1);
-    expect(events.map((e) => e.uid).sort()).toEqual(['deadline-worksafe-rtw-trials-2026-11-27@grant-navigator', 'goal-open@grant-navigator']);
+    expect(events.map((e) => e.uid).sort()).toEqual(['deadline-worksafe-rtw-trials-applications-close@grant-navigator', 'goal-open@grant-navigator']);
   });
   it('dedupes deadlines when the same program is in the pipeline twice, and ignores custom applications', () => {
     const ws = workspace({ pipeline: [app('a1', 'worksafe-rtw-trials'), app('a2', 'worksafe-rtw-trials'), app('a3')] });
@@ -77,6 +87,27 @@ describe('workspaceEvents', () => {
   it('resolves profile-relative deadlines with the workspace profile', () => {
     const ws = workspace({ profile: { fyEndMonth: 12 }, pipeline: [app('a1', 'rdti')] });
     expect(workspaceEvents(ws, now, appUrl).map((e) => e.date)).toEqual(['2026-10-31']);
+  });
+  it('skips deadlines of declined or withdrawn applications but keeps awarded ones', () => {
+    const at = (stage: 'declined' | 'withdrawn' | 'awarded') => workspace({ pipeline: [{ ...app('a1', 'worksafe-rtw-trials'), stage }] });
+    expect(workspaceEvents(at('declined'), now, appUrl)).toEqual([]);
+    expect(workspaceEvents(at('withdrawn'), now, appUrl)).toEqual([]);
+    expect(workspaceEvents(at('awarded'), now, appUrl)).toHaveLength(1);
+  });
+  it("keeps a program's deadlines while any of its applications is still active", () => {
+    const ws = workspace({ pipeline: [{ ...app('a1', 'worksafe-rtw-trials'), stage: 'withdrawn' }, app('a2', 'worksafe-rtw-trials')] });
+    expect(workspaceEvents(ws, now, appUrl)).toHaveLength(1);
+  });
+  it('names the program (or custom application) in linked goal titles', () => {
+    const ws = workspace({
+      pipeline: [app('a1', 'worksafe-rtw-trials'), app('a2')],
+      goals: [goal({ id: 'p', applicationId: 'a1' }), goal({ id: 'c', applicationId: 'a2' }), goal({ id: 'o' }), goal({ id: 'gone', applicationId: 'missing' })],
+    });
+    const titles = Object.fromEntries(workspaceEvents(ws, now, appUrl).map((e) => [e.uid, e.title]));
+    expect(titles['goal-p@grant-navigator']).toBe(`${worksafe.name}: Submit EOI`);
+    expect(titles['goal-c@grant-navigator']).toBe('Custom: Submit EOI');
+    expect(titles['goal-o@grant-navigator']).toBe('Submit EOI');
+    expect(titles['goal-gone@grant-navigator']).toBe('Submit EOI');
   });
   it('sorts events by date', () => {
     const ws = workspace({ pipeline: [app('a1', 'worksafe-rtw-trials')], goals: [goal({ id: 'late', dueDate: '2026-12-20' }), goal({ id: 'early', dueDate: '2026-11-01' })] });

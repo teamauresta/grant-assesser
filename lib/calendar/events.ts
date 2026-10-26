@@ -1,19 +1,23 @@
 import type { Goal, Program, Workspace } from '@/lib/schema';
 import { getProgram } from '@/content/programs';
 import { resolveDeadlines, type ResolvedDeadline } from '@/lib/status';
+import { applicationName, isDropped } from '@/lib/plan/applications';
 import type { CalEvent } from './ics';
 
 export const DEADLINE_ALARM_DAYS = [14, 7, 1];
 
-type DatedGoal = Goal & { dueDate: string };
-const hasDueDate = (g: Goal): g is DatedGoal => g.dueDate !== undefined;
+export type DatedGoal = Goal & { dueDate: string };
+export const hasDueDate = (g: Goal): g is DatedGoal => g.dueDate !== undefined;
 
-/** An all-day event on the goal's due date. The UID is stable, so re-importing updates the event. */
-export function goalToEvent(goal: DatedGoal, appUrl: string): CalEvent {
+/**
+ * An all-day event on the goal's due date. The UID is stable, so re-importing updates the event.
+ * `context` (the program or application name) prefixes the title, e.g. "CSIRO Kick-Start: Submit EOI".
+ */
+export function goalToEvent(goal: DatedGoal, appUrl: string, context?: string): CalEvent {
   const openSteps = goal.steps.filter((s) => !s.done).map((s) => `- ${s.title}`);
   return {
     uid: `goal-${goal.id}@grant-navigator`,
-    title: goal.title,
+    title: context ? `${context}: ${goal.title}` : goal.title,
     description: openSteps.length ? `Steps:\n${openSteps.join('\n')}` : undefined,
     url: `${appUrl}/plan/?goal=${goal.id}`,
     allDay: true,
@@ -27,7 +31,8 @@ export function goalToEvent(goal: DatedGoal, appUrl: string): CalEvent {
 export function deadlineToEvent(program: Program, deadline: ResolvedDeadline, appUrl: string): CalEvent {
   const when = deadline.time ? ` at ${deadline.time} (${deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time)` : '';
   return {
-    uid: `deadline-${program.slug}-${deadline.date}@grant-navigator`,
+    // Keyed by label, not date, so a corrected date updates the same calendar event.
+    uid: `deadline-${program.slug}-${slugify(deadline.label)}@grant-navigator`,
     title: `${program.name}: ${deadline.label}`,
     description: `${deadline.label}${when}. Check the official guidelines for the current date.`,
     url: `${appUrl}/programs/${program.slug}/`,
@@ -42,16 +47,26 @@ export function deadlineToEvent(program: Program, deadline: ResolvedDeadline, ap
 
 const sortKey = (e: CalEvent) => (e.at ? e.at.toISOString() : `${e.date}T00:00`);
 
+/** The name a goal's linked application goes by, for event titles. Undefined for unlinked goals. */
+export function goalContext(ws: Workspace, goal: Goal): string | undefined {
+  const app = goal.applicationId ? ws.pipeline.find((a) => a.id === goal.applicationId) : undefined;
+  return app ? applicationName(app) : undefined;
+}
+
+/** A goal's calendar event with its application's name in the title. */
+export const workspaceGoalEvent = (ws: Workspace, goal: DatedGoal, appUrl: string) => goalToEvent(goal, appUrl, goalContext(ws, goal));
+
 /**
- * Every open goal with a due date, plus every future deadline of each program in the pipeline.
- * A program in the pipeline more than once contributes its deadlines once. Sorted by date.
+ * Every open goal with a due date, plus every future deadline of each program in the pipeline that is
+ * still being pursued (declined and withdrawn applications are skipped). A program in the pipeline
+ * more than once contributes its deadlines once. Sorted by date.
  */
 export function workspaceEvents(ws: Workspace, now: Date, appUrl: string): CalEvent[] {
   const events: CalEvent[] = ws.goals
     .filter((g) => g.status !== 'done')
     .filter(hasDueDate)
-    .map((g) => goalToEvent(g, appUrl));
-  const slugs = new Set(ws.pipeline.map((a) => a.programSlug).filter((s): s is string => !!s));
+    .map((g) => workspaceGoalEvent(ws, g, appUrl));
+  const slugs = new Set(ws.pipeline.filter((a) => !isDropped(a)).map((a) => a.programSlug).filter((s): s is string => !!s));
   const seen = new Set<string>();
   for (const slug of slugs) {
     const program = getProgram(slug);

@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
 
 const event = {
-  uid: 'deadline-worksafe-rtw-trials-2026-11-27@grant-navigator', title: 'WorkSafe: Applications close',
+  uid: 'deadline-worksafe-rtw-trials-applications-close@grant-navigator', title: 'WorkSafe: Applications close',
   date: '2026-11-27', allDay: false, at: new Date('2026-11-27T03:00:00Z'), alarmsDaysBefore: [14, 7, 1], sequence: 0,
   url: 'https://x.test/grant-assesser/programs/worksafe-rtw-trials/',
 };
@@ -44,7 +44,7 @@ describe('AddToCalendar', () => {
     await user.click(screen.getByRole('menuitem', { name: /download \.ics/i }));
     expect(click).toHaveBeenCalledOnce();
     const text = await createObjectURL.mock.calls[0][0].text();
-    expect(text).toContain('UID:deadline-worksafe-rtw-trials-2026-11-27@grant-navigator');
+    expect(text).toContain('UID:deadline-worksafe-rtw-trials-applications-close@grant-navigator');
     expect(trigger).toHaveFocus();
   });
 
