@@ -14,6 +14,7 @@ const answered: Profile = {
 };
 
 describe('program content', () => {
+  it('registry has 35 programs', () => { expect(PROGRAMS).toHaveLength(35); });
   it('slugs are unique', () => { expect(new Set(PROGRAMS.map((p) => p.slug)).size).toBe(PROGRAMS.length); });
   it('open/rolling programs cite an official source', () => {
     for (const p of PROGRAMS.filter((p) => ['open', 'rolling'].includes(p.status.state)))

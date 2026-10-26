@@ -28,7 +28,10 @@ const program: ProgramInput = {
     { title: 'Agree IP and commercial-use terms', offsetDays: 60 },
     { title: 'Sign the agreement (within 60 days of offer)', offsetDays: 90 },
   ],
-  stacking: [{ with: 'rdti', note: 'Possible, but the grant can trigger an R&D Tax clawback adjustment. Get advice.' }],
+  stacking: [
+    { with: 'rdti', note: 'Possible, but the grant can trigger an R&D Tax clawback adjustment. Get advice.' },
+    { with: 'crc-p', note: 'A possible sequence: prove the research case with Kick-Start before a larger CRC-P bid. Avoid funding the same work twice.' },
+  ],
   content: {
     summary: 'A matched voucher that pays CSIRO to research one technical problem with you.',
     howToApply: [
