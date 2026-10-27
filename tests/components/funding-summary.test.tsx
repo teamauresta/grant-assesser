@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { FundingSummary } from '@/components/results/funding-summary';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { FUNDING_SUMMARY_ID, FundingSummary } from '@/components/results/funding-summary';
 import type { FundingEstimate } from '@/lib/assess';
 
 /** The text a screen reader gets from an element: everything except aria-hidden subtrees. */
@@ -18,6 +18,16 @@ const estimate = (aud: [number, number], credits: number): FundingEstimate => ({
   creditsUsd: { low: 0, high: credits },
   includedSlugs: [],
 });
+afterEach(() => vi.unstubAllGlobals());
+
+/** Captures requestAnimationFrame callbacks so a test can step through a tween. */
+function stubFrames() {
+  const frames: ((t: number) => void)[] = [];
+  vi.stubGlobal('requestAnimationFrame', (cb: (t: number) => void) => { frames.push(cb); return frames.length; });
+  vi.stubGlobal('cancelAnimationFrame', () => {});
+  return (t: number) => act(() => { for (const f of frames.splice(0)) f(t); });
+}
+
 const counted = { funding: ['R&D Tax Incentive'], credits: ['AWS Activate'] };
 
 describe('FundingSummary', () => {
@@ -42,5 +52,27 @@ describe('FundingSummary', () => {
     render(<FundingSummary estimate={estimate([0, 0], 0)} counted={{ funding: [], credits: [] }} />);
     expect(accessibleText(figure('Potential funding (not secured)'))).toBe('None counted yet');
     expect(accessibleText(figure('Credits'))).toBe('None counted yet');
+  });
+
+  it('counts in the final unit and never wider than the final figure, so the dash never moves', () => {
+    const step = stubFrames();
+    render(<FundingSummary estimate={estimate([8_700, 43_500], 0)} counted={counted} />);
+    const [low, high] = figure('Potential funding (not secured)').querySelectorAll<HTMLElement>('[data-count]');
+    step(0);
+    for (const t of [100, 300, 500, 700]) {
+      step(t);
+      expect(low.textContent).toMatch(/^\$\d+\.\dK$/);
+      expect(high.textContent).toMatch(/^\$\d+\.\dK$/);
+      expect(low.textContent!.length).toBeLessThanOrEqual('$8.7K'.length);
+      expect(high.textContent!.length).toBeLessThanOrEqual('$43.5K'.length);
+    }
+    step(2000);
+    expect(low).toHaveTextContent(/^\$8\.7K$/);
+    expect(high).toHaveTextContent(/^\$43\.5K$/);
+  });
+
+  it('puts an id on the section, for aiming the results burst', () => {
+    render(<FundingSummary estimate={estimate([30_000, 45_000], 0)} counted={counted} />);
+    expect(document.getElementById(FUNDING_SUMMARY_ID)).toBe(screen.getByRole('region', { name: 'Funding summary' }));
   });
 });

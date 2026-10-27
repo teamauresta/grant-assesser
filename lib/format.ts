@@ -17,6 +17,18 @@ export function formatMoney(n: number, currency: Currency): string {
   return `${sym}${Math.round(n)}`;
 }
 
+/**
+ * A CountUp format that ends on exactly `formatMoney(final)`. On the way it keeps the final value's
+ * unit and number of decimals ("$8.7K" counts "$0.0K", "$4.4K", ...), so the text never grows
+ * wider than the final figure and nothing beside it moves.
+ */
+export function moneyCounter(final: number, currency: Currency): (n: number) => string {
+  const [div, unit] = final >= 1_000_000 ? [1_000_000, 'M'] : final >= 1_000 ? [1_000, 'K'] : [1, ''];
+  const decimals = div === 1 ? 0 : (trim(final / div).split('.')[1] ?? '').length;
+  const end = formatMoney(final, currency);
+  return (n) => (n >= final ? end : `${SYMBOL[currency]}${(n / div).toFixed(decimals)}${unit}`);
+}
+
 /** The amount part only, or undefined when the record has no usable amount. */
 function amount({ min, max, currency }: Benefit): string | undefined {
   const lo = min ? min : undefined; // a minimum of 0 reads as "up to"

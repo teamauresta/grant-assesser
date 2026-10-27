@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { PERSONA_NOW as now, bootstrappedVic } from '@/tests/fixtures/personas';
 
 // `confetti` is the fire function that confetti.create(canvas) returns.
@@ -51,6 +51,20 @@ describe('Results finish-line cheer', () => {
   it('stays quiet when Results opens without finishing the assessment', async () => {
     render(<><Results /><Toaster /></>);
     expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(useToasts.getState().toasts).toHaveLength(0);
+    expect(confetti).not.toHaveBeenCalled();
+  });
+
+  it('drops a finish flag left by the empty state, so a later visit does not cheer', async () => {
+    // The wizard was left without answers: Results shows "Take the assessment first".
+    useWorkspace.setState({ ws: emptyWorkspace(now) });
+    markAssessmentFinished();
+    render(<><Results /><Toaster /></>);
+    expect(await screen.findByText('Take the assessment first')).toBeInTheDocument();
+    // Answers arrive later (e.g. a persona picked, then the browser's Back button) without finishing.
+    act(() => { useWorkspace.setState({ ws: { ...emptyWorkspace(now), profile: bootstrappedVic } }); });
+    expect(await screen.findByText('Edit your answers')).toBeInTheDocument();
     await new Promise((r) => setTimeout(r, 20));
     expect(useToasts.getState().toasts).toHaveLength(0);
     expect(confetti).not.toHaveBeenCalled();

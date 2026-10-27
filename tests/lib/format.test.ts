@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatBenefit, formatMoney, LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
+import { formatBenefit, formatMoney, moneyCounter, LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import type { Program } from '@/lib/schema';
 
 type Benefit = Program['benefit'];
@@ -16,6 +16,42 @@ describe('formatMoney', () => {
   it('shows small amounts in full', () => {
     expect(formatMoney(500, 'AUD')).toBe('$500');
     expect(formatMoney(0, 'USD')).toBe('US$0');
+  });
+});
+
+describe('moneyCounter', () => {
+  const finals: [number, 'AUD' | 'USD'][] = [
+    [43_500, 'AUD'], [8_700, 'AUD'], [30_000, 'AUD'], [1_250_000, 'AUD'], [5_000_000, 'AUD'],
+    [150_000, 'USD'], [2_500, 'USD'], [500, 'AUD'], [999, 'AUD'], [999_999, 'AUD'],
+  ];
+  const samples = (final: number) => Array.from({ length: 201 }, (_, i) => (final * i) / 200).concat([final - 0.001, final * 0.9999]);
+  const unit = (s: string) => s.replace(/^(US)?\$[\d.]+/, '');
+
+  it('ends on exactly formatMoney(final)', () => {
+    for (const [final, currency] of finals) expect(moneyCounter(final, currency)(final)).toBe(formatMoney(final, currency));
+  });
+
+  it('never grows wider than the final text while counting, so the layout never moves', () => {
+    for (const [final, currency] of finals) {
+      const fmt = moneyCounter(final, currency);
+      const max = formatMoney(final, currency).length;
+      for (const n of samples(final)) expect(fmt(n).length, `${final} at ${n}: ${fmt(n)}`).toBeLessThanOrEqual(max);
+    }
+  });
+
+  it('keeps the final value\'s unit and decimals throughout (no "$1.79K" on the way to "$43.5K")', () => {
+    for (const [final, currency] of finals) {
+      const fmt = moneyCounter(final, currency);
+      const end = unit(formatMoney(final, currency));
+      for (const n of samples(final)) expect(unit(fmt(n)), `${final} at ${n}: ${fmt(n)}`).toBe(end);
+    }
+    const fmt = moneyCounter(43_500, 'AUD');
+    expect(fmt(0)).toBe('$0.0K');
+    expect(fmt(1_790)).toBe('$1.8K');
+    expect(fmt(43_020)).toBe('$43.0K');
+    expect(moneyCounter(30_000, 'AUD')(12_345)).toBe('$12K');
+    expect(moneyCounter(1_250_000, 'AUD')(600_000)).toBe('$0.60M');
+    expect(moneyCounter(500, 'AUD')(123.4)).toBe('$123');
   });
 });
 

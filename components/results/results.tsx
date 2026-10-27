@@ -20,7 +20,7 @@ import { focusRing } from '@/components/ui/focus-ring';
 import { Tabs } from '@/components/ui/tabs';
 import { Reveal } from '@/components/motion/reveal';
 import { AssessmentRow } from './assessment-row';
-import { FundingSummary } from './funding-summary';
+import { FUNDING_SUMMARY_ID, FundingSummary } from './funding-summary';
 
 const TRACKS: Track[] = ['funding', 'quick-wins'];
 
@@ -32,6 +32,10 @@ export function Results() {
   const ready = useWorkspace((s) => s.ready);
   const profile = useStoredProfile();
   const now = useNow();
+  const empty = ready && now !== null && !profile;
+  // The wizard can be left for this empty state; drop its finish flag, so answering later and
+  // coming back without finishing does not celebrate.
+  useEffect(() => { if (empty) consumeAssessmentFinished(); }, [empty]);
   if (!ready || !now) return <ResultsSkeleton />;
   if (!profile) {
     return (
@@ -64,16 +68,18 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   );
 
   // Right after the wizard's last step (not on later visits), cheer once per session. The flag is
-  // consumed by the first run, so this fires once even when the effect runs again.
+  // read once, on mount; under Strict Mode the first run consumes it, so it fires once.
   useEffect(() => {
     if (!consumeAssessmentFinished()) return;
     const count = (group: string) => assessments.filter((a) => a.group === group).length;
     void cheer(
       'results',
       { message: resultsCheer(count('act-now'), count('prepare')), burst: 'results' },
-      originOf(document.getElementById('funding-summary-heading')?.parentElement),
+      originOf(document.getElementById(FUNDING_SUMMARY_ID)),
     );
-  });
+    // On mount only: the flag is read once, and the counts are those Results first opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col gap-8">
