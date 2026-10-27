@@ -46,6 +46,7 @@ describe('ResumeCard', () => {
     render(<ResumeCard />);
     expect(screen.getByRole('region', { name: 'Pick up where you left off' })).toBeInTheDocument();
     expect(screen.getByText('50%', { selector: '.sr-only' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '50% of goals done' })).toBeInTheDocument();
     // The counts sit in their own spans, so match the paragraph's whole text.
     const line = screen.getByText((_, el) => el?.tagName === 'P' && /^1 of 2 goals done/.test(el.textContent ?? ''));
     expect(line).toHaveTextContent(`1 of 2 goals done. Next: Draft the claim, due ${formatDate('2026-11-02')}`);

@@ -7,7 +7,10 @@ import { CountUp } from '@/components/motion/count-up';
 const R = 26;
 const C = 2 * Math.PI * R;
 
-/** A ring in the Liftoff gradient. The arc draws in from empty; the number counts up. */
+/**
+ * A ring in the Liftoff gradient. The arc draws in from empty; the number counts up. Assistive tech
+ * reads it as one image, "40% of goals done"; the counting number inside is hidden from it.
+ */
 export function ProgressRing({ percent, size = 64, className }: { percent: number; size?: number; className?: string }) {
   const id = useId();
   const p = Math.min(100, Math.max(0, Math.round(percent)));
@@ -18,7 +21,12 @@ export function ProgressRing({ percent, size = 64, className }: { percent: numbe
     return () => cancelAnimationFrame(f);
   }, [p]);
   return (
-    <span className={cn('relative inline-flex shrink-0 items-center justify-center', className)} style={{ width: size, height: size }}>
+    <span
+      role="img"
+      aria-label={`${p}% of goals done`}
+      className={cn('relative inline-flex shrink-0 items-center justify-center', className)}
+      style={{ width: size, height: size }}
+    >
       <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" className="absolute inset-0 -rotate-90">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
@@ -34,7 +42,9 @@ export function ProgressRing({ percent, size = 64, className }: { percent: numbe
           className="transition-[stroke-dashoffset] duration-700 ease-out"
         />
       </svg>
-      <CountUp value={p} format={(n) => `${Math.round(n)}%`} className="relative text-sm font-semibold" />
+      <span aria-hidden="true" className="relative inline-flex">
+        <CountUp value={p} format={(n) => `${Math.round(n)}%`} className="text-sm font-semibold" />
+      </span>
     </span>
   );
 }

@@ -9,7 +9,7 @@ export type PlanProgress = { done: number; total: number; percent: number; next?
  * plus goals not tied to an application, and the next open goal by due date. The percentage rounds
  * down, so 100% means every goal is done.
  */
-export function planProgress(ws: Workspace): PlanProgress {
+export function planProgress(ws: Pick<Workspace, 'goals' | 'pipeline'>): PlanProgress {
   const dropped = new Set(ws.pipeline.filter(isDropped).map((a) => a.id));
   const goals = ws.goals.filter((g) => !g.applicationId || !dropped.has(g.applicationId));
   const done = goals.filter((g) => g.status === 'done').length;

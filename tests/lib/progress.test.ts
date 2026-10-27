@@ -38,6 +38,10 @@ describe('planProgress', () => {
     };
     expect(planProgress(many)).toMatchObject({ done: 199, total: 200, percent: 99 });
   });
+  it('needs only the goals and the pipeline', () => {
+    const { goals, pipeline } = ws();
+    expect(planProgress({ goals, pipeline })).toMatchObject({ done: 1, total: 4, percent: 25 });
+  });
   it('is 0% with nothing to do', () => {
     expect(planProgress(emptyWorkspace(now))).toEqual({ done: 0, total: 0, percent: 0, next: undefined });
   });

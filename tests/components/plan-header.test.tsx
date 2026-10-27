@@ -42,6 +42,7 @@ describe('Plan header', () => {
     render(<Plan />);
     const h = within(header());
     expect(h.getByText('25%', { selector: '.sr-only' })).toBeInTheDocument();
+    expect(h.getByRole('img', { name: '25% of goals done' })).toBeInTheDocument();
     // The counts sit in their own spans, so match the paragraph's whole text.
     const line = h.getByText((_, el) => el?.tagName === 'P' && /^1 of 4 goals done/.test(el.textContent ?? ''));
     expect(line).toHaveTextContent(`1 of 4 goals done. Next: Draft the claim, due ${formatDate('2030-03-02')}.`);
@@ -61,6 +62,7 @@ describe('Plan header', () => {
     render(<Plan />);
     const h = within(header());
     expect(h.queryByText(/%$/, { selector: '.sr-only' })).toBeNull();
+    expect(h.queryByRole('img')).toBeNull();
     expect(h.queryByText(/goals done/)).toBeNull();
   });
 });

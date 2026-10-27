@@ -41,10 +41,11 @@ function UrlPlan() {
 }
 
 function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Date }) {
-  const ws = useWorkspace((s) => s.ws);
-  const applications = ws.pipeline.length;
-  const openGoals = useMemo(() => ws.goals.filter((g) => g.status !== 'done').length, [ws.goals]);
-  const { done, total, percent, next } = useMemo(() => planProgress(ws), [ws]);
+  const goals = useWorkspace((s) => s.ws.goals);
+  const pipeline = useWorkspace((s) => s.ws.pipeline);
+  const applications = pipeline.length;
+  const openGoals = useMemo(() => goals.filter((g) => g.status !== 'done').length, [goals]);
+  const { done, total, percent, next } = useMemo(() => planProgress({ goals, pipeline }), [goals, pipeline]);
 
   const select = (next: PlanTab) => {
     // Next.js syncs native history calls with useSearchParams. Replace, so tabs don't fill the back
