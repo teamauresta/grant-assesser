@@ -26,16 +26,16 @@ Every stop meets WCAG AA (4.5:1) on `--bg` in its theme, so the gradient may be 
 
 **Persona cards.** Each persona owns one stop: Bootstrapped teal, Pre-raise blue, VC-backed violet. It shows as an icon badge, a thin top edge and a soft hover glow.
 
-**Dark feature panel.** A rounded panel that is dark in both themes, explaining "How it works" in three steps (Assess, Plan, Report) with large gradient numerals and faint drifting particles. Its own tokens (`--panel-bg`, `--panel-fg`, `--panel-muted-fg`) meet AA.
+**Dark feature panel.** A rounded panel that is dark in both themes, explaining "How it works" in three steps (Assess, Plan, Report) with large gradient numerals and a faint scatter of dashes that drifts once, for 5 seconds, and rests. Its own tokens (`--panel-bg`, `--panel-fg`, `--panel-muted-fg`) meet AA.
 
 **Rule change.** "One accent" becomes "one accent, plus the Liftoff gradient for brand moments only".
 
 ## 2. Home hero
 
-- **Particle field** (`tsParticles`, slim bundle) behind the hero: short dashes in the gradient stops, denser to the right, slow drift, gentle repulse near the cursor. About 120 particles on desktop, 50 on phones; no touch interaction. Client only, loaded with `import()` after hydration, fades in, pauses off screen and in background tabs, `aria-hidden`. With reduced motion a static SVG scatter of dashes replaces it.
+- **Particle field** (`tsParticles`, slim bundle) behind the hero: short dashes in the gradient stops, denser to the right, slow drift, gentle repulse near the cursor. About 120 particles on desktop, 50 on phones; no touch interaction. Client only, loaded with `import()` after hydration, fades in, `aria-hidden`. It settles 5 seconds after loading and moves again only while the pointer moves over the hero, pausing 1.5 seconds after the pointer stops (WCAG 2.2.2). It pauses while the hero is out of view (an `IntersectionObserver`) and in background tabs. With reduced motion a static SVG scatter of dashes replaces it.
 - **Hero content:** an announcement pill ("Verified · 35 programs checked 26 Oct 2026", date from the newest `verification.lastVerified`, linking to `/programs/`); the headline with its gradient phrase; one line of subheading; "Start free assessment" (primary, gradient glow) and "Browse programs" (secondary).
 - **Stats that count up:** total programs, open now, closing in the next 30 days. The last two depend on `now`, so they render after mount (the static HTML never bakes in "now"). No "$X available" total: summing programs would overstate what any founder can get.
-- **Floating category band:** circles with Lucide icons for each program type, drifting in a gentle wave with slight scroll parallax. Each is a real link to `/programs/?type=<type>` with a visible label on hover and focus. Still with reduced motion.
+- **Floating category band:** circles with Lucide icons for each program type, floating in two short staggered waves after load (under 5 seconds in all) and then resting, with slight sideways scroll parallax on wide screens. Each is a real link to `/programs/?type=<type>` with a visible label on hover and focus. Still with reduced motion.
 - **Order below the hero:** persona cards, dark "How it works" panel, closing soon, trust row.
 
 ## 3. Motion across the app
@@ -62,7 +62,7 @@ Shared components in `components/motion/`:
 
 | Moment | Burst | Message |
 |---|---|---|
-| Assessment finished, Results first shown | Medium, behind the counting funding estimate | Persona-specific, e.g. "4 programs you can act on now. Start with the one closing first." |
+| Assessment finished, Results first shown | Medium, behind the counting funding estimate, only when something is in Act now or Prepare | Based on the counts, e.g. "4 programs you can act on now. Start with the one closing first." When nothing fits today, the message says so and there is no burst. |
 | Application moved to Submitted | Small, from the card | "Submitted. That's the hardest part done." |
 | Application moved to Awarded | Large, from both sides | "Awarded. Add the reporting dates to your calendar." |
 | Every goal for an application done | Small, on the goal list | "All goals done for <program>." |
@@ -87,12 +87,17 @@ Shared components in `components/motion/`:
 
 Recorded at the end of the build (27 Oct 2026). Where this list and the sections above differ, this list describes what shipped.
 
-- **Particles.** The hero uses the tsParticles slim bundle's `line` shape (round-capped strokes, 2px wide, 3–6px long, slowly rotating), 120 on desktop and 50 on phones, with repulse on hover on desktop only. Reduced motion gets a seeded SVG scatter of dashes (`StaticScatter`), which also drifts faintly on the dark panel.
+- **Particles.** The hero uses the tsParticles slim bundle's `line` shape (round-capped strokes, 2px wide, 3–6px long, slowly rotating), 120 on desktop and 50 on phones, with repulse on hover on desktop only. Reduced motion gets a seeded SVG scatter of dashes (`StaticScatter`), which also sits faintly behind the dark panel and drifts once there.
 - **Progress ring.** It counts goals, not goal steps, matching the existing "2 of 5 goals done" wording.
 - **Results.** Results has no score bars, so none were animated. Groups reveal in sequence and the funding estimate counts up (`moneyCounter()` in `lib/format.ts` keeps its width steady).
 - **Motion features.** `LazyMotion` loads `domMax`, not `domAnimation`, because the pipeline glide, directory reflow and tab indicator need layout animation. `m` is imported from `motion/react-m`: importing it from `motion/react` added about 35KB to the first load. An `m.*` element starts hidden only once the features have loaded (`useMotionReady()`), so content never stays invisible if that chunk fails. Under reduced motion `MotionConfig` also sets `skipAnimations`, so even opacity fades are skipped.
 - **Celebrations API.** `celebrate(kind)` became `cheer(key, { message, action, burst })`, which shows the toast once per key per session and fires the burst through `burst(kind)`. Confetti draws on its own `aria-hidden`, click-through canvas, and a failed load is ignored because the message has already shown.
 - **Logo colours.** The logo mark uses `--logo-*` tokens, the light stops in both themes, because white fails 3:1 on the dark-theme `--lift-*` stops.
 - **Panel edge.** `--panel-border` is visible in the dark theme only, where the dark panel would otherwise merge with the page; it is decorative and outside the AA tests.
-- **First-load size.** The home page's first-load JavaScript measured 278,256 bytes gzipped (`pnpm size`), up from 256,123 before Liftoff: about 22KB, against a 297,083-byte budget (baseline plus 40KiB).
-- **Tests.** The hero's type circles float without end, so the end-to-end test follows the Grant link with the keyboard rather than a mouse click.
+- **First-load size.** The home page's first-load JavaScript measured 278,255 bytes gzipped (`pnpm size`) after the review fixes, up from 256,123 before Liftoff: about 22KB, against a 297,083-byte budget (baseline plus 40KiB).
+- **Results message.** It is based on the Act now and Prepare counts, not on the persona. When both are zero ("Nothing is open for you today...") it shows without confetti. The cheer is keyed to the workspace's `updatedAt` at the wizard's finish, so a changed assessment later in the same session cheers again.
+- **No automatic motion past 5 seconds (WCAG 2.2.2).** The final review found the particles, the band and the panel drift all ran without end and had no pause control. Now the particles settle 5 seconds after loading, move again only while the pointer moves over the hero (`lib/particle-idle.ts`), and pause out of view. The band floats for two 2.4-second waves (4.8 seconds at most with the stagger) and rests. The panel scatter drifts once for 5 seconds.
+- **Off-screen pause.** tsParticles' `pauseOnOutsideViewport` does nothing with `detectsOn: 'window'` in 4.5, so the field uses its own `IntersectionObserver`.
+- **Gradient use.** Besides the moments in section 1, the home trust row's icons are tinted with the three stops (`text-lift-1..3`), and `glow-lift` is used on the hero's primary call to action and on the band's circles when hovered. The owner asked for more flair, so both stay.
+- **Other pages' size.** `pnpm size` also prints the first-load JavaScript of programs, plan, report and results, for information only.
+- **Tests.** The end-to-end test clicks the Grant circle with the mouse once the band has rested, and has a separate keyboard check.

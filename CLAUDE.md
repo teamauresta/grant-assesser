@@ -24,7 +24,7 @@ Grant Navigator helps Australian AI startups find grants, tax incentives, credit
   - `store/` the `WorkspaceStore` interface, localStorage and memory implementations, Zustand hook, backup and import/export
   - `pdf/` report data and the `@react-pdf/renderer` document (loaded with dynamic `import()` only)
   - `programs/` directory filters, Not-a-fit reasons, status hooks, `stats.ts` (hero numbers, latest verification date)
-  - `celebrate.ts` `cheer()` and confetti bursts; `toast.ts` milestone messages; `motion.ts` reduced-motion check and `tween()`; `contrast.ts` WCAG contrast maths; `hero-particles.ts` tsParticles options
+  - `celebrate.ts` `cheer()` and confetti bursts; `toast.ts` milestone messages; `motion.ts` reduced-motion check and `tween()`; `contrast.ts` WCAG contrast maths; `hero-particles.ts` tsParticles options; `particle-idle.ts` when the particles pause
   - `format.ts` money and label formatting (`moneyCounter()` for count-ups); `personas.ts` persona copy and defaults; `copy.ts` shared strings; `download.ts` browser file save; `theme.ts` theme preference; `use-now.ts` shared client clock; `cn.ts`, `id.ts`
 - `scripts/serve-out.mjs` static server for `out/`; `scripts/check-freshness.ts` weekly data report; `scripts/js-size.mjs` home first-load JS budget
 - `tests/` `lib/`, `components/`, `content/` (Vitest); `e2e/` (Playwright + axe); `fixtures/personas.ts`; `helpers/`
@@ -87,7 +87,8 @@ After every change, `pnpm typecheck && pnpm lint && pnpm test` must pass; run `p
 - Use `components/motion/` (`Reveal`, `CountUp`, `MotionProvider`). Durations 150–300ms, ease-out to enter.
 - Import `m` from `motion/react-m`, never `motion/react` (that adds about 35KB to the first load); `LazyMotion` is `strict`, which forbids `motion.*`. Features (`domMax`) load after hydration.
 - An `m.*` element may start hidden only when `useMotionReady()` (`components/motion/motion-provider.tsx`) is true; otherwise use `initial={false}`, or it stays invisible if the features never load.
+- Automatic motion must stop within 5 seconds, or pause when idle and resume only on user input (WCAG 2.2.2): finite CSS iteration counts, and `lib/particle-idle.ts` for the hero particles.
 - Every effect is off under reduced motion: the global CSS rule zeroes CSS animations, `MotionConfig` sets `skipAnimations`, and JavaScript effects call `prefersReducedMotion()` from `lib/motion.ts`. Hero particles become a still SVG scatter; count-ups show the final value.
 - Count-ups use `CountUp`; for money pass `moneyCounter()` from `lib/format.ts` as `format`.
 - Celebrations go through `cheer()` in `lib/celebrate.ts`: a toast once per event, plus confetti only when Celebrations is on in Settings and motion is allowed. Confetti draws on its own `aria-hidden` canvas. Never celebrate declined, withdrawn or not-a-fit.
-- Bundle: keep heavy libraries (`@tsparticles/*`, `canvas-confetti`, the PDF renderer) behind `import()`. `pnpm size` must pass (home first-load about 278KB gzipped against a 297,083-byte budget).
+- Bundle: keep heavy libraries (`@tsparticles/*`, `canvas-confetti`, the PDF renderer) behind `import()`. `pnpm size` must pass (home first-load about 278KB gzipped against a 297,083-byte budget; it also prints other pages for information).
