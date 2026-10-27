@@ -27,7 +27,8 @@ const BURSTS: Record<BurstKind, Options[]> = {
 };
 
 const fired = new Set<string>();
-let assessmentFinished = false;
+/** The workspace's updatedAt when the wizard last finished, until Results reads it; null if not. */
+let assessmentFinished: string | null = null;
 let fire: CreateTypes | undefined;
 let canvas: HTMLCanvasElement | undefined;
 
@@ -81,13 +82,19 @@ export function originOf(el: Element | null | undefined): Origin | undefined {
   return { x: (r.left + r.width / 2) / window.innerWidth, y: (r.top + r.height / 2) / window.innerHeight };
 }
 
-/** Set by the wizard's last step; read once by Results so revisiting Results does not celebrate. */
-export const markAssessmentFinished = () => { assessmentFinished = true; };
-export function consumeAssessmentFinished(): boolean {
+/**
+ * Set by the wizard's last step with the workspace's `updatedAt`; read once by Results so
+ * revisiting Results does not celebrate. The stamp keys the cheer, so finishing a changed
+ * assessment later in the session cheers again, while finishing the same answers twice does not.
+ */
+export const markAssessmentFinished = (stamp = '') => { assessmentFinished = stamp; };
+/** The finish stamp, once; null when the wizard has not finished since the last read. */
+export function consumeAssessmentFinish(): string | null {
   const was = assessmentFinished;
-  assessmentFinished = false;
+  assessmentFinished = null;
   return was;
 }
+export const consumeAssessmentFinished = (): boolean => consumeAssessmentFinish() !== null;
 
 /** What moving an application to a stage says, or null when the move needs no message. */
 export function stageCheer(stage: Stage): Cheer | null {
@@ -97,6 +104,12 @@ export function stageCheer(stage: Stage): Cheer | null {
     case 'declined': return { message: 'Most funded startups applied more than once. See what else fits.', action: { label: 'See your results', href: '/assess/results/' } };
     default: return null;
   }
+}
+
+/** The Results cheer: confetti only when there is something to act on or prepare for. */
+export function resultsCelebration(actNow: number, prepare: number): Cheer {
+  const message = resultsCheer(actNow, prepare);
+  return actNow + prepare > 0 ? { message, burst: 'results' } : { message };
 }
 
 /** The line shown when Results first opens after the assessment. */
@@ -109,7 +122,7 @@ export function resultsCheer(actNow: number, prepare: number): string {
 /** For tests. */
 export function resetCelebrations() {
   fired.clear();
-  assessmentFinished = false;
+  assessmentFinished = null;
   fire = undefined;
   canvas?.remove();
   canvas = undefined;

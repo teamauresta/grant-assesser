@@ -69,4 +69,26 @@ describe('Results finish-line cheer', () => {
     expect(useToasts.getState().toasts).toHaveLength(0);
     expect(confetti).not.toHaveBeenCalled();
   });
+
+  it('cheers again for a new assessment finished later in the same session', async () => {
+    markAssessmentFinished('2026-10-27T01:00:00.000Z');
+    const first = render(<><Results /><Toaster /></>);
+    await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
+    first.unmount();
+    useToasts.setState({ toasts: [] });
+
+    // The same finish again (Results remounted without a new finish) stays quiet...
+    markAssessmentFinished('2026-10-27T01:00:00.000Z');
+    const again = render(<><Results /><Toaster /></>);
+    expect(await screen.findByText('Edit your answers')).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(useToasts.getState().toasts).toHaveLength(0);
+    again.unmount();
+
+    // ...but a new finish, with the workspace changed since, cheers.
+    markAssessmentFinished('2026-10-27T02:00:00.000Z');
+    render(<><Results /><Toaster /></>);
+    expect(await screen.findByText(expected)).toBeInTheDocument();
+    await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
+  });
 });

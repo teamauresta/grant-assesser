@@ -8,7 +8,7 @@ const { confetti, create } = vi.hoisted(() => {
 });
 vi.mock('canvas-confetti', () => ({ default: Object.assign(vi.fn(), { create }) }));
 
-import { cheer, consumeAssessmentFinished, markAssessmentFinished, resetCelebrations, resultsCheer, stageCheer } from '@/lib/celebrate';
+import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, markAssessmentFinished, resetCelebrations, resultsCelebration, resultsCheer, stageCheer } from '@/lib/celebrate';
 import { useToasts } from '@/lib/toast';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
@@ -78,6 +78,24 @@ describe('assessment finished flag', () => {
     markAssessmentFinished();
     expect(consumeAssessmentFinished()).toBe(true);
     expect(consumeAssessmentFinished()).toBe(false);
+  });
+
+  it('carries the stamp of the finish, so each new assessment has its own cheer key', () => {
+    expect(consumeAssessmentFinish()).toBeNull();
+    markAssessmentFinished('2026-10-27T01:00:00.000Z');
+    expect(consumeAssessmentFinish()).toBe('2026-10-27T01:00:00.000Z');
+    expect(consumeAssessmentFinish()).toBeNull();
+  });
+});
+
+describe('resultsCelebration', () => {
+  it('bursts when there is something to act on or prepare for', () => {
+    expect(resultsCelebration(2, 0)).toEqual({ message: resultsCheer(2, 0), burst: 'results' });
+    expect(resultsCelebration(0, 3)).toEqual({ message: resultsCheer(0, 3), burst: 'results' });
+  });
+
+  it('does not burst when nothing fits today: the message is not good news', () => {
+    expect(resultsCelebration(0, 0)).toEqual({ message: resultsCheer(0, 0) });
   });
 });
 

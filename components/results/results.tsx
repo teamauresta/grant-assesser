@@ -9,7 +9,7 @@ import { assessAll, estimateFunding, type Track } from '@/lib/assess';
 import { GROUP_INFO, TRACK_INFO, countedPrograms, groupsForTrack, type ResultGroup } from '@/lib/assessment/results';
 import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS } from '@/lib/personas';
 import { DISCLAIMER } from '@/lib/copy';
-import { cheer, consumeAssessmentFinished, originOf, resultsCheer } from '@/lib/celebrate';
+import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, originOf, resultsCelebration } from '@/lib/celebrate';
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
@@ -67,14 +67,15 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
     [assessments],
   );
 
-  // Right after the wizard's last step (not on later visits), cheer once per session. The flag is
-  // read once, on mount; under Strict Mode the first run consumes it, so it fires once.
+  // Right after the wizard's last step (not on later visits), cheer once per finished assessment.
+  // The flag is read once, on mount; under Strict Mode the first run consumes it, so it fires once.
   useEffect(() => {
-    if (!consumeAssessmentFinished()) return;
+    const finished = consumeAssessmentFinish();
+    if (finished === null) return;
     const count = (group: string) => assessments.filter((a) => a.group === group).length;
     void cheer(
-      'results',
-      { message: resultsCheer(count('act-now'), count('prepare')), burst: 'results' },
+      `results:${finished}`,
+      resultsCelebration(count('act-now'), count('prepare')),
       originOf(document.getElementById(FUNDING_SUMMARY_ID)),
     );
     // On mount only: the flag is read once, and the counts are those Results first opened with.

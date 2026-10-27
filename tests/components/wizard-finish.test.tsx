@@ -8,7 +8,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }), useSearchParams
 vi.mock('@/lib/use-now', () => ({ useNow: () => new Date('2026-10-27T00:00:00Z') }));
 
 import { Wizard } from '@/components/assess/wizard';
-import { consumeAssessmentFinished, resetCelebrations } from '@/lib/celebrate';
+import { consumeAssessmentFinish, consumeAssessmentFinished, resetCelebrations } from '@/lib/celebrate';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
 
@@ -35,5 +35,13 @@ describe('Wizard last step', () => {
     await userEvent.setup().click(await screen.findByRole('button', { name: /See results/ }));
     expect(push).toHaveBeenCalledWith('/assess/results/');
     expect(consumeAssessmentFinished()).toBe(false);
+  });
+
+  it("stamps the finish with the workspace's updatedAt, so a changed assessment cheers again", async () => {
+    const ws = { ...emptyWorkspace(now), profile: { persona: 'bootstrapped' as const }, updatedAt: '2026-10-27T03:04:05.000Z' };
+    useWorkspace.setState({ ws });
+    render(<Wizard />);
+    await userEvent.setup().click(await screen.findByRole('button', { name: /See results/ }));
+    expect(consumeAssessmentFinish()).toBe(useWorkspace.getState().ws.updatedAt);
   });
 });
