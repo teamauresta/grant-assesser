@@ -141,6 +141,11 @@
 @keyframes drift {
   to { translate: -24px 12px; }
 }
+/* The home category band's gentle wave. */
+@keyframes lift-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
 
 @layer base {
   html {
