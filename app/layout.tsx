@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { MobileHeader } from '@/components/layout/mobile-header';
 import { StorageBanner } from '@/components/layout/storage-banner';
 import { ThemeWatcher } from '@/components/layout/theme-watcher';
+import { Toaster } from '@/components/ui/toast';
 import { MotionProvider } from '@/components/motion/motion-provider';
 import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <BottomNav className="md:hidden" />
+          <Toaster />
         </MotionProvider>
       </body>
     </html>

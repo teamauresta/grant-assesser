@@ -1,0 +1,69 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { TOAST_MS, useToasts, type Toast } from '@/lib/toast';
+import { focusRing } from './focus-ring';
+
+/**
+ * Short milestone messages at the bottom of the screen (above the mobile bottom nav). The polite
+ * live region is always rendered, even when empty, so screen readers reliably announce new
+ * messages; nothing here ever takes focus. Mount once, in the root layout.
+ */
+export function Toaster() {
+  const toasts = useToasts((s) => s.toasts);
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 flex flex-col gap-2 md:bottom-6 md:left-auto md:right-6 md:w-96"
+    >
+      {toasts.map((t) => <ToastItem key={t.id} toast={t} />)}
+    </div>
+  );
+}
+
+/** One message. It dismisses itself after TOAST_MS, paused while hovered or focused (WCAG 2.2.1). */
+function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
+  const dismiss = useToasts((s) => s.dismiss);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const timer = setTimeout(() => dismiss(id), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [paused, id, dismiss]);
+
+  return (
+    <div
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
+      className="flex animate-toast-in items-start gap-3 rounded-lg border border-border bg-bg p-4 text-sm text-fg shadow-lg"
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
+        <p>{message}</p>
+        {action && (
+          <Link
+            href={action.href}
+            onClick={() => dismiss(id)}
+            className={cn('inline-flex min-h-11 items-center self-start rounded-sm font-medium text-accent underline underline-offset-2', focusRing)}
+          >
+            {action.label}
+          </Link>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => dismiss(id)}
+        aria-label="Dismiss"
+        className={cn('-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+      >
+        <X aria-hidden="true" size={16} strokeWidth={1.5} />
+      </button>
+    </div>
+  );
+}
