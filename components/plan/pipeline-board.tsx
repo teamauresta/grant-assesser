@@ -53,7 +53,8 @@ export function PipelineBoard({ now }: { now: Date }) {
     setFocusId(a.id);
     setAnnouncement(`Moved ${nameOf(a)} to ${STAGE_LABELS[stage]}.`);
     const c = stageCheer(stage);
-    if (c) void cheer(`${a.id}:${stage}`, c, originOf(document.querySelector(`[data-app-id="${a.id}"]`)));
+    // Aim the burst at the card in its new column, once the move has rendered.
+    if (c) requestAnimationFrame(() => { void cheer(`${a.id}:${stage}`, c, originOf(document.querySelector(`[data-app-id="${a.id}"]`))); });
   };
 
   const onDrop = (e: DragEvent, column: BoardColumn) => {

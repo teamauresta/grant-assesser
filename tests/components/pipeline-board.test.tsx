@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // `confetti` is the fire function that confetti.create(canvas) returns.
@@ -147,5 +147,58 @@ describe('PipelineBoard milestone cheers', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(toasts()).toEqual([]);
     expect(confetti).not.toHaveBeenCalled();
+  });
+
+  it('cheers an award chosen in the outcome dialog after a drop on Outcome', async () => {
+    const { id } = await setup();
+    const data: Record<string, string> = {};
+    const dataTransfer = { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+    fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+    fireEvent.dragOver(column('Outcome'), { dataTransfer });
+    fireEvent.drop(column('Outcome'), { dataTransfer });
+    const dialog = screen.getByRole('dialog', { name: 'What was the outcome?' });
+    await userEvent.setup().click(within(dialog).getByRole('button', { name: /^Awarded/ }));
+    expect(useWorkspace.getState().ws.pipeline.find((a) => a.id === id)?.stage).toBe('awarded');
+    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
+  });
+
+  it('says nothing for Withdrawn', async () => {
+    const { moveTo } = await setup();
+    await moveTo('Outcome: Withdrawn');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(toasts()).toEqual([]);
+    expect(confetti).not.toHaveBeenCalled();
+  });
+
+  it('cheers a submission once, even after moving back and submitting again', async () => {
+    const { moveTo } = await setup();
+    await moveTo('Submitted');
+    await screen.findByText("Submitted. That's the hardest part done.");
+    await moveTo('Considering');
+    await moveTo('Submitted');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(toasts()).toEqual(["Submitted. That's the hardest part done."]);
+    expect(confetti).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts the burst from the card in its new column', async () => {
+    // Give each column its own place on a 1000px-wide screen: Considering 0, Preparing 250, Submitted 500, Outcome 750.
+    const lefts: Record<string, number> = { 'column-considering': 0, 'column-preparing': 250, 'column-submitted': 500, 'column-outcome': 750 };
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const left = lefts[this.closest('section[aria-labelledby]')?.getAttribute('aria-labelledby') ?? ''] ?? 0;
+      return { left, top: 100, width: 250, height: 100, right: left + 250, bottom: 200, x: left, y: 100, toJSON() {} } as DOMRect;
+    });
+    vi.stubGlobal('innerWidth', 1000);
+    vi.stubGlobal('innerHeight', 1000);
+    try {
+      const { moveTo } = await setup();
+      await moveTo('Submitted');
+      await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
+      expect(confetti.mock.calls[0][0].origin).toEqual({ x: 0.625, y: 0.15 });
+    } finally {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    }
   });
 });

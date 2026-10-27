@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { populatedWorkspace, seedStorage } from './helpers';
 
 /**
  * Motion's features (domMax) load in their own chunk after hydration. Until they arrive, and for
@@ -50,5 +51,25 @@ test('report sections stay visible when motion features fail to load', async ({ 
   await expect(section).toHaveCount(0);
   await cover.check();
   await expect(section).toHaveCSS('opacity', '1');
+  expect(errors).toEqual([]);
+});
+
+test('pipeline cards stay visible, and glide-free, when motion features fail to load', async ({ page }) => {
+  await seedStorage(page, { workspace: populatedWorkspace() });
+  const { blocked, errors } = await blockMotionFeatures(page);
+  await page.goto('plan/');
+  await page.waitForLoadState('networkidle');
+  await expect.poll(() => blocked.count).toBeGreaterThan(0);
+
+  const cards = page.locator('li[data-app-id]');
+  await expect(cards).toHaveCount(2);
+  for (const card of await cards.all()) await expect(card).toHaveCSS('opacity', '1');
+
+  await page.getByRole('button', { name: 'Move CSIRO Kick-Start to…' }).click();
+  await page.getByRole('menuitem', { name: 'Submitted' }).click();
+  const moved = page.getByRole('region', { name: /^Submitted/ }).locator('li[data-app-id="app-kick-start"]');
+  await expect(moved).toHaveCount(1);
+  await expect(moved).toHaveCSS('opacity', '1');
+  await expect(moved.getByRole('article', { name: 'CSIRO Kick-Start' })).toBeFocused();
   expect(errors).toEqual([]);
 });
