@@ -1,15 +1,18 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check } from 'lucide-react';
-import { PERSONAS } from '@/lib/schema';
+import { ArrowRight, Check, Rocket, Sprout, Target, type LucideIcon } from 'lucide-react';
+import { PERSONAS, type Persona } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
 
+const ICONS: Record<Persona, LucideIcon> = { bootstrapped: Sprout, 'pre-raise': Target, 'vc-backed': Rocket };
+
 /**
- * The three persona cards. Choosing one stores the persona, then opens the assessment; the query
+ * The three persona cards, each in its own Liftoff stop (top edge, icon badge, hover glow). Choosing one stores the persona, then opens the assessment; the query
  * parameter is kept so the wizard can pre-select it even if the store has not loaded yet.
  */
 export function PersonaCards() {
@@ -18,20 +21,29 @@ export function PersonaCards() {
   return (
     <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {PERSONAS.map((value) => {
-        const { label, description } = PERSONAS_INFO[value];
+        const { label, description, tone } = PERSONAS_INFO[value];
+        const Icon = ICONS[value];
         const selected = current === value;
         return (
           <li key={value}>
             <Link
               href={`/assess/?persona=${value}`}
               onClick={() => setProfile({ persona: value })}
+              style={{ '--tone': tone } as CSSProperties}
               className={cn(
                 'group flex h-full min-h-32 flex-col gap-2 rounded-lg border bg-surface p-6',
-                'transition-[border-color] duration-150 hover:border-accent',
+                'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent motion-safe:hover:-translate-y-0.5',
+                'hover:shadow-[0_10px_30px_-14px_var(--tone)]',
                 selected ? 'border-accent' : 'border-border',
+                // After the all-sides colours, so the top edge keeps its tone when selected or hovered.
+                'border-t-2 border-t-[var(--tone)] hover:border-t-[var(--tone)]',
                 focusRing,
               )}
             >
+              {/* Decorative: the link's name must still start with the persona label. */}
+              <span aria-hidden="true" className="mb-1 flex size-10 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--tone)_14%,transparent)] text-[var(--tone)]">
+                <Icon size={20} strokeWidth={1.5} />
+              </span>
               <span className="flex items-center justify-between gap-2 text-xl font-semibold tracking-tight">
                 {label}
                 <ArrowRight
