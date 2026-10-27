@@ -6,7 +6,6 @@ import { formatDate } from '@/lib/dates';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
-import { HeroParticles } from './hero-particles';
 import { HeroStats } from './hero-stats';
 
 /** The home page's opening section: the promise, the two calls to action and live numbers. */
@@ -14,7 +13,6 @@ export function Hero() {
   const verified = latestVerified(PROGRAMS);
   return (
     <section aria-labelledby="hero-heading" className="relative isolate -mx-4 -mt-6 px-4 pt-10 pb-8 md:-mt-10 md:pt-20 md:pb-12">
-      <HeroParticles />
       <div className="relative z-10 flex max-w-4xl flex-col items-start gap-6">
         <Link
           href="/programs/"

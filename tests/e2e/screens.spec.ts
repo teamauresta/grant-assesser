@@ -11,7 +11,7 @@ test.skip(!process.env.SCREENS, 'Set SCREENS=1 to capture review screenshots');
 
 const OUT = join(import.meta.dirname, '../../test-results/screens');
 
-/** Scrolls through the page so scroll reveals show, lets entrances finish, then waits for particles. */
+/** Scrolls through the page so scroll reveals show, lets entrances finish, then lets the hero settle. */
 async function settle(page: Page) {
   await page.waitForLoadState('networkidle');
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);

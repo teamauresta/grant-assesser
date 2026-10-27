@@ -28,8 +28,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      # pnpm-workspace.yaml's allowBuilds lets esbuild and unrs-resolver run their install scripts,
-      # and denies @tsparticles/engine's (it only prints compatibility warnings).
+      # pnpm-workspace.yaml's allowBuilds lets esbuild and unrs-resolver run their install scripts.
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm typecheck

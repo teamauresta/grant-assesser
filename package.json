@@ -28,9 +28,6 @@
   "type": "module",
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",
-    "@tsparticles/engine": "4.5.0",
-    "@tsparticles/react": "4.5.0",
-    "@tsparticles/slim": "4.5.0",
     "canvas-confetti": "1.9.4",
     "geist": "^1.8.2",
     "lucide-react": "^1.61.0",

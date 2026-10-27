@@ -3,7 +3,6 @@ import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Reveal } from '@/components/motion/reveal';
-import { StaticScatter } from './static-scatter';
 
 const STEPS = [
   { title: 'Assess', text: 'Answer six short steps. Every program is sorted into Act now, Prepare, Watch and Not a fit, with the reasons.', href: '/assess/', cta: 'Start the assessment' },
@@ -15,7 +14,6 @@ const STEPS = [
 export function HowItWorks() {
   return (
     <section aria-labelledby="how-heading" className="relative isolate overflow-hidden rounded-3xl border border-panel-border bg-panel-bg px-6 py-10 text-panel-fg md:px-12 md:py-14">
-      <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-40"><StaticScatter drift /></div>
       <h2 id="how-heading" className="text-3xl tracking-[-0.03em] md:text-5xl">How it works</h2>
       <ol className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
         {STEPS.map((s, i) => (
