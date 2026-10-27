@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { PROGRAM_TYPES } from '@/lib/programs/filter';
 import { populatedWorkspace, seedStorage } from './helpers';
 
 /**
@@ -23,8 +24,14 @@ const hero = (page: Page) => page.getByRole('region', { name: /^Find the funding
 
 const grantCircle = (page: Page) => page.getByRole('region', { name: 'Browse by type' }).getByRole('link', { name: 'Grant', exact: true });
 
-/** Waits for the band's float to finish: it runs two short waves after load, then rests. */
+/**
+ * Scrolls the band into view and waits for its float to finish: it starts the first time the band
+ * comes into view, runs two short waves (under 5 seconds), then rests.
+ */
 async function bandAtRest(page: Page) {
+  const band = page.getByRole('region', { name: 'Browse by type' });
+  await band.scrollIntoViewIfNeeded();
+  await expect(band.locator('li[class*="lift-float"]')).toHaveCount(PROGRAM_TYPES.length);
   await page.evaluate(() => Promise.all(document.getAnimations()
     .filter((a) => (a as CSSAnimation).animationName === 'lift-float')
     .map((a) => a.finished.catch(() => undefined))));
@@ -58,7 +65,7 @@ test.describe('hero', () => {
     await expect(stat(page, 'Open now')).toHaveText(/^\d+$/);
     await expect(stat(page, 'Closing in 30 days')).toHaveText(/^\d+$/);
 
-    // The circles float for under 5 seconds, then rest and can be clicked like any link.
+    // The circles float for under 5 seconds once in view, then rest and can be clicked like any link.
     await bandAtRest(page);
     await grantCircle(page).click();
     await expectGrantDirectory(page);

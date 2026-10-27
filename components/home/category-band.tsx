@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useMotionValueEvent, useScroll } from 'motion/react';
 import { Banknote, Cloud, Handshake, Landmark, Receipt, Rocket, Ticket, TrendingUp, type LucideIcon } from 'lucide-react';
 import type { Program } from '@/lib/schema';
 import { PROGRAM_TYPES } from '@/lib/programs/filter';
 import { TYPE_LABELS } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { prefersReducedMotion } from '@/lib/motion';
 import { focusRing } from '@/components/ui/focus-ring';
 
 const ICONS: Record<Program['type'], LucideIcon> = {
@@ -44,6 +45,20 @@ export function CategoryBand() {
   }, [drift]);
   useEffect(() => place(scrollYProgress.get()), [place, scrollYProgress]);
   useMotionValueEvent(scrollYProgress, 'change', place);
+  // The float plays once, the first time the band comes into view, so people actually see it.
+  // It rests in the server HTML, under reduced motion and without IntersectionObserver.
+  const [floating, setFloating] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined' || prefersReducedMotion()) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      setFloating(true);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
     <section ref={ref} aria-labelledby="types-heading" className="flex flex-col gap-4 overflow-hidden py-2">
       <h2 id="types-heading" className="text-xl">Browse by type</h2>
@@ -53,7 +68,7 @@ export function CategoryBand() {
           return (
             // Two 2.4s waves, started part-way by the negative stagger, so each circle moves for at
             // most 4.8s and rests at the keyframes' end (WCAG 2.2.2: no automatic motion past 5s).
-            <li key={type} className="animate-[lift-float_2.4s_ease-in-out_2]" style={{ animationDelay: `${i * -0.45}s` }}>
+            <li key={type} className={floating ? 'animate-[lift-float_2.4s_ease-in-out_2]' : undefined} style={{ animationDelay: `${i * -0.45}s` }}>
               <Link
                 href={`/programs/?type=${type}`}
                 className={cn('group flex flex-col items-center gap-2 rounded-lg p-1 text-center text-xs text-muted-fg hover:text-fg', focusRing)}

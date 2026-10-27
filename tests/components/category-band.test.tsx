@@ -71,8 +71,21 @@ describe('CategoryBand', () => {
     container.remove();
   });
 
+  /** Stands in for IntersectionObserver: `enter()` reports the band on screen. */
+  function observeBand() {
+    const io = { enter: () => {}, disconnected: false };
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) { io.enter = () => cb([{ isIntersecting: true }]); }
+      observe() {}
+      disconnect() { io.disconnected = true; }
+    });
+    return io;
+  }
+
   it('floats for under 5 seconds and comes to rest (WCAG 2.2.2)', () => {
+    const io = observeBand();
     const { container } = render(<MotionProvider><CategoryBand /></MotionProvider>);
+    act(() => io.enter());
     const items = [...list(container).children];
     expect(items).toHaveLength(PROGRAM_TYPES.length);
     for (const li of items) {
@@ -80,5 +93,33 @@ describe('CategoryBand', () => {
       expect(seconds).toBeGreaterThan(0);
       expect(seconds).toBeLessThanOrEqual(5);
     }
+  });
+
+  it('rests until it first comes into view, then floats once', () => {
+    const html = renderToString(<MotionProvider><CategoryBand /></MotionProvider>);
+    expect(html).not.toContain('animate-[');
+
+    const io = observeBand();
+    const { container } = render(<MotionProvider><CategoryBand /></MotionProvider>);
+    const items = () => [...list(container).children];
+    for (const li of items()) expect(visibleMotionSeconds(li)).toBe(0);
+    act(() => io.enter());
+    for (const li of items()) expect(visibleMotionSeconds(li)).toBeGreaterThan(0);
+    // Once is enough: the observer is let go.
+    expect(io.disconnected).toBe(true);
+  });
+
+  it('rests under reduced motion, and when IntersectionObserver is missing', () => {
+    media(['(prefers-reduced-motion: reduce)']);
+    const io = observeBand();
+    const reduced = render(<MotionProvider><CategoryBand /></MotionProvider>);
+    act(() => io.enter());
+    for (const li of list(reduced.container).children) expect(visibleMotionSeconds(li)).toBe(0);
+    reduced.unmount();
+
+    vi.unstubAllGlobals();
+    vi.stubGlobal('IntersectionObserver', undefined);
+    const bare = render(<MotionProvider><CategoryBand /></MotionProvider>);
+    for (const li of list(bare.container).children) expect(visibleMotionSeconds(li)).toBe(0);
   });
 });
