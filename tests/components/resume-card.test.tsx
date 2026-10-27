@@ -34,6 +34,13 @@ describe('ResumeCard', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('renders nothing when the applications have no goals to count, never "0 of 0 goals done"', () => {
+    useWorkspace.setState({ ws: { ...filled(), goals: [] }, ready: true });
+    const { container } = render(<ResumeCard />);
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText(/0 of 0 goals done/)).toBeNull();
+  });
+
   it('shows goal progress, the next goal and a link to the plan', () => {
     useWorkspace.setState({ ws: filled(), ready: true });
     render(<ResumeCard />);

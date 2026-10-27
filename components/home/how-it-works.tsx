@@ -14,7 +14,7 @@ const STEPS = [
 /** Dark in both themes: the page's one dramatic panel. */
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-heading" className="relative isolate overflow-hidden rounded-3xl bg-panel-bg px-6 py-10 text-panel-fg md:px-12 md:py-14">
+    <section aria-labelledby="how-heading" className="relative isolate overflow-hidden rounded-3xl border border-panel-border bg-panel-bg px-6 py-10 text-panel-fg md:px-12 md:py-14">
       <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-40"><StaticScatter drift /></div>
       <h2 id="how-heading" className="text-3xl tracking-[-0.03em] md:text-5xl">How it works</h2>
       <ol className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">

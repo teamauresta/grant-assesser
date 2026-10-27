@@ -56,6 +56,9 @@
   --panel-lift-1: #2dd4bf;
   --panel-lift-2: #60a5fa;
   --panel-lift-3: #a78bfa;
+  /* Decorative edge (WCAG 1.4.11 does not apply), so not in the AA contrast tests. Not needed in
+   * light, where the dark panel stands out; see the dark theme. */
+  --panel-border: transparent;
 }
 
 [data-theme="dark"] {
@@ -82,6 +85,9 @@
   --lift-1: #2dd4bf;
   --lift-2: #60a5fa;
   --lift-3: #a78bfa;
+
+  /* --panel-bg nearly matches --bg here (1.015:1), so the panel gets a visible decorative edge. */
+  --panel-border: #3f3f46;
 }
 
 @theme inline {
@@ -110,6 +116,7 @@
   --color-panel-bg: var(--panel-bg);
   --color-panel-fg: var(--panel-fg);
   --color-panel-muted-fg: var(--panel-muted-fg);
+  --color-panel-border: var(--panel-border);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;

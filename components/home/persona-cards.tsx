@@ -35,7 +35,9 @@ export function PersonaCards() {
                 'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent motion-safe:hover:-translate-y-0.5',
                 'hover:shadow-[0_10px_30px_-14px_var(--tone)]',
                 selected ? 'border-accent' : 'border-border',
-                // After the all-sides colours, so the top edge keeps its tone when selected or hovered.
+                // The top edge keeps its tone because Tailwind emits border-top-color after border-color,
+                // so it beats border-accent/border-border. Hover rules come later still, so hover:border-accent
+                // would recolour the top edge too: hover:border-t-[var(--tone)] wins it back. Keep both.
                 'border-t-2 border-t-[var(--tone)] hover:border-t-[var(--tone)]',
                 focusRing,
               )}

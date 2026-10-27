@@ -32,6 +32,14 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (_, t) =>
   });
 });
 
+// The panel's edge is decorative (WCAG 1.4.11 does not apply: the panel is not a control and its
+// content stands on its own), so it is not in the AA lists above. It is invisible in light, where
+// the dark panel already stands out, and a visible line in dark, where --panel-bg nearly matches --bg.
+it('the panel border is defined in both themes', () => {
+  expect(css).toMatch(/:root \{[^}]*--panel-border:\s*transparent;/);
+  expect(tokens('[data-theme="dark"]')['--panel-border']).toMatch(/^#[0-9a-f]{6}$/i);
+});
+
 it('the logo stops are the light Liftoff stops and only defined in :root', () => {
   expect([light['--logo-1'], light['--logo-2'], light['--logo-3']]).toEqual([light['--lift-1'], light['--lift-2'], light['--lift-3']]);
   expect(Object.keys(tokens('[data-theme="dark"]')).filter((k) => k.startsWith('--logo-') || k === '--on-lift')).toEqual([]);

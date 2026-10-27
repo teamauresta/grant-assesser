@@ -13,14 +13,15 @@ import { ProgressRing } from '@/components/plan/progress-ring';
 
 /**
  * For returning users: progress across the plan and the next goal. Renders nothing until the
- * workspace has loaded and has at least one application, so it never changes the server HTML.
+ * workspace has loaded and has at least one application and one goal to count, so it never changes
+ * the server HTML and never says "0 of 0 goals done".
  */
 export function ResumeCard() {
   const ready = useWorkspace((s) => s.ready);
   const ws = useWorkspace((s) => s.ws);
   const progress = useMemo(() => planProgress(ws), [ws]);
-  if (!ready || !ws.pipeline.length) return null;
   const { done, total, percent, next } = progress;
+  if (!ready || !ws.pipeline.length || total === 0) return null;
   return (
     <Card as="section" aria-labelledby="resume-heading" className="flex items-center gap-4">
       <ProgressRing percent={percent} size={56} />
