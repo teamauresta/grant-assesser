@@ -7,6 +7,7 @@ import { CategoryBand } from '@/components/home/category-band';
 import { MotionProvider } from '@/components/motion/motion-provider';
 import { PROGRAM_TYPES } from '@/lib/programs/filter';
 import { TYPE_LABELS } from '@/lib/format';
+import { visibleMotionSeconds } from '@/tests/helpers/animation';
 
 const media = (matching: string[]) => vi.stubGlobal('matchMedia', (q: string) => ({
   matches: matching.includes(q), addEventListener: () => {}, removeEventListener: () => {},
@@ -68,5 +69,16 @@ describe('CategoryBand', () => {
     await waitFor(() => expect(list(container).style.transform).toMatch(/translateX\((?!0)[\d.]+px\)/));
     act(() => root.unmount());
     container.remove();
+  });
+
+  it('floats for under 5 seconds and comes to rest (WCAG 2.2.2)', () => {
+    const { container } = render(<MotionProvider><CategoryBand /></MotionProvider>);
+    const items = [...list(container).children];
+    expect(items).toHaveLength(PROGRAM_TYPES.length);
+    for (const li of items) {
+      const seconds = visibleMotionSeconds(li);
+      expect(seconds).toBeGreaterThan(0);
+      expect(seconds).toBeLessThanOrEqual(5);
+    }
   });
 });

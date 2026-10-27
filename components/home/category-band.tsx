@@ -51,7 +51,9 @@ export function CategoryBand() {
         {PROGRAM_TYPES.map((type, i) => {
           const Icon = ICONS[type];
           return (
-            <li key={type} className="animate-[lift-float_6s_ease-in-out_infinite]" style={{ animationDelay: `${i * -0.45}s` }}>
+            // Two 2.4s waves, started part-way by the negative stagger, so each circle moves for at
+            // most 4.8s and rests at the keyframes' end (WCAG 2.2.2: no automatic motion past 5s).
+            <li key={type} className="animate-[lift-float_2.4s_ease-in-out_2]" style={{ animationDelay: `${i * -0.45}s` }}>
               <Link
                 href={`/programs/?type=${type}`}
                 className={cn('group flex flex-col items-center gap-2 rounded-lg p-1 text-center text-xs text-muted-fg hover:text-fg', focusRing)}

@@ -39,7 +39,7 @@ const DASHES: Dash[] = (() => {
 
 /**
  * A still scatter of short dashes in the Liftoff colours: the hero background under reduced
- * motion, and (with `drift`) a slow CSS drift for the dark panel. Decorative only.
+ * motion, and (with `drift`) a single 5s drift that settles, for the dark panel. Decorative only.
  */
 export function StaticScatter({ drift = false, className }: { drift?: boolean; className?: string }) {
   return (
@@ -49,7 +49,7 @@ export function StaticScatter({ drift = false, className }: { drift?: boolean; c
       focusable="false"
       viewBox="0 0 1200 600"
       preserveAspectRatio="xMidYMid slice"
-      className={cn('absolute inset-0 size-full', drift && 'animate-[drift_30s_linear_infinite_alternate]', className)}
+      className={cn('absolute inset-0 size-full', drift && 'animate-[drift_5s_ease-out_1_forwards]', className)}
     >
       {DASHES.map((d, i) => (
         <line key={i} x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke={d.stroke} strokeOpacity={d.opacity} strokeWidth={2} strokeLinecap="round" />

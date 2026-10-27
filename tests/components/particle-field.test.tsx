@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { IDLE_MS, SETTLE_MS } from '@/lib/particle-idle';
 import { act, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import type { IParticlesProps } from '@tsparticles/react';
@@ -8,13 +9,15 @@ import type { IParticlesProps } from '@tsparticles/react';
 // report "loaded" once per options, as the real <Particles> does after each (re)load.
 const seen: unknown[] = [];
 const classAtLoad: (string | undefined)[] = [];
+/** The container handed to particlesLoaded: only play() and pause() are used. */
+const fake = { play: vi.fn(), pause: vi.fn() };
 vi.mock('@tsparticles/react', async () => {
   const { useEffect } = await import('react');
   function Particles({ options, particlesLoaded, className, id }: IParticlesProps) {
     useEffect(() => {
       seen.push(options);
       classAtLoad.push(className);
-      void particlesLoaded?.();
+      void particlesLoaded?.(fake as never);
       // eslint-disable-next-line react-hooks/exhaustive-deps -- like the real one, only these reload
     }, [options, particlesLoaded]);
     return <div id={id} data-testid="particles" className={className} />;
@@ -40,6 +43,9 @@ afterEach(() => {
   root.removeAttribute('style');
   root.removeAttribute('data-theme');
   vi.unstubAllGlobals();
+  vi.useRealTimers();
+  fake.play.mockClear();
+  fake.pause.mockClear();
 });
 
 describe('ParticleField', () => {
@@ -73,5 +79,37 @@ describe('ParticleField', () => {
     // Hidden while the new colours load, then faded back in.
     expect(classAtLoad[1]).toContain('opacity-0');
     expect(particles).toHaveClass('opacity-100');
+  });
+
+  it('settles after 5 seconds, moves again with the pointer over the hero, and pauses out of view', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    let report: (visible: boolean) => void = () => {};
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) { report = (v) => cb([{ isIntersecting: v }]); }
+      observe() {}
+      disconnect() {}
+    });
+    setLift('#0f766e', '#2563eb', '#7c3aed');
+    const { getByTestId } = render(<ParticleField />);
+    await flush();
+    const area = getByTestId('particles').parentElement as HTMLElement;
+    area.getBoundingClientRect = () => ({ left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}) });
+    const move = (x: number, y: number) => act(() => { window.dispatchEvent(new MouseEvent('pointermove', { clientX: x, clientY: y })); });
+
+    act(() => { vi.advanceTimersByTime(SETTLE_MS); });
+    expect(fake.pause).toHaveBeenCalledTimes(1);
+
+    move(600, 500); // outside the hero
+    expect(fake.play).not.toHaveBeenCalled();
+    move(200, 150);
+    expect(fake.play).toHaveBeenCalledTimes(1);
+    act(() => { vi.advanceTimersByTime(IDLE_MS); });
+    expect(fake.pause).toHaveBeenCalledTimes(2);
+
+    move(200, 150);
+    expect(fake.play).toHaveBeenCalledTimes(2);
+    act(() => report(false));
+    expect(fake.pause).toHaveBeenCalledTimes(3);
   });
 });

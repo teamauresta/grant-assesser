@@ -4,6 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { act, render, screen } from '@testing-library/react';
 import { HeroParticles } from '@/components/home/hero-particles';
 import { StaticScatter } from '@/components/home/static-scatter';
+import { visibleMotionSeconds } from '@/tests/helpers/animation';
 
 // The real field needs a canvas; stand in for it so the test can see when the lazy import lands.
 vi.mock('@/components/home/particle-field', () => ({ default: () => <canvas data-testid="field" /> }));
@@ -80,5 +81,16 @@ describe('StaticScatter', () => {
   it('drifts only when asked', () => {
     expect(renderToString(<StaticScatter />)).not.toContain('animate-[drift');
     expect(renderToString(<StaticScatter drift />)).toContain('animate-[drift');
+  });
+});
+
+describe('StaticScatter drift', () => {
+  it('drifts once, for at most 5 seconds, and stays where it ends (WCAG 2.2.2)', () => {
+    const { container } = render(<StaticScatter drift />);
+    const svg = container.querySelector('svg') as SVGSVGElement;
+    const seconds = visibleMotionSeconds(svg);
+    expect(seconds).toBeGreaterThan(0);
+    expect(seconds).toBeLessThanOrEqual(5);
+    expect([...svg.classList].find((c) => c.startsWith('animate-['))).toMatch(/_forwards\]$/);
   });
 });

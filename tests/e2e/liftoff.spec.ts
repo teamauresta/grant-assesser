@@ -21,6 +21,35 @@ const stat = (page: Page, label: string) =>
 
 const hero = (page: Page) => page.getByRole('region', { name: /^Find the funding/ });
 
+const grantCircle = (page: Page) => page.getByRole('region', { name: 'Browse by type' }).getByRole('link', { name: 'Grant', exact: true });
+
+/** Waits for the band's float to finish: it runs two short waves after load, then rests. */
+async function bandAtRest(page: Page) {
+  await page.evaluate(() => Promise.all(document.getAnimations()
+    .filter((a) => (a as CSSAnimation).animationName === 'lift-float')
+    .map((a) => a.finished.catch(() => undefined))));
+}
+
+/** The directory filtered to grants: every listed card shows the Grant type. */
+async function expectGrantDirectory(page: Page) {
+  await expect(page).toHaveURL(/\/programs\/\?type=grant$/);
+  // The directory reads the filter from the URL on the client; wait until it has applied it.
+  await expect(page.getByRole('group', { name: 'Type' }).getByRole('button', { name: 'Grant', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  const cards = page.getByRole('list').filter({ has: page.locator('article') }).locator(':scope > li');
+  await expect.poll(() => cards.count()).toBeGreaterThan(0);
+  for (const card of await cards.all()) await expect(card.getByText(/· Grant$/)).toBeVisible();
+}
+
+/** A picture of the hero canvas, to tell whether the field is still moving. */
+const frame = (page: Page) => hero(page).locator('canvas').evaluate((c: HTMLCanvasElement) => c.toDataURL());
+
+/** True when the hero canvas changes over `ms`. */
+async function moving(page: Page, ms = 500, during?: () => Promise<void>) {
+  const a = await frame(page);
+  await (during ? during() : page.waitForTimeout(ms));
+  return a !== await frame(page);
+}
+
 test.describe('hero', () => {
   test('shows the promise, live numbers, and links each type to the directory', async ({ page }) => {
     await page.goto('./');
@@ -29,21 +58,57 @@ test.describe('hero', () => {
     await expect(stat(page, 'Open now')).toHaveText(/^\d+$/);
     await expect(stat(page, 'Closing in 30 days')).toHaveText(/^\d+$/);
 
-    // The circles float without end, so Playwright never sees the link as stable enough to click
-    // it with the mouse; follow it with the keyboard instead.
-    await page.getByRole('region', { name: 'Browse by type' }).getByRole('link', { name: 'Grant', exact: true }).press('Enter');
-    await expect(page).toHaveURL(/\/programs\/\?type=grant$/);
-    // The directory reads the filter from the URL on the client; wait until it has applied it.
-    await expect(page.getByRole('group', { name: 'Type' }).getByRole('button', { name: 'Grant', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    const cards = page.getByRole('list').filter({ has: page.locator('article') }).locator(':scope > li');
-    await expect.poll(() => cards.count()).toBeGreaterThan(0);
-    for (const card of await cards.all()) await expect(card.getByText(/· Grant$/)).toBeVisible();
+    // The circles float for under 5 seconds, then rest and can be clicked like any link.
+    await bandAtRest(page);
+    await grantCircle(page).click();
+    await expectGrantDirectory(page);
+  });
+
+  test('the type circles work from the keyboard', async ({ page }) => {
+    await page.goto('./');
+    await grantCircle(page).focus();
+    await expect(grantCircle(page)).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expectGrantDirectory(page);
   });
 
   test('draws the particle field with motion on', async ({ page }) => {
     await page.goto('./');
     await expect(hero(page).locator('canvas')).toBeVisible({ timeout: 5_000 });
     await expect(hero(page).locator('svg[data-hero-static]')).toHaveCount(0);
+  });
+
+  // WCAG 2.2.2: nothing moves on its own for more than 5 seconds.
+  test('the particle field settles after 5 seconds and moves again with the pointer', async ({ page }) => {
+    test.slow();
+    await page.goto('./');
+    await expect(hero(page).locator('canvas')).toBeVisible({ timeout: 5_000 });
+    expect(await moving(page)).toBe(true);
+    await page.waitForTimeout(6_000);
+    expect(await moving(page)).toBe(false);
+
+    const box = (await hero(page).boundingBox())!;
+    const wiggle = async () => {
+      for (let i = 0; i < 10; i++) {
+        await page.mouse.move(box.x + box.width * (0.3 + i * 0.04), box.y + box.height * 0.5);
+        await page.waitForTimeout(50);
+      }
+    };
+    expect(await moving(page, 0, wiggle)).toBe(true);
+    // And settles again once the pointer is still.
+    await page.waitForTimeout(2_000);
+    expect(await moving(page)).toBe(false);
+  });
+
+  test('the particle field pauses when the hero is scrolled out of view', async ({ page }) => {
+    await page.goto('./');
+    await expect(hero(page).locator('canvas')).toBeVisible({ timeout: 5_000 });
+    // Still inside its first 5 seconds, so it is moving on its own...
+    expect(await moving(page, 300)).toBe(true);
+    // ...until the hero leaves the screen.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(200);
+    expect(await moving(page, 500)).toBe(false);
   });
 
   test.describe('under reduced motion', () => {

@@ -144,11 +144,11 @@
 }
 
 /* Used through arbitrary animate-[...] classes, so kept outside @theme where they always ship. */
-/* The still scatter's slow drift on the dark panel. */
+/* The still scatter's one-off drift on the dark panel (5s, then it rests: WCAG 2.2.2). */
 @keyframes drift {
   to { translate: -24px 12px; }
 }
-/* The home category band's gentle wave. */
+/* The home category band's gentle wave (two cycles, then it rests: WCAG 2.2.2). */
 @keyframes lift-float {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -6px; }

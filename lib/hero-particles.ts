@@ -19,6 +19,7 @@ export function heroParticleOptions({ compact, colours }: { compact: boolean; co
     detectRetina: true,
     fpsLimit: 60,
     pauseOnBlur: true,
+    // Has no effect with `detectsOn: 'window'` in 4.5; ParticleField pauses with its own IntersectionObserver.
     pauseOnOutsideViewport: true,
     resize: { enable: true },
     background: { color: 'transparent' },
