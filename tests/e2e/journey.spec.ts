@@ -25,6 +25,10 @@ async function next(page: Page, step: number) {
 /** A section (board column or results group) found by its heading, which ends in a count. */
 const region = (scope: Page | Locator, name: string) => scope.getByRole('region', { name: startsWith(name) });
 
+// The journey checks behaviour, not animation: reduced motion keeps it fast and stable (no
+// count-ups, glides, fades or confetti to wait for). tests/e2e/liftoff.spec.ts covers the motion.
+test.use({ reducedMotion: 'reduce' });
+
 test('assessment to plan, calendar, report and backup', async ({ page }) => {
   // 1. Home: choose Bootstrapped; the wizard opens at step 1 with it selected.
   await page.goto('./');
