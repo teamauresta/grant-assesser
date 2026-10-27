@@ -10,8 +10,22 @@ async function expectNoViolations(page: Page, path: string, ready?: (page: Page)
   await page.waitForLoadState('networkidle');
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await ready?.(page);
-  // Let entrance animations (route fade, dialog scale-in) finish, so axe checks the settled colours
-  // rather than a half-faded frame. Infinite animations (spinners) are left running.
+  // Scroll down a screen at a time and back, so content that reveals on scroll (<Reveal>) is shown
+  // and axe checks it too.
+  await page.evaluate(async () => {
+    const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight / 2) {
+      window.scrollTo(0, y);
+      await frames();
+    }
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await frames();
+    window.scrollTo(0, 0);
+    await frames();
+  });
+  await expect(page.locator('[data-reveal="hidden"]')).toHaveCount(0);
+  // Let entrance animations and transitions (route fade, dialog scale-in, reveals) finish, so axe
+  // checks the settled colours rather than a half-faded frame. Infinite ones (spinners) keep running.
   await page.evaluate(() => Promise.all(document.getAnimations()
     .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
     .map((a) => a.finished.catch(() => undefined))));
