@@ -2,16 +2,20 @@
 
 import { useCallback, useId, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import Link from 'next/link';
+import { LayoutGroup } from 'motion/react';
+import * as m from 'motion/react-m';
 import { ArrowRight, CircleX, Plus, SquareKanban, Trophy, Undo2 } from 'lucide-react';
 import { LIMITS, type Application } from '@/lib/schema';
 import { BOARD_COLUMNS, STAGE_LABELS, applicationName, columnOf, type BoardColumn, type Stage } from '@/lib/plan/applications';
 import { useWorkspace } from '@/lib/store/use-workspace';
+import { cheer, originOf, stageCheer } from '@/lib/celebrate';
 import { cn } from '@/lib/cn';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { useMotionReady } from '@/components/motion/motion-provider';
 import { ApplicationCard } from './application-card';
 
 const OUTCOMES = [
@@ -35,6 +39,8 @@ export function PipelineBoard({ now }: { now: Date }) {
   const [removing, setRemoving] = useState<Application>();
   const [outcomeFor, setOutcomeFor] = useState<Application>();
   const [adding, setAdding] = useState(false);
+  /** Cards glide once motion has loaded, never under reduced motion (not even for one frame). */
+  const glide = useMotionReady();
   const headingRefs = useRef<Partial<Record<BoardColumn['id'], HTMLHeadingElement | null>>>({});
   const addRef = useRef<HTMLButtonElement>(null);
 
@@ -46,6 +52,8 @@ export function PipelineBoard({ now }: { now: Date }) {
     moveApplication(a.id, stage);
     setFocusId(a.id);
     setAnnouncement(`Moved ${nameOf(a)} to ${STAGE_LABELS[stage]}.`);
+    const c = stageCheer(stage);
+    if (c) void cheer(`${a.id}:${stage}`, c, originOf(document.querySelector(`[data-app-id="${a.id}"]`)));
   };
 
   const onDrop = (e: DragEvent, column: BoardColumn) => {
@@ -112,68 +120,80 @@ export function PipelineBoard({ now }: { now: Date }) {
         {addButton}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {BOARD_COLUMNS.map((column) => {
-          const apps = pipeline.filter((a) => column.stages.includes(a.stage));
-          const headingId = `column-${column.id}`;
-          const dropTarget = dragId !== undefined && !apps.some((a) => a.id === dragId);
-          return (
-            <section
-              key={column.id}
-              aria-labelledby={headingId}
-              onDragOver={(e) => {
-                if (!dropTarget) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                if (overColumn !== column.id) setOverColumn(column.id);
-              }}
-              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverColumn((c) => (c === column.id ? undefined : c)); }}
-              onDrop={(e) => onDrop(e, column)}
-              className={cn(
-                'flex min-w-0 flex-col gap-3 rounded-lg border bg-surface p-3 transition-[border-color,background-color] duration-150',
-                overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border',
-              )}
-            >
-              <h2
-                id={headingId}
-                ref={(el) => { headingRefs.current[column.id] = el; }}
-                tabIndex={-1}
-                className="flex items-baseline justify-between gap-2 px-1 text-base focus:outline-none"
+      <LayoutGroup>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {BOARD_COLUMNS.map((column) => {
+            const apps = pipeline.filter((a) => column.stages.includes(a.stage));
+            const headingId = `column-${column.id}`;
+            const dropTarget = dragId !== undefined && !apps.some((a) => a.id === dragId);
+            return (
+              <section
+                key={column.id}
+                aria-labelledby={headingId}
+                onDragOver={(e) => {
+                  if (!dropTarget) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (overColumn !== column.id) setOverColumn(column.id);
+                }}
+                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverColumn((c) => (c === column.id ? undefined : c)); }}
+                onDrop={(e) => onDrop(e, column)}
+                className={cn(
+                  'flex min-w-0 flex-col gap-3 rounded-lg border bg-surface p-3 transition-[border-color,background-color] duration-150',
+                  overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border',
+                )}
               >
-                {column.label}
-                <span className="num font-mono text-sm font-normal text-muted-fg">
-                  {apps.length}<span className="sr-only"> {apps.length === 1 ? 'application' : 'applications'}</span>
-                </span>
-              </h2>
-              {apps.length ? (
-                <ul className="flex flex-col gap-3">
-                  {apps.map((a) => (
-                    <li key={a.id}>
-                      <ApplicationCard
-                        application={a}
-                        goals={goals}
-                        now={now}
-                        autoFocus={focusId === a.id}
-                        onFocused={clearFocus}
-                        dragging={dragId === a.id}
-                        onDragStart={() => setDragId(a.id)}
-                        onDragEnd={() => { setDragId(undefined); setOverColumn(undefined); }}
-                        onMove={(stage) => move(a, stage)}
-                        onEditNotes={() => setNotesFor(a)}
-                        onRemove={() => setRemoving(a)}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-fg">
-                  {column.id === 'outcome' ? 'Awarded, declined and withdrawn applications appear here.' : 'Nothing here yet.'}
-                </p>
-              )}
-            </section>
-          );
-        })}
-      </div>
+                <h2
+                  id={headingId}
+                  ref={(el) => { headingRefs.current[column.id] = el; }}
+                  tabIndex={-1}
+                  className="flex items-baseline justify-between gap-2 px-1 text-base focus:outline-none"
+                >
+                  {column.label}
+                  <span className="num font-mono text-sm font-normal text-muted-fg">
+                    {apps.length}<span className="sr-only"> {apps.length === 1 ? 'application' : 'applications'}</span>
+                  </span>
+                </h2>
+                {apps.length ? (
+                  <ul className="flex flex-col gap-3">
+                    {apps.map((a) => (
+                      // A moved card glides to its new column (layoutId). Position only, so a card
+                      // that changes height never stretches its text; never while being dragged, so
+                      // the drag image and the animation do not fight; never under reduced motion.
+                      // Nothing starts hidden.
+                      <m.li
+                        key={a.id}
+                        data-app-id={a.id}
+                        layout={glide && dragId !== a.id ? 'position' : false}
+                        layoutId={glide ? a.id : undefined}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                      >
+                        <ApplicationCard
+                          application={a}
+                          goals={goals}
+                          now={now}
+                          autoFocus={focusId === a.id}
+                          onFocused={clearFocus}
+                          dragging={dragId === a.id}
+                          onDragStart={() => setDragId(a.id)}
+                          onDragEnd={() => { setDragId(undefined); setOverColumn(undefined); }}
+                          onMove={(stage) => move(a, stage)}
+                          onEditNotes={() => setNotesFor(a)}
+                          onRemove={() => setRemoving(a)}
+                        />
+                      </m.li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-fg">
+                    {column.id === 'outcome' ? 'Awarded, declined and withdrawn applications appear here.' : 'Nothing here yet.'}
+                  </p>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </LayoutGroup>
 
       {addDialog}
       {notesFor && <NotesDialog application={notesFor} name={nameOf(notesFor)} onClose={() => setNotesFor(undefined)} />}

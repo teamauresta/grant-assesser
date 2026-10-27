@@ -8,6 +8,8 @@ import { getProgram } from '@/content/programs';
 import { formatDate } from '@/lib/dates';
 import { appBaseUrl, goalFilename, hasDueDate, workspaceGoalEvent } from '@/lib/calendar/events';
 import { goalsByApplication, isOverdue, type GoalGroup } from '@/lib/plan/selectors';
+import { completesApplication } from '@/lib/plan/progress';
+import { cheer, originOf } from '@/lib/celebrate';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
@@ -128,8 +130,12 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
   const headingId = `group-${group.id}`;
   const program = group.application?.programSlug ? getProgram(group.application.programSlug) : undefined;
   const done = group.goals.filter((g) => g.status === 'done').length;
+  const sectionRef = useRef<HTMLElement>(null);
+  const celebrate = (appId: string) => {
+    void cheer(`${appId}:goals-done`, { message: `All goals done for ${group.name}.`, burst: 'goals-done' }, originOf(sectionRef.current));
+  };
   return (
-    <section id={headingId} aria-labelledby={`${headingId}-h`} className="flex scroll-mt-24 flex-col gap-3">
+    <section ref={sectionRef} id={headingId} aria-labelledby={`${headingId}-h`} className="flex scroll-mt-24 flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 id={`${headingId}-h`} className="text-xl">
           {program
@@ -144,7 +150,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
       </div>
       {group.goals.length ? (
         <ul className="divide-y divide-border rounded-lg border border-border">
-          {group.goals.map((g) => <GoalRow key={g.id} goal={g} now={now} onEdit={() => onEdit(g)} onRemove={() => onRemove(g)} />)}
+          {group.goals.map((g) => <GoalRow key={g.id} goal={g} now={now} onEdit={() => onEdit(g)} onRemove={() => onRemove(g)} onCompletesApplication={celebrate} />)}
         </ul>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-fg">
@@ -159,7 +165,9 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
   );
 }
 
-function GoalRow({ goal, now, onEdit, onRemove }: { goal: Goal; now: Date; onEdit: () => void; onRemove: () => void }) {
+function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
+  goal: Goal; now: Date; onEdit: () => void; onRemove: () => void; onCompletesApplication: (appId: string) => void;
+}) {
   const ws = useWorkspace((s) => s.ws);
   const updateGoal = useWorkspace((s) => s.updateGoal);
   const toggleStep = useWorkspace((s) => s.toggleStep);
@@ -168,6 +176,12 @@ function GoalRow({ goal, now, onEdit, onRemove }: { goal: Goal; now: Date; onEdi
   const done = goal.status === 'done';
   const overdue = isOverdue(goal, now);
   const stepsDone = goal.steps.filter((s) => s.done).length;
+  // Work out before saving whether this change finishes the application's last open goal.
+  const setStatus = (status: Goal['status']) => {
+    const appId = completesApplication(useWorkspace.getState().ws, goal.id, status);
+    updateGoal(goal.id, { status });
+    if (appId) onCompletesApplication(appId);
+  };
   const event = useMemo(() => (hasDueDate(goal) ? workspaceGoalEvent(ws, goal, appBaseUrl()) : undefined), [ws, goal]);
 
   return (
@@ -185,7 +199,7 @@ function GoalRow({ goal, now, onEdit, onRemove }: { goal: Goal; now: Date; onEdi
             <input
               type="checkbox"
               checked={done}
-              onChange={(e) => updateGoal(goal.id, { status: e.target.checked ? 'done' : 'todo' })}
+              onChange={(e) => setStatus(e.target.checked ? 'done' : 'todo')}
               className="size-5 accent-accent outline-none"
             />
             <span className="sr-only">Done: {goal.title}</span>
@@ -212,7 +226,7 @@ function GoalRow({ goal, now, onEdit, onRemove }: { goal: Goal; now: Date; onEdi
             <Select
               id={`${id}-status`}
               value={goal.status}
-              onChange={(e) => updateGoal(goal.id, { status: e.target.value as Goal['status'] })}
+              onChange={(e) => setStatus(e.target.value as Goal['status'])}
             >
               {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </Select>

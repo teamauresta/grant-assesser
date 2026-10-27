@@ -1,15 +1,31 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
+// `confetti` is the fire function that confetti.create(canvas) returns.
+const { confetti, create } = vi.hoisted(() => {
+  const confetti = vi.fn();
+  return { confetti, create: vi.fn(() => confetti) };
+});
+vi.mock('canvas-confetti', () => ({ default: Object.assign(vi.fn(), { create }) }));
+
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { PipelineBoard } from '@/components/plan/pipeline-board';
+import { Toaster } from '@/components/ui/toast';
+import { resetCelebrations } from '@/lib/celebrate';
+import { useToasts } from '@/lib/toast';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const column = (name: string) => screen.getByRole('region', { name: new RegExp(`^${name}`) });
 
 beforeAll(async () => { await useWorkspace.getState().init(); });
-beforeEach(() => { useWorkspace.getState().reset(); });
+beforeEach(() => {
+  useWorkspace.getState().reset();
+  resetCelebrations();
+  useToasts.setState({ toasts: [] });
+  confetti.mockClear();
+});
 
 describe('PipelineBoard', () => {
   it('shows an empty state with links to programs and results', () => {
@@ -84,5 +100,52 @@ describe('PipelineBoard', () => {
     await user.type(screen.getByLabelText('Expected amount (AUD)'), '50k{Enter}');
     expect(useWorkspace.getState().ws.pipeline[0].expectedAmount).toBe(50_000);
     expect(screen.getByText('$50K')).toBeInTheDocument();
+  });
+});
+
+describe('PipelineBoard milestone cheers', () => {
+  const toasts = () => useToasts.getState().toasts.map((t) => t.message);
+  /** Renders the board with the toaster and moves "Angel round" through Move to… */
+  async function setup() {
+    const id = useWorkspace.getState().addCustomApplication('Angel round');
+    render(<><PipelineBoard now={now} /><Toaster /></>);
+    const user = userEvent.setup();
+    const moveTo = async (item: string) => {
+      await user.click(screen.getByRole('button', { name: 'Move Angel round to…' }));
+      await user.click(screen.getByRole('menuitem', { name: item }));
+    };
+    return { id, moveTo };
+  }
+
+  it('cheers a submission with a toast and a burst', async () => {
+    const { id, moveTo } = await setup();
+    await moveTo('Submitted');
+    expect(await screen.findByText("Submitted. That's the hardest part done.")).toBeInTheDocument();
+    await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
+    expect(document.querySelector(`li[data-app-id="${id}"]`)).toContainElement(screen.getByRole('article', { name: 'Angel round' }));
+  });
+
+  it('cheers an award and links to the calendar', async () => {
+    const { moveTo } = await setup();
+    await moveTo('Outcome: Awarded');
+    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open calendar' })).toHaveAttribute('href', expect.stringMatching(/^\/plan\/?\?tab=calendar$/));
+    await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
+  });
+
+  it('is supportive after a decline, without confetti', async () => {
+    const { moveTo } = await setup();
+    await moveTo('Outcome: Declined');
+    expect(await screen.findByText('Most funded startups applied more than once. See what else fits.')).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(confetti).not.toHaveBeenCalled();
+  });
+
+  it('says nothing for a move to Preparing', async () => {
+    const { moveTo } = await setup();
+    await moveTo('Preparing');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(toasts()).toEqual([]);
+    expect(confetti).not.toHaveBeenCalled();
   });
 });
