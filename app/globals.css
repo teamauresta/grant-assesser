@@ -8,6 +8,9 @@
  * --border is decorative separation only; --border-strong (>= 3:1) outlines form controls
  * and outline pills so their boundaries meet WCAG 1.4.11.
  * Status colours are for StatusPill only; the accent is never used for status.
+ * The Liftoff gradient (--lift-*) is for brand moments only: the logo, the hero phrase, particles,
+ * the progress ring, celebrations and the primary-CTA glow. Never for status or body text.
+ * The panel (--panel-*) is dark in both themes.
  */
 :root {
   color-scheme: light;
@@ -29,6 +32,18 @@
   --warn-fg: #92400e;
   --neutral-bg: #f4f4f5;
   --neutral-fg: #3f3f46;
+
+  --lift-1: #0f766e;
+  --lift-2: #2563eb;
+  --lift-3: #7c3aed;
+
+  /* The "How it works" panel is dark in both themes. */
+  --panel-bg: #0b0b12;
+  --panel-fg: #fafafa;
+  --panel-muted-fg: #a1a1aa;
+  --panel-lift-1: #2dd4bf;
+  --panel-lift-2: #60a5fa;
+  --panel-lift-3: #a78bfa;
 }
 
 [data-theme="dark"] {
@@ -51,6 +66,10 @@
   --warn-fg: #fcd34d;
   --neutral-bg: #27272a;
   --neutral-fg: #d4d4d8;
+
+  --lift-1: #2dd4bf;
+  --lift-2: #60a5fa;
+  --lift-3: #a78bfa;
 }
 
 @theme inline {
@@ -72,6 +91,13 @@
   --color-warn-fg: var(--warn-fg);
   --color-neutral-bg: var(--neutral-bg);
   --color-neutral-fg: var(--neutral-fg);
+
+  --color-lift-1: var(--lift-1);
+  --color-lift-2: var(--lift-2);
+  --color-lift-3: var(--lift-3);
+  --color-panel-bg: var(--panel-bg);
+  --color-panel-fg: var(--panel-fg);
+  --color-panel-muted-fg: var(--panel-muted-fg);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
@@ -130,6 +156,37 @@
 
 @utility num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Gradient text for one highlighted phrase. Falls back to plain text in forced-colours mode. */
+@utility text-lift {
+  background-image: linear-gradient(90deg, var(--lift-1), var(--lift-2) 55%, var(--lift-3));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  @media (forced-colors: active) {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* The same on the dark panel. */
+@utility text-lift-panel {
+  background-image: linear-gradient(90deg, var(--panel-lift-1), var(--panel-lift-2) 55%, var(--panel-lift-3));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  @media (forced-colors: active) {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* A soft gradient glow for the one primary call to action per screen. */
+@utility glow-lift {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--lift-2) 35%, transparent),
+    0 10px 36px -10px color-mix(in srgb, var(--lift-2) 60%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
