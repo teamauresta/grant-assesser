@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { MobileHeader } from '@/components/layout/mobile-header';
 import { StorageBanner } from '@/components/layout/storage-banner';
 import { ThemeWatcher } from '@/components/layout/theme-watcher';
+import { MotionProvider } from '@/components/motion/motion-provider';
 import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
 
@@ -33,16 +34,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        <WorkspaceProvider />
-        <ThemeWatcher />
-        <SkipLink />
-        <TopNav className="hidden md:block" />
-        <MobileHeader className="md:hidden" />
-        <StorageBanner />
-        <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] focus:outline-none md:pt-10 md:pb-12">
-          {children}
-        </main>
-        <BottomNav className="md:hidden" />
+        <MotionProvider>
+          <WorkspaceProvider />
+          <ThemeWatcher />
+          <SkipLink />
+          <TopNav className="hidden md:block" />
+          <MobileHeader className="md:hidden" />
+          <StorageBanner />
+          <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] focus:outline-none md:pt-10 md:pb-12">
+            {children}
+          </main>
+          <BottomNav className="md:hidden" />
+        </MotionProvider>
       </body>
     </html>
   );

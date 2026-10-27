@@ -10,6 +10,11 @@ async function expectNoViolations(page: Page, path: string, ready?: (page: Page)
   await page.waitForLoadState('networkidle');
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await ready?.(page);
+  // Let entrance animations (route fade, dialog scale-in) finish, so axe checks the settled colours
+  // rather than a half-faded frame. Infinite animations (spinners) are left running.
+  await page.evaluate(() => Promise.all(document.getAnimations()
+    .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+    .map((a) => a.finished.catch(() => undefined))));
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   // Summarise so a failure says what and where, not just "expected [] to equal [...]".
   expect(violations.map((v) => ({ rule: v.id, help: v.help, targets: v.nodes.map((n) => n.target.join(' ')) }))).toEqual([]);

@@ -31,7 +31,8 @@ export function buttonClasses({
 }: { variant?: ButtonVariant; size?: ButtonSize; iconOnly?: boolean; className?: string } = {}): string {
   return cn(
     'inline-flex select-none items-center justify-center gap-2 rounded-md font-medium',
-    'transition-[opacity,background-color,border-color] duration-150',
+    // Pressed buttons sink slightly; no transform when the device asks for reduced motion.
+    'transition-[opacity,background-color,border-color,scale] duration-150 motion-safe:active:scale-[0.98]',
     'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
     focusRing,
     VARIANTS[variant],

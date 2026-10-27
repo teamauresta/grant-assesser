@@ -94,7 +94,7 @@ function DialogPanel({ onClose, title, description, initialFocusRef, footer, chi
         tabIndex={-1}
         onKeyDown={onKeyDown}
         className={cn(
-          'flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-lg border border-border bg-bg focus:outline-none',
+          'flex max-h-[calc(100dvh-2rem)] w-full animate-dialog-in flex-col overflow-hidden rounded-lg border border-border bg-bg focus:outline-none',
           size === 'sm' ? 'max-w-md' : 'max-w-lg',
         )}
       >
