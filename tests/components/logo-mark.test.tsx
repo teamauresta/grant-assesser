@@ -11,6 +11,8 @@ describe('LogoMark', () => {
     // The logo stops are the light Liftoff stops in both themes, so the white compass keeps 3:1
     // (the dark-theme --lift-* stops are too light for white; see tests/lib/tokens.test.ts).
     expect(container.innerHTML).toContain('var(--logo-1)');
+    expect(container.innerHTML).toContain('var(--logo-2)');
+    expect(container.innerHTML).toContain('var(--logo-3)');
     expect(container.innerHTML).toContain('var(--on-lift)');
     expect(container.innerHTML).not.toMatch(/#[0-9a-f]{6}/i);
     // Two marks on one page must not share a gradient id.

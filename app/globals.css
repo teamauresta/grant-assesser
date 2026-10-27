@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Plans and design docs quote class names in prose; keep them out of the class scan. */
+@source not "../docs";
+
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /*

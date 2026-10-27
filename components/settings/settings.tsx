@@ -152,7 +152,7 @@ function CelebrationsSection() {
       <ChoiceGroup
         type="radio"
         name="celebrations"
-        legend="Celebrations"
+        legend="Confetti on milestones"
         help="A short burst of confetti when you finish the assessment, submit or win an application, or finish an application's goals. Always off when your device is set to reduce motion."
         columns={2}
         value={on ? 'on' : 'off'}

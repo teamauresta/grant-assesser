@@ -61,7 +61,7 @@ describe('Settings', () => {
   it('turns Celebrations off and on through the store', async () => {
     const user = userEvent.setup();
     render(<Settings />);
-    const group = screen.getByRole('group', { name: 'Celebrations' });
+    const group = screen.getByRole('group', { name: 'Confetti on milestones' });
     const on = within(group).getByRole('radio', { name: 'On' });
     const off = within(group).getByRole('radio', { name: 'Off' });
     expect(on).toBeChecked();
