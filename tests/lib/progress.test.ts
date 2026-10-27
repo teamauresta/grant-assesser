@@ -31,6 +31,13 @@ describe('planProgress', () => {
   it('names the next open goal by due date', () => {
     expect(planProgress(ws()).next?.id).toBe('g3');
   });
+  it('rounds down, so 100% shows only when every goal is done', () => {
+    const many: Workspace = {
+      ...emptyWorkspace(now),
+      goals: Array.from({ length: 200 }, (_, i) => goal(`m${i}`, { status: i < 199 ? 'done' : 'todo' })),
+    };
+    expect(planProgress(many)).toMatchObject({ done: 199, total: 200, percent: 99 });
+  });
   it('is 0% with nothing to do', () => {
     expect(planProgress(emptyWorkspace(now))).toEqual({ done: 0, total: 0, percent: 0, next: undefined });
   });
@@ -40,11 +47,22 @@ describe('completesApplication', () => {
   it('returns the application id when this change finishes its last open goal', () => {
     const w = ws();
     w.goals = w.goals.map((g) => (g.id === 'g2' ? { ...g, status: 'done' } : g));
-    expect(completesApplication(w.goals, 'g3', 'done')).toBe('a');
+    expect(completesApplication(w, 'g3', 'done')).toBe('a');
   });
   it('is undefined while other goals stay open, when un-completing, or for unattached goals', () => {
-    expect(completesApplication(ws().goals, 'g3', 'done')).toBeUndefined();
-    expect(completesApplication(ws().goals, 'g1', 'todo')).toBeUndefined();
-    expect(completesApplication(ws().goals, 'g5', 'done')).toBeUndefined();
+    expect(completesApplication(ws(), 'g3', 'done')).toBeUndefined();
+    expect(completesApplication(ws(), 'g1', 'todo')).toBeUndefined();
+    expect(completesApplication(ws(), 'g5', 'done')).toBeUndefined();
+  });
+  it('is undefined for a declined or withdrawn application: no celebration for those', () => {
+    // g4 is the only goal of declined application b, so finishing it would otherwise complete b.
+    expect(completesApplication(ws(), 'g4', 'done')).toBeUndefined();
+    const withdrawn = ws();
+    withdrawn.pipeline = withdrawn.pipeline.map((a) => (a.id === 'b' ? { ...a, stage: 'withdrawn' } : a));
+    expect(completesApplication(withdrawn, 'g4', 'done')).toBeUndefined();
+    // The same goal completes b once b is back in progress.
+    const pursued = ws();
+    pursued.pipeline = pursued.pipeline.map((a) => (a.id === 'b' ? { ...a, stage: 'submitted' } : a));
+    expect(completesApplication(pursued, 'g4', 'done')).toBe('b');
   });
 });

@@ -65,11 +65,11 @@ Shared components in `components/motion/`:
 | Assessment finished, Results first shown | Medium, behind the counting funding estimate | Persona-specific, e.g. "4 programs you can act on now. Start with the one closing first." |
 | Application moved to Submitted | Small, from the card | "Submitted. That's the hardest part done." |
 | Application moved to Awarded | Large, from both sides | "Awarded. Add the reporting dates to your calendar." |
-| Every goal for an application done | Small, on the goal list | "All steps done for <program>." |
+| Every goal for an application done | Small, on the goal list | "All goals done for <program>." |
 
 - No celebration for Declined, Withdrawn or Not a fit. Declined shows a supportive toast: "Most funded startups applied more than once. See what else fits."
 - Messages use a new `Toast` in `components/ui/` (`aria-live="polite"`, no focus steal, 4s auto-dismiss).
-- **Progress ring** in the My Plan header: gradient stroke, share of goal steps done across open applications, counting up, with "5 of 12 steps done. Next: <goal>, due <date>." Returning users see a compact "Pick up where you left off" card under the hero buttons on the home page.
+- **Progress ring** in the My Plan header: gradient stroke, share of goals done (not goal steps) across applications still being pursued plus goals not tied to an application, counting up, with "2 of 5 goals done. Next: <goal>, due <date>." It rounds down, so 100% means every goal is done. Returning users with at least one goal see a compact "Pick up where you left off" card right after the hero on the home page.
 - **Encouraging empty states**, plain and specific, no hype and no emoji. Example for an empty pipeline: "Every funded startup started with one application. Add your first from your results."
 
 ## 5. Accessibility, performance, testing
