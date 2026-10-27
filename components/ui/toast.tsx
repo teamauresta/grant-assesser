@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -25,10 +25,16 @@ export function Toaster() {
   );
 }
 
-/** One message. It dismisses itself after TOAST_MS, paused while hovered or focused (WCAG 2.2.1). */
+/**
+ * One message. It dismisses itself after TOAST_MS, paused while hovered or while focus is inside
+ * (WCAG 2.2.1). If it holds focus when it goes, focus moves to the main landmark, not the body.
+ */
 function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
   const dismiss = useToasts((s) => s.dismiss);
-  const [paused, setPaused] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const paused = hovered || focused;
 
   useEffect(() => {
     if (paused) return;
@@ -36,12 +42,18 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
     return () => clearTimeout(timer);
   }, [paused, id, dismiss]);
 
+  const close = () => {
+    if (ref.current?.contains(document.activeElement)) document.getElementById('main')?.focus();
+    dismiss(id);
+  };
+
   return (
     <div
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false); }}
       className="flex animate-toast-in items-start gap-3 rounded-lg border border-border bg-bg p-4 text-sm text-fg shadow-lg"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
@@ -49,7 +61,7 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
         {action && (
           <Link
             href={action.href}
-            onClick={() => dismiss(id)}
+            onClick={close}
             className={cn('inline-flex min-h-11 items-center self-start rounded-sm font-medium text-accent underline underline-offset-2', focusRing)}
           >
             {action.label}
@@ -58,7 +70,7 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
       </div>
       <button
         type="button"
-        onClick={() => dismiss(id)}
+        onClick={close}
         aria-label="Dismiss"
         className={cn('-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
       >

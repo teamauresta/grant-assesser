@@ -1,7 +1,9 @@
-import type { Options } from 'canvas-confetti';
+import type { CreateTypes, Options } from 'canvas-confetti';
 import type { Stage } from '@/lib/plan/applications';
 import { prefersReducedMotion } from '@/lib/motion';
 import { toast, type ToastAction } from '@/lib/toast';
+// This module imports the workspace store, so call cheer() and burst() from components only, never
+// from lib/store/* or lib/plan/* (the store would then import itself through this file).
 import { useWorkspace } from '@/lib/store/use-workspace';
 
 export type BurstKind = 'results' | 'submitted' | 'awarded' | 'goals-done';
@@ -26,18 +28,41 @@ const BURSTS: Record<BurstKind, Options[]> = {
 
 const fired = new Set<string>();
 let assessmentFinished = false;
+let fire: CreateTypes | undefined;
+let canvas: HTMLCanvasElement | undefined;
+
+/**
+ * The confetti function, drawing on one full-screen canvas that is hidden from assistive technology
+ * and never takes clicks. Created on first use and kept for later bursts.
+ */
+async function confettiInstance(): Promise<CreateTypes> {
+  if (fire) return fire;
+  const { default: confetti } = await import('canvas-confetti');
+  if (fire) return fire;
+  canvas = document.createElement('canvas');
+  canvas.setAttribute('aria-hidden', 'true');
+  Object.assign(canvas.style, { position: 'fixed', inset: '0', width: '100%', height: '100%', pointerEvents: 'none', zIndex: '60' });
+  document.body.appendChild(canvas);
+  fire = confetti.create(canvas, { resize: true, disableForReducedMotion: true });
+  return fire;
+}
 
 /** Fires a burst unless the user turned Celebrations off or prefers reduced motion. */
 export async function burst(kind: BurstKind, origin?: Origin): Promise<void> {
   if (!useWorkspace.getState().ws.settings.celebrations || prefersReducedMotion()) return;
-  const { default: confetti } = await import('canvas-confetti');
-  for (const options of BURSTS[kind]) {
-    // `...options` comes last so the award bursts keep their own side origins.
-    void confetti({
-      colors: LIFT_COLOURS, ticks: 180, scalar: 0.9, zIndex: 60, disableForReducedMotion: true,
-      ...(origin && kind !== 'awarded' ? { origin } : { origin: { y: 0.6 } }),
-      ...options,
-    });
+  try {
+    const confetti = await confettiInstance();
+    for (const options of BURSTS[kind]) {
+      // `...options` comes last so the award bursts keep their own side origins.
+      void confetti({
+        colors: LIFT_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
+        ...(origin && kind !== 'awarded' ? { origin } : { origin: { y: 0.6 } }),
+        ...options,
+      });
+    }
+  } catch {
+    // Confetti is decoration: if its code fails to load (offline, a new deploy), the message has
+    // already shown, so carry on without it.
   }
 }
 
@@ -85,4 +110,7 @@ export function resultsCheer(actNow: number, prepare: number): string {
 export function resetCelebrations() {
   fired.clear();
   assessmentFinished = false;
+  fire = undefined;
+  canvas?.remove();
+  canvas = undefined;
 }
