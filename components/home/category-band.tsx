@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useSyncExternalStore } from 'react';
-import { useScroll, useTransform } from 'motion/react';
-// `m` from its own entry: importing it from 'motion/react' added about 40 KB gzipped to the home page.
-import * as m from 'motion/react-m';
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useMotionValueEvent, useScroll } from 'motion/react';
 import { Banknote, Cloud, Handshake, Landmark, Receipt, Rocket, Ticket, TrendingUp, type LucideIcon } from 'lucide-react';
 import type { Program } from '@/lib/schema';
 import { PROGRAM_TYPES } from '@/lib/programs/filter';
@@ -35,12 +33,21 @@ const driftServerSnapshot = () => false;
 export function CategoryBand() {
   const ref = useRef<HTMLElement>(null);
   const drift = useSyncExternalStore(subscribeDrift, driftSnapshot, driftServerSnapshot);
+  const list = useRef<HTMLUListElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const x = useTransform(scrollYProgress, [0, 1], drift ? [24, -24] : [0, 0]);
+  // The drift is written straight to the list's style rather than through an `m.ul` motion value:
+  // after hydration, LazyMotion loads its features late, and an m component drops motion value
+  // changes made before then, so the band would sit still (then jump) until the first scroll.
+  const place = useCallback((progress: number) => {
+    const el = list.current;
+    if (el) el.style.transform = drift ? `translateX(${Math.round((24 - 48 * progress) * 10) / 10}px)` : '';
+  }, [drift]);
+  useEffect(() => place(scrollYProgress.get()), [place, scrollYProgress]);
+  useMotionValueEvent(scrollYProgress, 'change', place);
   return (
     <section ref={ref} aria-labelledby="types-heading" className="flex flex-col gap-4 overflow-hidden py-2">
       <h2 id="types-heading" className="text-xl">Browse by type</h2>
-      <m.ul style={{ x }} className="grid grid-cols-4 gap-3 px-1 md:flex md:justify-center md:gap-4">
+      <ul ref={list} className="grid grid-cols-4 gap-3 px-1 md:flex md:justify-center md:gap-4">
         {PROGRAM_TYPES.map((type, i) => {
           const Icon = ICONS[type];
           return (
@@ -57,7 +64,7 @@ export function CategoryBand() {
             </li>
           );
         })}
-      </m.ul>
+      </ul>
     </section>
   );
 }
