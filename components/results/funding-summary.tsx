@@ -1,5 +1,9 @@
+'use client';
+
+import type { ReactNode } from 'react';
 import type { FundingEstimate } from '@/lib/assess';
 import { formatMoney } from '@/lib/format';
+import { CountUp } from '@/components/motion/count-up';
 
 export type FundingSummaryProps = {
   estimate: FundingEstimate;
@@ -7,13 +11,31 @@ export type FundingSummaryProps = {
   counted: { funding: string[]; credits: string[] };
 };
 
-function range(low: number, high: number, currency: 'AUD' | 'USD'): string {
+type Currency = 'AUD' | 'USD';
+
+const aud = (n: number) => formatMoney(n, 'AUD');
+const usd = (n: number) => formatMoney(n, 'USD');
+
+function range(low: number, high: number, currency: Currency): string {
   return low === high ? formatMoney(high, currency) : `${formatMoney(low, currency)}–${formatMoney(high, currency)}`;
+}
+
+/**
+ * A figure that counts up on screen, with its exact text for assistive technology. The counting
+ * copy is hidden from screen readers so they read one string, not the parts of a range.
+ */
+function Figure({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <span aria-hidden="true">{children}</span>
+      <span className="sr-only">{label}</span>
+    </>
+  );
 }
 
 /** The headline figures: potential cash and tax offsets (never "secured"), with credits kept separate. */
 export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
-  const { aud, creditsUsd } = estimate;
+  const { aud: funding, creditsUsd } = estimate;
   return (
     <section aria-labelledby="funding-summary-heading" className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 md:p-6">
       <h2 id="funding-summary-heading" className="sr-only">Funding summary</h2>
@@ -21,13 +43,21 @@ export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Potential funding (not secured)</dt>
           <dd className="num font-mono text-2xl font-semibold tracking-tight">
-            {aud.high > 0 ? range(aud.low, aud.high, 'AUD') : 'None counted yet'}
+            {funding.high > 0 ? (
+              <Figure label={range(funding.low, funding.high, 'AUD')}>
+                {funding.low === funding.high
+                  ? <CountUp value={funding.high} format={aud} />
+                  : <><CountUp value={funding.low} format={aud} />–<CountUp value={funding.high} format={aud} /></>}
+              </Figure>
+            ) : 'None counted yet'}
           </dd>
         </div>
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Credits</dt>
           <dd className="num font-mono text-2xl font-semibold tracking-tight">
-            {creditsUsd.high > 0 ? `Up to ${formatMoney(creditsUsd.high, 'USD')}` : 'None counted yet'}
+            {creditsUsd.high > 0 ? (
+              <Figure label={`Up to ${usd(creditsUsd.high)}`}>Up to <CountUp value={creditsUsd.high} format={usd} /></Figure>
+            ) : 'None counted yet'}
           </dd>
         </div>
       </dl>

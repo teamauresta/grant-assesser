@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, ClipboardCheck, Pencil, Plus, Target } from 'lucide-react';
 import type { Persona, Profile } from '@/lib/schema';
@@ -9,6 +9,7 @@ import { assessAll, estimateFunding, type Track } from '@/lib/assess';
 import { GROUP_INFO, TRACK_INFO, countedPrograms, groupsForTrack, type ResultGroup } from '@/lib/assessment/results';
 import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS } from '@/lib/personas';
 import { DISCLAIMER } from '@/lib/copy';
+import { cheer, consumeAssessmentFinished, originOf, resultsCheer } from '@/lib/celebrate';
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
@@ -17,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Tabs } from '@/components/ui/tabs';
+import { Reveal } from '@/components/motion/reveal';
 import { AssessmentRow } from './assessment-row';
 import { FundingSummary } from './funding-summary';
 
@@ -60,6 +62,18 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
     () => Object.fromEntries(TRACKS.map((t) => [t, groupsForTrack(assessments, t)])) as Record<Track, ResultGroup[]>,
     [assessments],
   );
+
+  // Right after the wizard's last step (not on later visits), cheer once per session. The flag is
+  // consumed by the first run, so this fires once even when the effect runs again.
+  useEffect(() => {
+    if (!consumeAssessmentFinished()) return;
+    const count = (group: string) => assessments.filter((a) => a.group === group).length;
+    void cheer(
+      'results',
+      { message: resultsCheer(count('act-now'), count('prepare')), burst: 'results' },
+      originOf(document.getElementById('funding-summary-heading')?.parentElement),
+    );
+  });
 
   return (
     <div className="flex flex-col gap-8">
@@ -109,34 +123,36 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
   return (
     <div className="flex flex-col gap-8">
       <p className="text-sm text-muted-fg">{TRACK_INFO[track].description}</p>
-      {groups.map(({ group, items }) => {
+      {groups.map(({ group, items }, i) => {
         const id = `${track}-${group}`;
         return (
-          <section key={group} aria-labelledby={id} className="flex flex-col gap-3">
-            <div className="flex flex-col gap-0.5">
-              <h2 id={id} className="flex items-baseline gap-2 text-xl">
-                {GROUP_INFO[group].label}{' '}
-                <span className="num font-mono text-base font-normal text-muted-fg">
-                  {items.length}<span className="sr-only"> {items.length === 1 ? 'program' : 'programs'}</span>
-                </span>
-              </h2>
-              <p className="text-sm text-muted-fg">{GROUP_INFO[group].description}</p>
-            </div>
-            {items.length ? (
-              <ul className={cn('divide-y divide-border rounded-lg border border-border', group === 'not-a-fit' ? 'border-dashed' : 'bg-surface')}>
-                {items.map((a) => (
-                  <AssessmentRow
-                    key={a.program.slug}
-                    assessment={a}
-                    inPlan={inPlan.has(a.program.slug)}
-                    onAdd={() => onAdd(a.program.slug)}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-fg">Nothing here for now.</p>
-            )}
-          </section>
+          <Reveal key={group} delay={i * 40}>
+            <section aria-labelledby={id} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-0.5">
+                <h2 id={id} className="flex items-baseline gap-2 text-xl">
+                  {GROUP_INFO[group].label}{' '}
+                  <span className="num font-mono text-base font-normal text-muted-fg">
+                    {items.length}<span className="sr-only"> {items.length === 1 ? 'program' : 'programs'}</span>
+                  </span>
+                </h2>
+                <p className="text-sm text-muted-fg">{GROUP_INFO[group].description}</p>
+              </div>
+              {items.length ? (
+                <ul className={cn('divide-y divide-border rounded-lg border border-border', group === 'not-a-fit' ? 'border-dashed' : 'bg-surface')}>
+                  {items.map((a) => (
+                    <AssessmentRow
+                      key={a.program.slug}
+                      assessment={a}
+                      inPlan={inPlan.has(a.program.slug)}
+                      onAdd={() => onAdd(a.program.slug)}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-fg">Nothing here for now.</p>
+              )}
+            </section>
+          </Reveal>
         );
       })}
     </div>

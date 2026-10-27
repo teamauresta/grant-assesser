@@ -8,6 +8,7 @@ import { STEPS, STEP_COUNT, parseStep, visibleQuestions, type Step } from '@/lib
 import { todayISO } from '@/lib/dates';
 import { useNow } from '@/lib/use-now';
 import { useWorkspace } from '@/lib/store/use-workspace';
+import { markAssessmentFinished } from '@/lib/celebrate';
 import { Button } from '@/components/ui/button';
 import { Question } from './question';
 
@@ -129,7 +130,12 @@ function WizardView({ step, today }: { step: Step; today: string }) {
           <Button
             variant="primary"
             className="max-md:flex-1"
-            onClick={() => (last ? router.push('/assess/results/') : goTo(step + 1))}
+            onClick={() => {
+              if (!last) return goTo(step + 1);
+              // Results celebrates once when it opens straight after this.
+              markAssessmentFinished();
+              router.push('/assess/results/');
+            }}
           >
             {last ? 'See results' : 'Next'}
             <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
