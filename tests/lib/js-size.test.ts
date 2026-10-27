@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BUDGET_BYTES, firstLoadScripts, verdict } from '@/scripts/js-size.mjs';
+import { BUDGET_BYTES, INFO_PAGES, firstLoadScripts, infoLine, verdict } from '@/scripts/js-size.mjs';
 
 describe('firstLoadScripts', () => {
   it('lists each script under the base path once', () => {
@@ -32,5 +32,18 @@ describe('verdict', () => {
   it('passes at the budget and fails one byte over', () => {
     expect(verdict([BUDGET_BYTES - 10, 10])).toMatchObject({ ok: true, message: expect.stringMatching(/within/) });
     expect(verdict([BUDGET_BYTES, 1])).toMatchObject({ ok: false, message: expect.stringMatching(/OVER/) });
+  });
+});
+
+describe('other pages (information only, no budget)', () => {
+  it('reports programs, plan, report and results', () => {
+    expect(INFO_PAGES).toEqual(['programs/', 'plan/', 'report/', 'assess/results/']);
+  });
+  it('prints the total for a page and never fails, however large', () => {
+    expect(infoLine('plan/', [1_000, 234])).toBe('/plan/ first-load JS: 1,234 bytes gzipped (information only).');
+    expect(infoLine('report/', [BUDGET_BYTES * 2])).toMatch(/^\/report\/ first-load JS: [\d,]+ bytes gzipped \(information only\)\.$/);
+  });
+  it('says so when a page references no scripts', () => {
+    expect(infoLine('programs/', [])).toBe('/programs/ first-load JS: no scripts found (information only).');
   });
 });
