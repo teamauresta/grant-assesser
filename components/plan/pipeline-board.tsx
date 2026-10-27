@@ -85,8 +85,8 @@ export function PipelineBoard({ now }: { now: Date }) {
         {status}
         <EmptyState
           icon={SquareKanban}
-          title="Nothing in your pipeline"
-          description="Browse programs or see your results, then add the ones you plan to apply for. You can also track an application that isn't listed here."
+          title="Every funded startup started with one application."
+          description="Add your first from your results, or browse programs."
           action={(
             <div className="flex flex-wrap justify-center gap-2">
               <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>Browse programs<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>

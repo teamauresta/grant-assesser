@@ -1,12 +1,18 @@
 'use client';
 
 import { Suspense, useMemo } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { parsePlanTab, type PlanTab } from '@/lib/plan/routes';
+import { cn } from '@/lib/cn';
+import { formatDate } from '@/lib/dates';
+import { planProgress } from '@/lib/plan/progress';
+import { goalHref, parsePlanTab, type PlanTab } from '@/lib/plan/routes';
 import { useNow } from '@/lib/use-now';
 import { useWorkspace } from '@/lib/store/use-workspace';
+import { focusRing } from '@/components/ui/focus-ring';
 import { Tabs } from '@/components/ui/tabs';
 import { BackupPrompt } from '@/components/layout/backup-prompt';
+import { ProgressRing } from './progress-ring';
 import { CalendarView } from './calendar-view';
 import { DueThisWeek } from './due-this-week';
 import { GoalList } from './goal-list';
@@ -35,9 +41,10 @@ function UrlPlan() {
 }
 
 function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Date }) {
-  const applications = useWorkspace((s) => s.ws.pipeline.length);
-  const goals = useWorkspace((s) => s.ws.goals);
-  const openGoals = useMemo(() => goals.filter((g) => g.status !== 'done').length, [goals]);
+  const ws = useWorkspace((s) => s.ws);
+  const applications = ws.pipeline.length;
+  const openGoals = useMemo(() => ws.goals.filter((g) => g.status !== 'done').length, [ws.goals]);
+  const { done, total, percent, next } = useMemo(() => planProgress(ws), [ws]);
 
   const select = (next: PlanTab) => {
     // Next.js syncs native history calls with useSearchParams. Replace, so tabs don't fill the back
@@ -54,6 +61,21 @@ function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Da
       <header className="flex max-w-3xl flex-col gap-2">
         <h1 className="text-3xl">My plan</h1>
         <p className="text-muted-fg">Track the programs you are applying for, the goals that get each application done, and the dates that matter.</p>
+        {total > 0 && (
+          <div className="mt-2 flex items-center gap-4">
+            <ProgressRing percent={percent} />
+            <p className="min-w-0 text-sm text-muted-fg">
+              <span className="num font-mono text-fg">{done}</span> of <span className="num font-mono text-fg">{total}</span> {total === 1 ? 'goal' : 'goals'} done
+              {next ? (
+                <>
+                  . Next:{' '}
+                  <Link href={goalHref(next.id)} className={cn('break-words rounded-sm font-medium text-accent underline-offset-4 hover:underline', focusRing)}>{next.title}</Link>
+                  , due <time dateTime={next.dueDate} className="whitespace-nowrap">{formatDate(next.dueDate)}</time>.
+                </>
+              ) : '.'}
+            </p>
+          </div>
+        )}
       </header>
 
       <BackupPrompt />

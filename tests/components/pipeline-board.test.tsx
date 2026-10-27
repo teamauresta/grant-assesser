@@ -14,7 +14,8 @@ beforeEach(() => { useWorkspace.getState().reset(); });
 describe('PipelineBoard', () => {
   it('shows an empty state with links to programs and results', () => {
     render(<PipelineBoard now={now} />);
-    expect(screen.getByText('Nothing in your pipeline')).toBeInTheDocument();
+    expect(screen.getByText('Every funded startup started with one application.')).toBeInTheDocument();
+    expect(screen.getByText('Add your first from your results, or browse programs.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /browse programs/i })).toHaveAttribute('href', expect.stringMatching(/^\/programs\/?$/));
     expect(screen.getByRole('link', { name: /see your results/i })).toHaveAttribute('href', expect.stringMatching(/^\/assess\/results\/?$/));
   });

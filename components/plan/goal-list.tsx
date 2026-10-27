@@ -78,8 +78,8 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
       {visible.length === 0 ? (
         <EmptyState
           icon={Target}
-          title="No goals yet"
-          description="Adding a program to your pipeline creates starter goals from its checklist. You can also add your own."
+          title="Big applications get done one small goal at a time."
+          description="Add a program to your pipeline and its checklist becomes your first goals. You can also add your own."
           action={<Link href="/programs/" className={cn('inline-flex min-h-11 items-center rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>Browse programs</Link>}
         />
       ) : (
