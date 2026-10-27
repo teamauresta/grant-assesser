@@ -13,9 +13,9 @@ import { HowItWorks } from '@/components/home/how-it-works';
 import { DueThisWeek } from '@/components/plan/due-this-week';
 
 const VALUES: { icon: LucideIcon; title: string; text: string; tint: string }[] = [
-  { icon: BadgeCheck, title: 'Verified sources', text: 'Every program links to the official pages and shows the date it was checked.', tint: 'text-[var(--lift-1)]' },
-  { icon: CircleHelp, title: 'Honest about uncertainty', text: 'Where the rules are unclear or contradictory, we say so instead of guessing.', tint: 'text-[var(--lift-2)]' },
-  { icon: Lock, title: 'Private', text: 'Your answers stay in this browser. There is no account and no server.', tint: 'text-[var(--lift-3)]' },
+  { icon: BadgeCheck, title: 'Verified sources', text: 'Every program links to the official pages and shows the date it was checked.', tint: 'text-lift-1' },
+  { icon: CircleHelp, title: 'Honest about uncertainty', text: 'Where the rules are unclear or contradictory, we say so instead of guessing.', tint: 'text-lift-2' },
+  { icon: Lock, title: 'Private', text: 'Your answers stay in this browser. There is no account and no server.', tint: 'text-lift-3' },
 ];
 
 export default function HomePage() {

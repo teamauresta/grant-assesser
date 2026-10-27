@@ -229,7 +229,7 @@
   }
 }
 
-/* A soft gradient glow for the one primary call to action per screen. */
+/* A soft gradient glow: the primary call to action in the hero, and the category band circles on hover. */
 @utility glow-lift {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--lift-2) 35%, transparent),

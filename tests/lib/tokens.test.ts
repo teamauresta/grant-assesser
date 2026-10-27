@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { contrast } from '@/lib/contrast';
+import { LIFT_COLOURS } from '@/lib/celebrate';
 
 const css = readFileSync('app/globals.css', 'utf8');
 
@@ -43,4 +44,10 @@ it('the panel border is defined in both themes', () => {
 it('the logo stops are the light Liftoff stops and only defined in :root', () => {
   expect([light['--logo-1'], light['--logo-2'], light['--logo-3']]).toEqual([light['--lift-1'], light['--lift-2'], light['--lift-3']]);
   expect(Object.keys(tokens('[data-theme="dark"]')).filter((k) => k.startsWith('--logo-') || k === '--on-lift')).toEqual([]);
+});
+
+// canvas-confetti needs literal colours, so lib/celebrate.ts repeats the stops; keep them in step.
+it('the confetti colours are the Liftoff stops of both themes', () => {
+  const stops = (t: Record<string, string>) => ['--lift-1', '--lift-2', '--lift-3'].map((n) => t[n].toLowerCase());
+  expect(LIFT_COLOURS.map((c) => c.toLowerCase())).toEqual([...stops(light), ...stops(tokens('[data-theme="dark"]'))]);
 });
