@@ -37,6 +37,15 @@
   --lift-2: #2563eb;
   --lift-3: #7c3aed;
 
+  /*
+   * The logo mark: the light stops in both themes, because white fails 3:1 on the dark-theme
+   * --lift-* stops. --on-lift sits only on this gradient. Not redefined in the dark theme.
+   */
+  --logo-1: #0f766e;
+  --logo-2: #2563eb;
+  --logo-3: #7c3aed;
+  --on-lift: #ffffff;
+
   /* The "How it works" panel is dark in both themes. */
   --panel-bg: #0b0b12;
   --panel-fg: #fafafa;

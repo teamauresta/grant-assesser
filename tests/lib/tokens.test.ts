@@ -25,4 +25,14 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (_, t) =>
   it('the accent focus ring stays visible on the panel (3:1)', () => {
     expect(contrast(t['--accent'], t['--panel-bg'])).toBeGreaterThanOrEqual(3);
   });
+  // The logo's white compass is a non-text graphic (3:1). White fails on the dark-theme --lift-*
+  // stops (1.9 to 2.7:1), so the logo uses --logo-*, the light stops, in both themes.
+  it.each(['--logo-1', '--logo-2', '--logo-3'])('--on-lift stays visible on %s (3:1)', (name) => {
+    expect(contrast(t['--on-lift'], t[name])).toBeGreaterThanOrEqual(3);
+  });
+});
+
+it('the logo stops are the light Liftoff stops and only defined in :root', () => {
+  expect([light['--logo-1'], light['--logo-2'], light['--logo-3']]).toEqual([light['--lift-1'], light['--lift-2'], light['--lift-3']]);
+  expect(Object.keys(tokens('[data-theme="dark"]')).filter((k) => k.startsWith('--logo-') || k === '--on-lift')).toEqual([]);
 });
