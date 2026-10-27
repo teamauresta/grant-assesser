@@ -26,6 +26,10 @@ const THEME_OPTIONS = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
 ] as const;
+const CELEBRATION_OPTIONS = [
+  { value: 'on', label: 'On' },
+  { value: 'off', label: 'Off' },
+] as const;
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -54,6 +58,7 @@ function SettingsBody() {
       <PersonaSection />
       <CompanySection />
       <AppearanceSection />
+      <CelebrationsSection />
       <RemindersSection />
       <DataSection />
       <Section id="privacy" title="Privacy">
@@ -135,6 +140,25 @@ function AppearanceSection() {
   return (
     <Section id="appearance" title="Appearance">
       <ChoiceGroup type="radio" name="theme" legend="Theme" columns={3} value={theme} onChange={choose} options={THEME_OPTIONS} />
+    </Section>
+  );
+}
+
+function CelebrationsSection() {
+  const on = useWorkspace((s) => s.ws.settings.celebrations);
+  const setSettings = useWorkspace((s) => s.setSettings);
+  return (
+    <Section id="celebrations" title="Celebrations">
+      <ChoiceGroup
+        type="radio"
+        name="celebrations"
+        legend="Celebrations"
+        help="A short burst of confetti when you finish the assessment, submit or win an application, or finish an application's goals. Always off when your device is set to reduce motion."
+        columns={2}
+        value={on ? 'on' : 'off'}
+        onChange={(v) => setSettings({ celebrations: v === 'on' })}
+        options={CELEBRATION_OPTIONS}
+      />
     </Section>
   );
 }

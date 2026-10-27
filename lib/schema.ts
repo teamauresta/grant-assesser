@@ -217,6 +217,8 @@ export const WorkspaceSchema = z.object({
   settings: z.object({
     theme: z.enum(['system', 'light', 'dark']).default('system'),
     remindersDefault: reminderDays.default([7, 1]),
+    // Confetti on milestones. Missing in workspaces saved before 27 Oct 2026, so it defaults on.
+    celebrations: z.boolean().default(true),
   }),
   lastExportedAt: isoDateTime.optional(),
   lastCalendarExportAt: isoDateTime.optional(),

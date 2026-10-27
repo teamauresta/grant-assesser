@@ -170,7 +170,7 @@ describe('workspace actions (more)', () => {
   });
   it('setSettings, importWorkspace and reset', () => {
     useWs.getState().setSettings({ theme: 'dark' });
-    expect(ws().settings).toEqual({ theme: 'dark', remindersDefault: [7, 1] });
+    expect(ws().settings).toEqual({ theme: 'dark', remindersDefault: [7, 1], celebrations: true });
     const other = { ...emptyWorkspace(at), profile: { companyName: 'Imported' } };
     useWs.getState().importWorkspace(other);
     expect(ws().profile.companyName).toBe('Imported');

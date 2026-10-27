@@ -58,6 +58,21 @@ describe('Settings', () => {
     expect(document.documentElement.dataset.theme).toBe('light');
   });
 
+  it('turns Celebrations off and on through the store', async () => {
+    const user = userEvent.setup();
+    render(<Settings />);
+    const group = screen.getByRole('group', { name: 'Celebrations' });
+    const on = within(group).getByRole('radio', { name: 'On' });
+    const off = within(group).getByRole('radio', { name: 'Off' });
+    expect(on).toBeChecked();
+    expect(off).not.toBeChecked();
+    await user.click(off);
+    expect(useWorkspace.getState().ws.settings.celebrations).toBe(false);
+    expect(off).toBeChecked();
+    await user.click(on);
+    expect(useWorkspace.getState().ws.settings.celebrations).toBe(true);
+  });
+
   it('keeps at least one default reminder', async () => {
     const user = userEvent.setup();
     render(<Settings />);
@@ -72,7 +87,7 @@ describe('Settings', () => {
 
   it('keeps at most 5 default reminders, counting ones from an imported file', async () => {
     const user = userEvent.setup();
-    useWorkspace.setState({ ws: { ...emptyWorkspace(now), settings: { theme: 'system', remindersDefault: [30, 21, 2, 7, 1] } } });
+    useWorkspace.setState({ ws: { ...emptyWorkspace(now), settings: { theme: 'system', remindersDefault: [30, 21, 2, 7, 1], celebrations: true } } });
     render(<Settings />);
     await user.click(screen.getByRole('checkbox', { name: '14 days before' }));
     expect(useWorkspace.getState().ws.settings.remindersDefault).toEqual([30, 21, 2, 7, 1]);
@@ -127,7 +142,7 @@ describe('Settings', () => {
     window.localStorage.setItem(THEME_KEY, 'light');
     render(<Settings />);
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
-    const incoming = { ...filled(), settings: { theme: 'dark' as const, remindersDefault: [7, 1] } };
+    const incoming = { ...filled(), settings: { theme: 'dark' as const, remindersDefault: [7, 1], celebrations: true } };
     await user.upload(screen.getByLabelText('Choose a workspace file (.json)'), jsonFile(serializeWorkspace(incoming)));
     const dialog = await screen.findByRole('dialog', { name: 'Replace your workspace?' });
     await user.click(within(dialog).getByRole('button', { name: 'Replace workspace' }));

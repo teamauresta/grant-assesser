@@ -87,3 +87,13 @@ describe('workspace bounds', () => {
     rejects(crafted((ws) => { ws.goals[0].steps[0].title = long(201); }), /goals\[0\]\.steps\[0\]\.title/);
   });
 });
+
+describe('workspace settings', () => {
+  it('turns Celebrations on by default, including for workspaces saved before the setting existed', () => {
+    const ws = emptyWorkspace(new Date('2026-10-27T00:00:00Z'));
+    expect(ws.settings.celebrations).toBe(true);
+    const older: Partial<typeof ws.settings> = { ...ws.settings };
+    delete older.celebrations;
+    expect(WorkspaceSchema.parse({ ...ws, settings: older }).settings.celebrations).toBe(true);
+  });
+});
