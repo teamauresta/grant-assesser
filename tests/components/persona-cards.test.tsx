@@ -18,4 +18,9 @@ describe('PersonaCards', () => {
       expect(link.firstElementChild?.querySelector('svg')).not.toBeNull();
     }
   });
+
+  it('has no coloured edge: only the icon badge and the hover glow carry the tone', () => {
+    render(<PersonaCards />);
+    for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(/border-[tlrb]-/);
+  });
 });

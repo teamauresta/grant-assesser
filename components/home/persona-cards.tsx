@@ -12,7 +12,7 @@ import { focusRing } from '@/components/ui/focus-ring';
 const ICONS: Record<Persona, LucideIcon> = { bootstrapped: Sprout, 'pre-raise': Target, 'vc-backed': Rocket };
 
 /**
- * The three persona cards, each in its own Liftoff stop (top edge, icon badge, hover glow). Choosing one stores the persona, then opens the assessment; the query
+ * The three persona cards, each in its own Liftoff stop (icon badge, hover glow). Choosing one stores the persona, then opens the assessment; the query
  * parameter is kept so the wizard can pre-select it even if the store has not loaded yet.
  */
 export function PersonaCards() {
@@ -35,10 +35,6 @@ export function PersonaCards() {
                 'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent motion-safe:hover:-translate-y-0.5',
                 'hover:shadow-[0_10px_30px_-14px_var(--tone)]',
                 selected ? 'border-accent' : 'border-border',
-                // The top edge keeps its tone because Tailwind emits border-top-color after border-color,
-                // so it beats border-accent/border-border. Hover rules come later still, so hover:border-accent
-                // would recolour the top edge too: hover:border-t-[var(--tone)] wins it back. Keep both.
-                'border-t-2 border-t-[var(--tone)] hover:border-t-[var(--tone)]',
                 focusRing,
               )}
             >

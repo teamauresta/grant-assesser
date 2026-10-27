@@ -71,7 +71,6 @@ function Cover({ data }: { data: ReportData }) {
     <header className="flex flex-col gap-3 border-b border-border pb-6">
       <p className="text-xs font-medium uppercase tracking-widest text-muted-fg">Funding report</p>
       <h2 className="text-3xl">{cover.title}</h2>
-      <div className="h-0.5 w-12 bg-accent" aria-hidden="true" />
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
         {cover.persona && <><dt className="text-muted-fg">Persona</dt><dd className="font-medium">{cover.persona}</dd></>}
         <dt className="text-muted-fg">Date</dt><dd className="num font-medium">{fmt(data.generatedOn)}</dd>

@@ -9,8 +9,8 @@ import {
 } from './report-data';
 
 /*
- * The PDF has no CSS tokens, so its palette lives here: neutrals only, with the accent kept for the
- * thin rules under section headings. Matches the light theme in app/globals.css.
+ * The PDF has no CSS tokens, so its palette lives here: neutrals only. Matches the light theme in
+ * app/globals.css.
  */
 const C = {
   fg: '#09090b',
@@ -20,7 +20,6 @@ const C = {
   border: '#d4d4d8',
   hairline: '#e4e4e7',
   fill: '#f4f4f5',
-  accent: '#0F766E',
 } as const;
 
 /** 1px at 96dpi. */
@@ -72,7 +71,7 @@ const s = StyleSheet.create({
   cover: { flexGrow: 1, justifyContent: 'space-between' },
   eyebrow: { fontSize: 9, fontWeight: 500, color: C.muted, letterSpacing: 1.2, textTransform: 'uppercase' },
   coverTitle: { marginTop: 10, fontSize: 30, lineHeight: 1.15, fontWeight: 600, color: C.fg },
-  coverRule: { marginTop: 18, width: 48, height: 1.5, backgroundColor: C.accent },
+  coverRule: { marginTop: 18, width: 48, height: PX, backgroundColor: C.hairline },
   coverMeta: { marginTop: 18, gap: 4 },
   coverMetaRow: { flexDirection: 'row' },
   coverMetaLabel: { width: 110, fontSize: 10.5, color: C.muted },
@@ -89,7 +88,7 @@ const s = StyleSheet.create({
   section: { marginBottom: 22 },
   sectionHead: { marginBottom: 10 },
   h2: { fontSize: 14, lineHeight: 1.25, fontWeight: 600, color: C.fg },
-  rule: { marginTop: 5, height: PX, backgroundColor: C.accent },
+  rule: { marginTop: 5, height: PX, backgroundColor: C.hairline },
   lead: { marginTop: 6, color: C.muted },
   h3: { fontSize: 10.5, fontWeight: 600, color: C.fg },
   groupHead: { marginTop: 8, marginBottom: 5 },
@@ -133,6 +132,8 @@ const s = StyleSheet.create({
   blockFirst: { borderTopWidth: 0, paddingTop: 0 },
   link: { color: C.body, textDecoration: 'none' },
 });
+
+export { C as REPORT_PALETTE, s as REPORT_STYLES };
 
 /**
  * Text with the body size and line height. A unitless lineHeight resolves against the fontSize in
@@ -186,7 +187,7 @@ function Footer({ data }: { data: ReportData }) {
   );
 }
 
-/** Heading, accent rule and lead kept together, and never left alone at the foot of a page. */
+/** Heading, rule and lead kept together, and never left alone at the foot of a page. */
 function Section({ title, lead, first, children }: {
   title: string; lead?: string;
   /** Kept on the same page as the heading. minPresenceAhead does not hold for a tall unbreakable block. */
