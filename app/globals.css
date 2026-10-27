@@ -136,6 +136,12 @@
   }
 }
 
+/* Used through arbitrary animate-[...] classes, so kept outside @theme where they always ship. */
+/* The still scatter's slow drift on the dark panel. */
+@keyframes drift {
+  to { translate: -24px 12px; }
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
