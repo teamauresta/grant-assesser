@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import * as m from 'motion/react-m';
 import { cn } from '@/lib/cn';
 import { focusRing } from './focus-ring';
 
@@ -17,7 +18,10 @@ export type TabsProps<V extends string> = {
   className?: string;
 };
 
-/** WAI-ARIA tabs: arrow keys move and select (automatic activation), Home/End jump to the ends. */
+/**
+ * WAI-ARIA tabs: arrow keys move and select (automatic activation), Home/End jump to the ends.
+ * The selected tab's underline is one shared layout element, so it slides to the new tab.
+ */
 export function Tabs<V extends string>({ label, tabs, value, defaultValue, onValueChange, className }: TabsProps<V>) {
   const id = useId();
   const [inner, setInner] = useState<V | undefined>(defaultValue ?? tabs[0]?.value);
@@ -45,7 +49,9 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
 
   return (
     <div className={className}>
-      <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto border-b border-border">
+      {/* The baseline is an inset shadow, not a border: the list scrolls sideways, which clips anything
+          outside its padding box, and the indicator has to sit on top of the line, not below it. */}
+      <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)]">
         {tabs.map((t, i) => {
           const isSelected = t.value === selected;
           return (
@@ -61,12 +67,21 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
               onClick={() => select(t.value)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
-                'relative -mb-px min-h-11 whitespace-nowrap rounded-t-md border-b-2 px-3 text-sm transition-colors duration-150',
-                isSelected ? 'border-accent font-semibold text-fg' : 'border-transparent text-muted-fg hover:text-fg',
+                'relative min-h-11 whitespace-nowrap rounded-t-md px-3 text-sm transition-colors duration-150',
+                isSelected ? 'font-semibold text-fg' : 'text-muted-fg hover:text-fg',
                 focusRing,
               )}
             >
               {t.label}
+              {isSelected && (
+                <m.span
+                  layoutId={`${id}-indicator`}
+                  data-tab-indicator=""
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-0 h-0.5 bg-accent"
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                />
+              )}
             </button>
           );
         })}

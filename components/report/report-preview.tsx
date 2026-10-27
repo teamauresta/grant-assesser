@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { formatDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -50,6 +52,15 @@ function Table({ label, head, children, minWidth = 560 }: { label: string; head:
 }
 
 const td = 'px-3 py-2';
+
+/** A preview section that fades in and out (150ms) inside the preview's AnimatePresence. */
+function Fade({ children }: { children: ReactNode }) {
+  return (
+    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: 'easeOut' }}>
+      {children}
+    </m.div>
+  );
+}
 
 function Cover({ data }: { data: ReportData }) {
   const cover = data.cover!;
@@ -262,16 +273,19 @@ function Sources({ groups }: { groups: SourceGroup[] }) {
 export function ReportPreview({ data }: { data: ReportData }) {
   return (
     <article aria-label="Report preview" className="flex flex-col gap-8 rounded-lg border border-border bg-bg p-4 shadow-sm md:p-8">
-      {!hasAnySection(data) && <Empty>Choose at least one section to include.</Empty>}
-      {data.cover && <Cover data={data} />}
-      {data.summary && <Summary summary={data.summary} />}
-      {data.programs && <Programs groups={data.programs} directory={data.mode === 'directory'} />}
-      {data.funding && <Funding funding={data.funding} />}
-      {data.pipeline && <Pipeline rows={data.pipeline} />}
-      {data.upcoming && <Upcoming rows={data.upcoming} />}
-      {data.gaps && <Gaps rows={data.gaps} />}
-      {data.stacking && <Stacking rows={data.stacking} />}
-      {data.sources && <Sources groups={data.sources} />}
+      {/* Sections fade in and out as they are switched on and off; the first render is not animated. */}
+      <AnimatePresence initial={false}>
+        {!hasAnySection(data) && <Fade key="none"><Empty>Choose at least one section to include.</Empty></Fade>}
+        {data.cover && <Fade key="cover"><Cover data={data} /></Fade>}
+        {data.summary && <Fade key="summary"><Summary summary={data.summary} /></Fade>}
+        {data.programs && <Fade key="programs"><Programs groups={data.programs} directory={data.mode === 'directory'} /></Fade>}
+        {data.funding && <Fade key="funding"><Funding funding={data.funding} /></Fade>}
+        {data.pipeline && <Fade key="pipeline"><Pipeline rows={data.pipeline} /></Fade>}
+        {data.upcoming && <Fade key="upcoming"><Upcoming rows={data.upcoming} /></Fade>}
+        {data.gaps && <Fade key="gaps"><Gaps rows={data.gaps} /></Fade>}
+        {data.stacking && <Fade key="stacking"><Stacking rows={data.stacking} /></Fade>}
+        {data.sources && <Fade key="sources"><Sources groups={data.sources} /></Fade>}
+      </AnimatePresence>
       <footer className="border-t border-border pt-3 text-xs text-muted-fg">
         Generated <span className="num">{fmt(data.generatedOn)}</span> · Program data verified as of <span className="num">{fmt(data.oldestVerified)}</span> · {data.disclaimer}
       </footer>

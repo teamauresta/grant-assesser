@@ -3,6 +3,8 @@
 import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SearchX } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import type { Program } from '@/lib/schema';
 import { PROGRAMS } from '@/content/programs';
 import {
@@ -18,6 +20,7 @@ import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input } from '@/components/ui/field';
+import { Reveal } from '@/components/motion/reveal';
 import { FilterChips } from './filter-chips';
 import { ProgramCard } from './program-card';
 
@@ -138,13 +141,27 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
       </div>
 
       {results.length ? (
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {results.map((p) => (
-            <li key={p.slug}>
-              <ProgramCard program={p} status={statuses.get(p.slug)} notFitReason={notFit.get(p.slug)} />
-            </li>
-          ))}
-        </ul>
+        <Reveal>
+          {/* Cards that stay glide to their new place; cards that come and go fade. initial={false}
+              keeps the first render (and the exported HTML) fully visible. popLayout takes leaving
+              cards out of the flow at once, so the rest reflow while they fade. */}
+          <ul className="relative grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence initial={false} mode="popLayout">
+              {results.map((p) => (
+                <m.li
+                  key={p.slug}
+                  layout="position"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <ProgramCard program={p} status={statuses.get(p.slug)} notFitReason={notFit.get(p.slug)} />
+                </m.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </Reveal>
       ) : (
         <EmptyState
           icon={SearchX}
