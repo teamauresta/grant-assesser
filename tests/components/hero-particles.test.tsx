@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { HeroParticles } from '@/components/home/hero-particles';
 import { StaticScatter } from '@/components/home/static-scatter';
 
@@ -10,6 +10,18 @@ vi.mock('@/components/home/particle-field', () => ({ default: () => <canvas data
 
 const motion = (reduced: boolean) =>
   vi.stubGlobal('matchMedia', (q: string) => ({ matches: reduced && q === '(prefers-reduced-motion: reduce)' }));
+
+/** A reduced-motion setting the test can flip, notifying listeners as a real MediaQueryList does. */
+function switchableMotion(reduced: boolean) {
+  const listeners = new Set<() => void>();
+  const list = {
+    get matches() { return reduced; },
+    addEventListener: (_: string, l: () => void) => { listeners.add(l); },
+    removeEventListener: (_: string, l: () => void) => { listeners.delete(l); },
+  };
+  vi.stubGlobal('matchMedia', (q: string) => (q === '(prefers-reduced-motion: reduce)' ? list : { matches: false }));
+  return (next: boolean) => act(() => { reduced = next; listeners.forEach((l) => l()); });
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -35,6 +47,22 @@ describe('HeroParticles', () => {
   it('loads the particle field on the client when motion is allowed', async () => {
     motion(false);
     const { container } = render(<HeroParticles />);
+    expect(await screen.findByTestId('field')).toBeInTheDocument();
+    expect(container.querySelector('svg[data-hero-static]')).toBeNull();
+  });
+});
+
+describe('HeroParticles, when the setting changes mid-session', () => {
+  it('swaps the live field for the still scatter, and back', async () => {
+    const setReduced = switchableMotion(false);
+    const { container } = render(<HeroParticles />);
+    expect(await screen.findByTestId('field')).toBeInTheDocument();
+
+    setReduced(true);
+    expect(screen.queryByTestId('field')).toBeNull();
+    expect(container.querySelector('svg[data-hero-static]')).not.toBeNull();
+
+    setReduced(false);
     expect(await screen.findByTestId('field')).toBeInTheDocument();
     expect(container.querySelector('svg[data-hero-static]')).toBeNull();
   });

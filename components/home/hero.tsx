@@ -20,12 +20,13 @@ export function Hero() {
           href="/programs/"
           className={cn('inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg/80 py-1 pr-4 pl-1 text-sm backdrop-blur-sm hover:border-border-strong', focusRing)}
         >
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-on-primary">
+          {/* On phones the badge shows only its icon, so the pill stays on one line at 375px. */}
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-1.5 py-1 text-xs font-semibold text-on-primary sm:px-2.5">
             <BadgeCheck aria-hidden="true" size={16} strokeWidth={1.5} />
-            Verified
+            <span className="max-sm:sr-only">Verified</span>
           </span>
           <span>
-            {PROGRAMS.length} programs checked <time dateTime={verified}>{formatDate(verified)}</time>
+            {PROGRAMS.length} programs checked <time dateTime={verified} className="whitespace-nowrap">{formatDate(verified)}</time>
           </span>
           <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
         </Link>

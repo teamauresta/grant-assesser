@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Particles, { ParticlesProvider } from '@tsparticles/react';
 import type { Engine } from '@tsparticles/engine';
 import { loadSlim } from '@tsparticles/slim';
@@ -19,8 +19,16 @@ export default function ParticleField() {
   const [colours, setColours] = useState(readLiftColours);
   const [compact] = useState(isCompact);
   const [shown, setShown] = useState(false);
+  const current = useRef(colours);
   useEffect(() => {
-    const observer = new MutationObserver(() => setColours(readLiftColours()));
+    const observer = new MutationObserver(() => {
+      const next = readLiftColours();
+      if (next.join() === current.current.join()) return;
+      current.current = next;
+      // Hide while the container reloads in the new colours, so they fade in as on first load.
+      setShown(false);
+      setColours(next);
+    });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, []);
@@ -29,8 +37,8 @@ export default function ParticleField() {
   const loaded = useCallback(async () => setShown(true), []);
   return (
     <ParticlesProvider init={init}>
+      {/* No key: <Particles> reloads its container whenever `options` changes. */}
       <Particles
-        key={colours.join()}
         id="hero-particles"
         options={options}
         particlesLoaded={loaded}

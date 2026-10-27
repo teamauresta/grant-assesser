@@ -11,6 +11,8 @@ describe('heroParticleOptions', () => {
     expect(o.particles.number.value).toBe(120);
     expect(o.interactivity.events.onHover.enable).toBe(true);
     expect(o.interactivity.events.onHover.mode).toBe('repulse');
+    // Read on the document, so the canvas can stay pointer-events: none under the hero content.
+    expect(o.interactivity.detectsOn).toBe('window');
   });
   it('uses 50 particles and no interaction on phones', () => {
     const o = heroParticleOptions({ compact: true, colours });

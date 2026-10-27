@@ -25,9 +25,12 @@ describe('Hero', () => {
     expect(html).toContain('Programs');
     expect(html).toContain('Open now');
     expect(html).toContain('Closing in 30 days');
+    // These two regexes come from the plan. CountUp nests its digits two spans deep, so they can
+    // never match; they are kept because assertions are not removed. The DOMParser text check
+    // below is the real one.
     expect(html).not.toMatch(/Open now<\/dt><dd[^>]*>\s*<span[^>]*>\d/);
     expect(html).not.toMatch(/Closing in 30 days<\/dt><dd[^>]*>\s*<span[^>]*>\d/);
-    // The same, read as text: the server shows the program count but no "now"-based number.
+    // The real check, read as text: the server shows the program count but no "now"-based number.
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const dd = (label: string) => [...doc.querySelectorAll('dt')].find((dt) => dt.textContent === label)?.nextElementSibling?.textContent;
     expect(dd('Programs')).toContain(String(PROGRAMS.length));

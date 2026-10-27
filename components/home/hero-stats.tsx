@@ -11,7 +11,9 @@ const placeholder = <span aria-hidden="true" className="inline-block w-[2ch]">&n
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
+    // Spans both rows of the list's grid, so every number sits on the same line even when a label
+    // wraps (as "Closing in 30 days" does on phones).
+    <div className="row-span-2 grid grid-rows-subgrid">
       <dt className="text-sm text-muted-fg">{label}</dt>
       <dd className="text-3xl font-semibold tracking-tight md:text-5xl">{children}</dd>
     </div>
@@ -26,7 +28,7 @@ export function HeroStats() {
   const now = useNow();
   const stats = useMemo(() => (now ? programStats(PROGRAMS, now) : null), [now]);
   return (
-    <dl className="grid w-full grid-cols-3 gap-4 border-t border-border pt-6">
+    <dl className="grid w-full grid-cols-3 grid-rows-[auto_auto] gap-x-4 gap-y-1 border-t border-border pt-6">
       <Stat label="Programs"><CountUp value={PROGRAMS.length} /></Stat>
       <Stat label="Open now">{stats ? <CountUp value={stats.openNow} /> : placeholder}</Stat>
       <Stat label={`Closing in ${STATS_CLOSING_DAYS} days`}>{stats ? <CountUp value={stats.closingSoon} /> : placeholder}</Stat>
