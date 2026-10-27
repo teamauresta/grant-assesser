@@ -5,6 +5,9 @@ import * as m from 'motion/react-m';
 import { cn } from '@/lib/cn';
 import { focusRing } from './focus-ring';
 
+/** focusRing drawn inside the tab rather than around it. */
+const tabFocusRing = 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent';
+
 export type TabItem<V extends string> = { value: V; label: ReactNode; content: ReactNode };
 
 export type TabsProps<V extends string> = {
@@ -50,8 +53,9 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
   return (
     <div className={className}>
       {/* The baseline is an inset shadow, not a border: the list scrolls sideways, which clips anything
-          outside its padding box, and the indicator has to sit on top of the line, not below it. */}
-      <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)]">
+          outside its padding box, and the indicator has to sit on top of the line, not below it.
+          Forced-colours mode drops shadows, so it gets a real border there. */}
+      <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)] forced-colors:border-b forced-colors:border-[CanvasText]">
         {tabs.map((t, i) => {
           const isSelected = t.value === selected;
           return (
@@ -69,7 +73,8 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
               className={cn(
                 'relative min-h-11 whitespace-nowrap rounded-t-md px-3 text-sm transition-colors duration-150',
                 isSelected ? 'font-semibold text-fg' : 'text-muted-fg hover:text-fg',
-                focusRing,
+                // Inset: the scrolling list clips anything drawn outside a tab.
+                tabFocusRing,
               )}
             >
               {t.label}
@@ -78,7 +83,7 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
                   layoutId={`${id}-indicator`}
                   data-tab-indicator=""
                   aria-hidden="true"
-                  className="absolute inset-x-0 bottom-0 h-0.5 bg-accent"
+                  className="absolute inset-x-0 bottom-0 h-0.5 bg-accent forced-colors:bg-[CanvasText]"
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                 />
               )}

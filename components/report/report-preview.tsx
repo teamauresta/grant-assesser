@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
+import { useMotionReady } from '@/components/motion/motion-provider';
 import { formatDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -55,8 +56,10 @@ const td = 'px-3 py-2';
 
 /** A preview section that fades in and out (150ms) inside the preview's AnimatePresence. */
 function Fade({ children }: { children: ReactNode }) {
+  // Starts hidden only when it can fade in: see useMotionReady.
+  const motionReady = useMotionReady();
   return (
-    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: 'easeOut' }}>
+    <m.div initial={motionReady ? { opacity: 0 } : false} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15, ease: 'easeOut' }}>
       {children}
     </m.div>
   );

@@ -20,6 +20,7 @@ import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input } from '@/components/ui/field';
+import { useMotionReady } from '@/components/motion/motion-provider';
 import { Reveal } from '@/components/motion/reveal';
 import { FilterChips } from './filter-chips';
 import { ProgramCard } from './program-card';
@@ -93,6 +94,8 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
   const set = (patch: Partial<Filters>) => onChange?.({ ...filters, ...patch });
   const isDefault = serializeFilters(filters) === '';
   const clear = () => onChange?.(DEFAULT_FILTERS);
+  // Cards start hidden only when they can animate in: see useMotionReady.
+  const motionReady = useMotionReady();
 
   return (
     <div className="flex flex-col gap-6">
@@ -151,7 +154,7 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
                 <m.li
                   key={p.slug}
                   layout="position"
-                  initial={{ opacity: 0, scale: 0.98 }}
+                  initial={motionReady ? { opacity: 0, scale: 0.98 } : false}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
