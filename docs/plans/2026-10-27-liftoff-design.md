@@ -82,3 +82,17 @@ Shared components in `components/motion/`:
 - **Tests:** Vitest for `celebrate()` gating and once-per-event, progress and next-due selectors, the `celebrations` schema default and old imports, `Toast` announcement, `CountUp` final value in markup, and gradient contrast. Playwright: journey under forced reduced motion, Awarded toast, axe on home including the dark panel in light and dark, hero screenshots at 375px and 1280px for review (not stored baselines).
 - **Docs:** this file, plus `CLAUDE.md` design-system rules for the gradient, motion and celebrations.
 - **Delivery:** branch `feature/liftoff`, subagent-driven build with reviews, screenshots to the owner before merging.
+
+## 6. What changed during the build
+
+Recorded at the end of the build (27 Oct 2026). Where this list and the sections above differ, this list describes what shipped.
+
+- **Particles.** The hero uses the tsParticles slim bundle's `line` shape (round-capped strokes, 2px wide, 3–6px long, slowly rotating), 120 on desktop and 50 on phones, with repulse on hover on desktop only. Reduced motion gets a seeded SVG scatter of dashes (`StaticScatter`), which also drifts faintly on the dark panel.
+- **Progress ring.** It counts goals, not goal steps, matching the existing "2 of 5 goals done" wording.
+- **Results.** Results has no score bars, so none were animated. Groups reveal in sequence and the funding estimate counts up (`moneyCounter()` in `lib/format.ts` keeps its width steady).
+- **Motion features.** `LazyMotion` loads `domMax`, not `domAnimation`, because the pipeline glide, directory reflow and tab indicator need layout animation. `m` is imported from `motion/react-m`: importing it from `motion/react` added about 35KB to the first load. An `m.*` element starts hidden only once the features have loaded (`useMotionReady()`), so content never stays invisible if that chunk fails. Under reduced motion `MotionConfig` also sets `skipAnimations`, so even opacity fades are skipped.
+- **Celebrations API.** `celebrate(kind)` became `cheer(key, { message, action, burst })`, which shows the toast once per key per session and fires the burst through `burst(kind)`. Confetti draws on its own `aria-hidden`, click-through canvas, and a failed load is ignored because the message has already shown.
+- **Logo colours.** The logo mark uses `--logo-*` tokens, the light stops in both themes, because white fails 3:1 on the dark-theme `--lift-*` stops.
+- **Panel edge.** `--panel-border` is visible in the dark theme only, where the dark panel would otherwise merge with the page; it is decorative and outside the AA tests.
+- **First-load size.** The home page's first-load JavaScript measured 278,256 bytes gzipped (`pnpm size`), up from 256,123 before Liftoff: about 22KB, against a 297,083-byte budget (baseline plus 40KiB).
+- **Tests.** The hero's type circles float without end, so the end-to-end test follows the Grant link with the keyboard rather than a mouse click.

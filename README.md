@@ -9,6 +9,7 @@ A free tool that helps Australian AI startups find the grants, tax incentives, c
 - **Assessment.** A short wizard checks your answers against each program's eligibility rules. Each program lands in one of four groups: Act now, Prepare, Watch or Not a fit. Each group comes with reasons and fixes, and you get an estimate of the funding you could reach.
 - **Plan and calendar.** Track applications on a pipeline board, work through goals generated from each program, and add deadlines to Google Calendar or Outlook, or download them as `.ics` files.
 - **PDF report.** Build a report of your results and plan, preview it and download it as a PDF.
+- **Motion and celebrations.** A drifting particle hero, gentle transitions, a plan progress ring and a short burst of confetti when you finish the assessment or submit or win an application. All motion stops when your device is set to reduce motion, and confetti can be turned off in **Settings**.
 
 Program status (open, closing soon, closed) is worked out in your browser from today's date, so it never goes stale between deploys.
 
@@ -39,9 +40,10 @@ Then open http://localhost:3000/grant-assesser/ (the app is served under the `/g
 | `pnpm lint` | ESLint |
 | `pnpm build` | Static export into `out/` |
 | `pnpm serve` | Serves `out/` the way GitHub Pages does, at http://localhost:4173/grant-assesser/ |
+| `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget. Run after `pnpm build` |
 | `pnpm freshness` | Prints a Markdown report of stale program data, closes within 30 days, past closes that need a decision, and broken or blocked source links |
 
-Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright install chromium`.
+Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright install chromium`. `SCREENS=1 pnpm e2e tests/e2e/screens.spec.ts` saves review screenshots of the home, plan and results pages to `test-results/screens/`.
 
 ## Updating a program
 
@@ -85,7 +87,7 @@ components/          UI by feature: ui, layout, home, programs, assess, results,
 content/programs/    One verified record per program, plus index.ts that validates and exports them
 content/verification Fact-check evidence behind the launch data
 lib/                 Logic: schema, gates, status, scoring, assessment, plan, calendar, store, pdf, dates
-scripts/             serve-out.mjs (local static server), check-freshness.ts (weekly data check)
+scripts/             serve-out.mjs (local static server), check-freshness.ts (weekly data check), js-size.mjs (JS budget)
 tests/               Vitest unit, component and content tests; Playwright e2e and axe tests in tests/e2e
 docs/plans/          Design document and implementation plan
 public/              Static files copied into out/ (fonts, .nojekyll)
@@ -98,7 +100,7 @@ The original single-file app (`index.html`, `base.jsx` and its `404.html`) is in
 
 ## Tech stack
 
-Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Lucide icons, `@react-pdf/renderer`, Vitest and Playwright with axe.
+Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Lucide icons, `@react-pdf/renderer`, `motion`, tsParticles, `canvas-confetti`, Vitest and Playwright with axe.
 
 ## License
 
