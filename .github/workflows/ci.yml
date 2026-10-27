@@ -38,6 +38,8 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       # The Playwright web server builds the static export and serves out/.
       - run: pnpm e2e
+      # Home first-load JavaScript budget, measured on the out/ the e2e web server built.
+      - run: pnpm size
 
       - name: Upload Playwright report
         if: failure()

@@ -1,3 +1,5 @@
 allowBuilds:
+  # Its install script only prints warnings about incompatible particle packages; not needed.
+  '@tsparticles/engine': false
   esbuild: true
   unrs-resolver: true
