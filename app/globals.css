@@ -59,6 +59,9 @@
   /* Decorative edge (WCAG 1.4.11 does not apply), so not in the AA contrast tests. Not needed in
    * light, where the dark panel stands out; see the dark theme. */
   --panel-border: transparent;
+
+  /* Strength of the cursor spotlight; tests/lib/tokens.test.ts keeps text AA on it. */
+  --spot-mix: 4%;
 }
 
 [data-theme="dark"] {
@@ -235,6 +238,26 @@
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--lift-2) 35%, transparent),
     0 10px 36px -10px color-mix(in srgb, var(--lift-2) 60%, transparent);
+}
+
+/* A soft highlight that follows the pointer (useSpotlight). Mouse-like pointers with motion allowed only. */
+@utility spotlight {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+    background: radial-gradient(240px circle at var(--spot-x, 50%) var(--spot-y, 50%), color-mix(in srgb, var(--fg) var(--spot-mix), transparent), transparent 70%);
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    &:hover::before { opacity: 1; }
+  }
 }
 
 /* Set by <Reveal> after hydration, only on content that starts below the first screen. */

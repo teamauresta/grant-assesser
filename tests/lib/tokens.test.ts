@@ -5,6 +5,7 @@ import { AURORA_ALPHA } from '@/lib/aurora';
 import { LIFT_COLOURS } from '@/lib/celebrate';
 
 const css = readFileSync('app/globals.css', 'utf8');
+const spot = Number(/--spot-mix:\s*(\d+)%/.exec(css)![1]) / 100;
 
 /** `--name: #hex;` pairs from the first block that starts with `selector {`. */
 function tokens(selector: string): Record<string, string> {
@@ -29,6 +30,12 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
     for (const field of fields) {
       expect(contrast(t[name], mixHex(t['--bg'], field, AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+  // The cursor spotlight (useSpotlight) paints --fg at --spot-mix over the card. Persona cards are
+  // --surface; the type links sit on --bg. Text on either must stay AA at the highlight's centre.
+  it.each(['--fg', '--muted-fg', '--accent'])('%s meets AA on the strongest spotlight', (name) => {
+    expect(contrast(t[name], mixHex(t['--surface'], t['--fg'], spot))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t[name], mixHex(t['--bg'], t['--fg'], spot))).toBeGreaterThanOrEqual(4.5);
   });
   it.each(['--panel-fg', '--panel-muted-fg', '--panel-lift-1', '--panel-lift-2', '--panel-lift-3'])('%s meets AA on --panel-bg', (name) => {
     expect(contrast(t[name], t['--panel-bg'])).toBeGreaterThanOrEqual(4.5);
