@@ -44,14 +44,20 @@ export function sortStory(programs: Program[], now: Date): Story {
   return { groups, closed: programs.length - assessed.length };
 }
 
-export type Scatter = { x: number; y: number; rotate: number; delay: number };
+export type Scatter = { rotate: number; delay: number };
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** FNV-1a, then mulberry32: a small seeded generator, so a slug always scatters the same way. */
-function seeded(text: string) {
+/** FNV-1a: a 32-bit hash of the text. */
+function hash(text: string) {
   let s = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) s = Math.imul(s ^ text.charCodeAt(i), 0x01000193);
+  return s >>> 0;
+}
+
+/** mulberry32 seeded with the text's hash: a small generator, so a slug always scatters the same way. */
+function seeded(text: string) {
+  let s = hash(text);
   return () => {
     s = (s + 0x6d2b79f5) | 0;
     let t = Math.imul(s ^ (s >>> 15), 1 | s);
@@ -60,15 +66,40 @@ function seeded(text: string) {
   };
 }
 
-/**
- * Where a chip starts before it sorts: an offset from its sorted place (rem), a tilt (degrees) and
- * a stagger (0..1). Flattened vertically, because the stage is wider than it is tall.
- */
+/** How a chip lies before it sorts: a tilt (degrees) and a stagger (0..1) for when it starts moving. */
 export function chipScatter(slug: string): Scatter {
   const next = seeded(slug);
-  const angle = next() * Math.PI * 2;
-  const distance = 8 + next() * 14;
-  return { x: round(Math.cos(angle) * distance), y: round(Math.sin(angle) * distance * 0.6), rotate: round((next() - 0.5) * 24), delay: round(next() * 0.99) };
+  return { rotate: round((next() - 0.5) * 24), delay: round(next() * 0.99) };
+}
+
+/** A point in a box, as fractions (0..1) of its free width and height. */
+export type Slot = { x: number; y: number };
+export type Box = { left: number; top: number; width: number; height: number };
+
+/**
+ * Where each chip lies in the unsorted pile: one chip per cell of a grid `columns` wide, cells dealt
+ * in a seeded order (so groups mix), alternate rows shifted like bricks and each chip jittered within
+ * its cell. It looks random, but nothing bunches up or leaves a hole, and every visit agrees.
+ */
+export function cloudSlots(slugs: string[], columns: number): Map<string, Slot> {
+  const rows = Math.max(1, Math.ceil(slugs.length / columns));
+  const order = [...slugs].sort((a, b) => hash(a) - hash(b) || a.localeCompare(b));
+  return new Map(order.map((slug, i) => {
+    const row = Math.floor(i / columns);
+    const next = seeded(`${slug}:slot`);
+    const base = row % 2 ? 0.65 : 0.35;
+    const x = ((i % columns) + base + (next() - 0.5) * 0.4) / columns;
+    const y = (row + 0.5 + (next() - 0.5) * 0.6) / rows;
+    return [slug, { x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000 }];
+  }));
+}
+
+/** The offset (px) from a chip's sorted box to its slot in the cloud, keeping the chip inside the cloud. */
+export function scatterOffset(chip: Box, cloud: Box, slot: Slot): { x: number; y: number } {
+  return {
+    x: round(cloud.left + Math.max(0, cloud.width - chip.width) * slot.x - chip.left),
+    y: round(cloud.top + Math.max(0, cloud.height - chip.height) * slot.y - chip.top),
+  };
 }
 
 /** Share of the sort each chip spends moving; the rest of the range staggers their starts. */

@@ -8,6 +8,7 @@ import { ClosingSoonStrip } from '@/components/programs/closing-soon-strip';
 import { Hero } from '@/components/home/hero';
 import { ResumeCard } from '@/components/home/resume-card';
 import { PersonaCards } from '@/components/home/persona-cards';
+import { SortStory } from '@/components/home/sort-story';
 import { CategoryBand } from '@/components/home/category-band';
 import { HowItWorks } from '@/components/home/how-it-works';
 import { DueThisWeek } from '@/components/plan/due-this-week';
@@ -43,6 +44,8 @@ export default function HomePage() {
           </p>
         </section>
       </Reveal>
+
+      <SortStory />
 
       <CategoryBand />
 

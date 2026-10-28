@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { PROGRAMS } from '@/content/programs';
 import { assessProgram, GROUP_ORDER } from '@/lib/assess';
 import { ProfileSchema } from '@/lib/schema';
-import { CHIP_SPAN, chipProgress, chipScatter, DEMO_PROFILE, sortStory } from '@/lib/showcase';
+import { CHIP_SPAN, chipProgress, chipScatter, cloudSlots, DEMO_PROFILE, scatterOffset, sortStory } from '@/lib/showcase';
 import { PERSONA_NOW, preRaiseVic } from '@/tests/fixtures/personas';
 
 describe('DEMO_PROFILE', () => {
@@ -41,16 +41,64 @@ describe('chipScatter', () => {
     expect(chipScatter('csiro-kick-start')).toEqual(chipScatter('csiro-kick-start'));
     expect(chipScatter('csiro-kick-start')).not.toEqual(chipScatter('rdti'));
   });
-  it('stays within the stage: up to 22rem across, 13.2rem down or up, 12 degrees of tilt', () => {
+  it('tilts up to 12 degrees and staggers within 0..1', () => {
     for (const { slug } of PROGRAMS) {
       const s = chipScatter(slug);
-      expect(Math.hypot(s.x, s.y / 0.6)).toBeGreaterThanOrEqual(8 - 0.01);
-      expect(Math.abs(s.x)).toBeLessThanOrEqual(22);
-      expect(Math.abs(s.y)).toBeLessThanOrEqual(13.2);
       expect(Math.abs(s.rotate)).toBeLessThanOrEqual(12);
       expect(s.delay).toBeGreaterThanOrEqual(0);
       expect(s.delay).toBeLessThan(1);
     }
+  });
+});
+
+describe('cloudSlots', () => {
+  const slugs = PROGRAMS.map((p) => p.slug);
+  const columns = 6;
+  const slots = cloudSlots(slugs, columns);
+
+  it('gives every chip a place inside the box, the same on every visit', () => {
+    expect([...slots.keys()].sort()).toEqual([...slugs].sort());
+    expect(cloudSlots([...slugs].reverse(), columns)).toEqual(slots);
+    for (const { x, y } of slots.values()) {
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x).toBeLessThanOrEqual(1);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThanOrEqual(1);
+    }
+  });
+
+  // Even spread: one chip per cell of a columns x rows grid, so the pile never bunches up.
+  it('puts one chip in each cell of the grid', () => {
+    const rows = Math.ceil(slugs.length / columns);
+    const cells = [...slots.values()].map(({ x, y }) => `${Math.floor(x * columns)},${Math.floor(y * rows)}`);
+    expect(new Set(cells).size).toBe(slugs.length);
+  });
+
+  it('mixes the groups rather than keeping each chip near its column', () => {
+    const story = sortStory(PROGRAMS, PERSONA_NOW);
+    const actNow = story.groups['act-now'].map((c) => slots.get(c.slug)!.x);
+    expect(Math.min(...actNow)).toBeLessThan(0.3);
+    expect(Math.max(...actNow)).toBeGreaterThan(0.7);
+  });
+
+  it('copes with one chip and with an empty list', () => {
+    expect(cloudSlots(['rdti'], 2).get('rdti')).toBeDefined();
+    expect(cloudSlots([], 2).size).toBe(0);
+  });
+});
+
+describe('scatterOffset', () => {
+  const cloud = { left: 0, top: 40, width: 1000, height: 400 };
+  const chip = { left: 300, top: 100, width: 200, height: 26 };
+
+  it('moves the chip from its sorted place to its slot, kept inside the cloud', () => {
+    expect(scatterOffset(chip, cloud, { x: 0, y: 0 })).toEqual({ x: -300, y: -60 });
+    expect(scatterOffset(chip, cloud, { x: 1, y: 1 })).toEqual({ x: 500, y: 314 });
+    expect(scatterOffset(chip, cloud, { x: 0.5, y: 0.5 })).toEqual({ x: 100, y: 127 });
+  });
+
+  it('never moves a chip wider than the cloud past its left edge', () => {
+    expect(scatterOffset({ ...chip, left: 0, width: 1200 }, cloud, { x: 1, y: 0 }).x).toBe(0);
   });
 });
 

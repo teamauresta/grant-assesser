@@ -245,6 +245,20 @@
 [data-reveal="hidden"]:focus-within { opacity: 1; translate: none; }
 @media print { [data-reveal] { opacity: 1 !important; translate: none !important; } }
 
+/*
+ * Sorting-story chips (components/home/sort-story.tsx). --t runs from 0 (scattered) to 1 (sorted);
+ * the sorted layout is the real one. A focused chip's stage shows everything sorted, as do
+ * reduced motion and print.
+ */
+[data-chip] {
+  transform:
+    translate(calc(var(--sx, 0px) * (1 - var(--t, 1))), calc(var(--sy, 0px) * (1 - var(--t, 1))))
+    rotate(calc(var(--sr, 0deg) * (1 - var(--t, 1))));
+}
+[data-stage]:focus-within [data-chip] { transform: none; }
+@media (prefers-reduced-motion: reduce) { [data-chip] { transform: none; } }
+@media print { [data-chip] { transform: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
