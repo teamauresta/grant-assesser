@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { populatedWorkspace, seedStorage } from './helpers';
+import { frames, populatedWorkspace, scrollSort, seedStorage } from './helpers';
 
 /**
  * Review screenshots for the owner, not a test baseline: nothing is compared. Run with
@@ -24,6 +24,8 @@ async function settle(page: Page) {
     window.scrollTo(0, 0);
     await frames();
   });
+  // Finite animations only: the aurora is drawn on requestAnimationFrame, not a CSS animation, so
+  // it never appears here and never holds this up.
   await page.evaluate(() => Promise.all(document.getAnimations()
     .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
     .map((a) => a.finished.catch(() => undefined))));
@@ -35,21 +37,49 @@ async function capture(page: Page, name: string, project: string) {
   await page.screenshot({ path: join(OUT, `${name}-${project}.png`), fullPage: true });
 }
 
+/** A viewport (not full-page) shot of one part of the home page. */
+const homePart = (page: Page, part: string, theme: string, project: string) =>
+  page.screenshot({ path: join(OUT, `home-${part}-${theme}-${project}.png`) });
+
 for (const theme of ['light', 'dark'] as const) {
   test(`home (${theme})`, async ({ page }, info) => {
+    const project = info.project.name;
     await seedStorage(page, { workspace: populatedWorkspace(), theme });
     await page.goto('./');
     await expect(page.getByText('Pick up where you left off')).toBeVisible();
-    await capture(page, `home-${theme}`, info.project.name);
-    // The pinned sorting story part-way through (wide screens only: phones settle in one go).
-    if (info.project.name !== 'desktop') return;
-    await page.evaluate(() => {
-      const section = document.querySelector<HTMLElement>('section[aria-labelledby="sort-heading"]')!;
-      const top = section.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, top + (section.offsetHeight - window.innerHeight) * 0.4);
-    });
-    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-    await page.screenshot({ path: join(OUT, `home-sort-${theme}-${info.project.name}.png`), fullPage: false });
+    // The full page under reduced motion: the sorting story's pinned range collapses to the sorted
+    // layout. With motion, a full-page capture draws the pinned section flat: the pile, then a gap.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await capture(page, `home-${theme}`, project);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+
+    const stage = page.locator('[data-stage]');
+    if (project !== 'desktop') {
+      // The phone settle part-way: it starts when the stage comes into view and runs for 1.2s.
+      await stage.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await page.waitForTimeout(500);
+      await homePart(page, 'sort-mid', theme, project);
+      return;
+    }
+
+    // The story as a visitor sees it, a screen at a time: the hero with the aurora drawing, the
+    // sort at the start, part-way and the end of its pinned range, and How it works after the
+    // previews have played.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const canvas = page.locator('[data-hero-aurora] canvas');
+    const drawn = Number(await canvas.getAttribute('data-frame'));
+    await expect.poll(async () => Number(await canvas.getAttribute('data-frame')), { timeout: 10_000 }).toBeGreaterThan(drawn);
+    await homePart(page, 'hero', theme, project);
+    for (const [part, k] of [['sort-start', 0], ['sort-mid', 0.4], ['sort-end', 1]] as const) {
+      await scrollSort(page, k);
+      await homePart(page, part, theme, project);
+    }
+    await page.getByRole('region', { name: 'How it works' }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await frames(page);
+    await page.evaluate(() => Promise.all(document.getAnimations()
+      .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+      .map((a) => a.finished.catch(() => undefined))));
+    await homePart(page, 'how', theme, project);
   });
 }
 

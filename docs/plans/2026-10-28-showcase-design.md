@@ -114,7 +114,8 @@ Built on `feature/showcase` on 28 Oct 2026. Where the build differs from section
 **Testing (§7)**
 
 - `data-frame` updates every 30 frames (about twice a second), not once a second.
-- `tests/e2e/showcase.spec.ts`: the aurora plays, pauses and remembers the pause across a reload; under reduced motion it draws one still frame and offers no button; the sorting story sorts every chip at the end of the pinned scroll (desktop), settles once in view (phone), is sorted without scrolling under reduced motion, and shows sorted when a chip has focus, with Enter opening the program; the previews play once when scrolled to and then rest; persona cards have one border colour on every side. `liftoff.spec.ts` now covers the hero numbers, the type links and celebrations. `screens.spec.ts` adds a mid-sort screenshot at 1280px.
+- `tests/e2e/showcase.spec.ts`: the aurora plays, pauses and remembers the pause across a reload; under reduced motion it draws one still frame and offers no button; the sorting story sorts every chip at the end of the pinned scroll (desktop), settles once in view (phone), is sorted without scrolling under reduced motion, and shows sorted when a chip has focus, with Enter opening the program; the previews play once when scrolled to and then rest; persona cards have one border colour on every side. `liftoff.spec.ts` now covers the hero numbers, the type links and celebrations. `screens.spec.ts` adds viewport shots of the story at 1280px (hero, sort at its start, part-way and end, How it works) and the phone settle part-way at 375px.
+- Full-page captures of the home page are taken under reduced motion: with motion, the pinned sorting story draws flat (the unsorted pile, then a screen and a half of empty pinned range).
 
 **Size (§7)**
 

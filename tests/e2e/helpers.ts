@@ -48,3 +48,20 @@ export async function seedStorage(page: Page, { workspace, theme }: { workspace?
     [WORKSPACE_KEY, workspace ? JSON.stringify(workspace) : '', THEME_KEY, theme ?? ''] as const,
   );
 }
+
+/** Two animation frames: enough for a scroll handler's frame (or a last queued tick) to run. */
+export const frames = (page: Page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+/**
+ * Scrolls the home page's pinned sorting story to `k` (0..1) of its pinned range: 0 puts the
+ * section's top at the top of the window, 1 is the section's end minus one window. Then waits for
+ * the scroll handler's frame.
+ */
+export async function scrollSort(page: Page, k: number) {
+  await page.evaluate((share) => {
+    const section = document.querySelector<HTMLElement>('section[aria-labelledby="sort-heading"]')!;
+    const top = section.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, top + (section.offsetHeight - window.innerHeight) * share);
+  }, k);
+  await frames(page);
+}
