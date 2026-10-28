@@ -55,7 +55,7 @@ function seeded(text: string) {
 /** How a chip lies before it sorts: a tilt (degrees) and a stagger (0..1) for when it starts moving. */
 export function chipScatter(slug: string): Scatter {
   const next = seeded(slug);
-  return { rotate: round((next() - 0.5) * 24), delay: round(next() * 0.99) };
+  return { rotate: round((next() - 0.5) * 12), delay: round(next() * 0.99) };
 }
 
 /** A point in a box, as fractions (0..1) of its free width and height. */
@@ -86,6 +86,62 @@ export function scatterOffset(chip: Box, cloud: Box, slot: Slot): { x: number; y
     x: round(cloud.left + Math.max(0, cloud.width - chip.width) * slot.x - chip.left),
     y: round(cloud.top + Math.max(0, cloud.height - chip.height) * slot.y - chip.top),
   };
+}
+
+export type PileChip = { slug: string; width: number; height: number };
+
+/** Clear space (px) a column of the wide-screen pile keeps beside a typical chip. */
+const PILE_GAP = 56;
+/** When rows would sit closer than a chip plus ROW_ROOM, the pile takes another column, if each gap across keeps MIN_GAP. */
+const ROW_ROOM = 16;
+const MIN_GAP = 24;
+
+/** Columns for the wide-screen pile: as many median-width chips, each with a clear gap, as fit across. */
+export function pileColumns(width: number, chipWidths: number[]): number {
+  if (!chipWidths.length) return 1;
+  const sorted = [...chipWidths].sort((a, b) => a - b);
+  return Math.max(1, Math.min(chipWidths.length, Math.floor(width / (sorted[sorted.length >> 1] + PILE_GAP))));
+}
+
+/**
+ * Where each chip lies in the wide-screen pile (top-left, px), from the chips' real sizes. Chips are
+ * dealt in a seeded order (so groups mix) into rows of `pileColumns` (one more when the pile is
+ * short and there is room across); each row's spare width is
+ * split into uneven, seeded gaps, so chips never overlap within a row and columns never line up;
+ * each chip then sits high or low within its row band, as far as its tilt leaves room. Rows share the
+ * height evenly.
+ */
+export function pileLayout(chips: PileChip[], cloud: Box): Map<string, { left: number; top: number }> {
+  const placed = new Map<string, { left: number; top: number }>();
+  if (!chips.length) return placed;
+  const widths = chips.map((c) => c.width).sort((a, b) => a - b);
+  const median = widths[widths.length >> 1];
+  const tallest = Math.max(...chips.map((c) => c.height));
+  let columns = pileColumns(cloud.width, widths);
+  // A short pile trades width for height: more columns, so fewer, roomier rows.
+  while (columns < chips.length && cloud.height / Math.ceil(chips.length / columns) < tallest + ROW_ROOM
+    && (cloud.width - (columns + 1) * median) / (columns + 2) >= MIN_GAP) columns++;
+  const order = [...chips].sort((a, b) => hash(a.slug) - hash(b.slug) || a.slug.localeCompare(b.slug));
+  const rows = Math.ceil(order.length / columns);
+  const pitch = cloud.height / rows;
+  for (let r = 0; r < rows; r++) {
+    const row = order.slice(r * columns, (r + 1) * columns);
+    // Gaps before, between and after the chips, weighted 0.4-1.6 so the row looks dealt, not set.
+    const weights = [...row.map((c) => 0.4 + seeded(`${c.slug}:gap`)() * 1.2), 0.4 + seeded(`${row[0].slug}:end`)() * 1.2];
+    const spare = cloud.width - row.reduce((sum, c) => sum + c.width, 0);
+    const unit = Math.max(0, spare) / weights.reduce((a, b) => a + b, 0);
+    let left = cloud.left;
+    row.forEach((chip, i) => {
+      left += weights[i] * unit;
+      // Free to move up or down only as far as its tilted height stays inside the row band.
+      const tilted = chip.width * Math.sin((Math.abs(chipScatter(chip.slug).rotate) * Math.PI) / 180) + chip.height;
+      const room = Math.max(0, pitch - tilted);
+      const top = cloud.top + r * pitch + (pitch - chip.height) / 2 + room * (seeded(`${chip.slug}:row`)() - 0.5);
+      placed.set(chip.slug, { left: round(Math.min(left, cloud.left + cloud.width - chip.width)), top: round(top) });
+      left += chip.width;
+    });
+  }
+  return placed;
 }
 
 /** Share of the sort each chip spends moving; the rest of the range staggers their starts. */

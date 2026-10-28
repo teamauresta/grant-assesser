@@ -3,7 +3,7 @@ import { PROGRAMS } from '@/content/programs';
 import { assessProgram, GROUP_ORDER } from '@/lib/assess';
 import { ProfileSchema } from '@/lib/schema';
 import { readFileSync } from 'node:fs';
-import { CHIP_SPAN, chipProgress, chipScatter, cloudSlots, keepStory, pinProgress, scatterOffset, type Story } from '@/lib/showcase';
+import { CHIP_SPAN, chipProgress, chipScatter, cloudSlots, keepStory, pileColumns, pileLayout, pinProgress, scatterOffset, type Box, type Story } from '@/lib/showcase';
 import { DEMO_PROFILE, sortStory } from '@/lib/showcase-story';
 import { PERSONA_NOW, preRaiseVic } from '@/tests/fixtures/personas';
 
@@ -43,10 +43,10 @@ describe('chipScatter', () => {
     expect(chipScatter('csiro-kick-start')).toEqual(chipScatter('csiro-kick-start'));
     expect(chipScatter('csiro-kick-start')).not.toEqual(chipScatter('rdti'));
   });
-  it('tilts up to 12 degrees and staggers within 0..1', () => {
+  it('tilts up to 6 degrees and staggers within 0..1', () => {
     for (const { slug } of PROGRAMS) {
       const s = chipScatter(slug);
-      expect(Math.abs(s.rotate)).toBeLessThanOrEqual(12);
+      expect(Math.abs(s.rotate)).toBeLessThanOrEqual(6);
       expect(s.delay).toBeGreaterThanOrEqual(0);
       expect(s.delay).toBeLessThan(1);
     }
@@ -164,5 +164,88 @@ describe('first-load modules', () => {
       const source = readFileSync(file, 'utf8');
       expect(source).not.toMatch(/^import (?!type )[^;]*from '@\/lib\/(assess|gates|scoring|assessment\/)/m);
     }
+  });
+});
+
+describe('pileLayout (the wide-screen pile)', () => {
+  const story = sortStory(PROGRAMS, PERSONA_NOW);
+  const all = GROUP_ORDER.flatMap((g) => story.groups[g]);
+  /** Chip sizes as the browser draws them: 12px text, 12px padding a side, capped at the column width. */
+  const chipsFor = (column: number, height = 26) => all.map((c) => ({ slug: c.slug, width: Math.min(column, Math.round(24 + c.name.length * 6.1)), height }));
+  /** The pile area under the column headings (stage less the headings and a 10px inset), from the browser. */
+  const geometries = [
+    { name: '1280px wide', cloud: { left: 0, top: 0, width: 1068, height: 398 }, column: 258 },
+    { name: '800px wide', cloud: { left: 0, top: 0, width: 748, height: 398 }, column: 178 },
+    // Short windows use 22px chips and a shorter stage (the pin-short layout).
+    { name: '1280 × 720', cloud: { left: 0, top: 0, width: 1068, height: 326 }, column: 258, chipHeight: 22 },
+    { name: '1024 × 640', cloud: { left: 0, top: 0, width: 972, height: 326 }, column: 234, chipHeight: 22 },
+  ];
+
+  /** The on-screen (tilted) box of a chip placed at `at`: rotation is about its centre. */
+  function screenBox(chip: { slug: string; width: number; height: number }, at: { left: number; top: number }): Box {
+    const turn = (Math.abs(chipScatter(chip.slug).rotate) * Math.PI) / 180;
+    const width = chip.width * Math.cos(turn) + chip.height * Math.sin(turn);
+    const height = chip.width * Math.sin(turn) + chip.height * Math.cos(turn);
+    return { left: at.left + (chip.width - width) / 2, top: at.top + (chip.height - height) / 2, width, height };
+  }
+  /** The largest share of the smaller box that any two boxes cover together. */
+  function worstOverlap(boxes: Box[]) {
+    let worst = 0;
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const [a, b] = [boxes[i], boxes[j]];
+      const x = Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
+      const y = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
+      if (x > 0 && y > 0) worst = Math.max(worst, (x * y) / Math.min(a.width * a.height, b.width * b.height));
+    }
+    return worst;
+  }
+
+  it('fits as many columns as there is room for a typical chip and a clear gap', () => {
+    expect(pileColumns(1068, chipsFor(258).map((c) => c.width))).toBe(4);
+    expect(pileColumns(748, chipsFor(178).map((c) => c.width))).toBe(3);
+    expect(pileColumns(100, [300])).toBe(1);
+    expect(pileColumns(1000, [])).toBe(1);
+  });
+
+  it.each(geometries)('keeps every chip inside the pile at $name', ({ cloud, column, chipHeight }) => {
+    const chips = chipsFor(column, chipHeight);
+    const placed = pileLayout(chips, cloud);
+    expect(placed.size).toBe(chips.length);
+    for (const chip of chips) {
+      const at = placed.get(chip.slug)!;
+      expect(at.left).toBeGreaterThanOrEqual(cloud.left);
+      expect(at.left + chip.width).toBeLessThanOrEqual(cloud.left + cloud.width + 0.01);
+      expect(at.top).toBeGreaterThanOrEqual(cloud.top);
+      expect(at.top + chip.height).toBeLessThanOrEqual(cloud.top + cloud.height + 0.01);
+    }
+  });
+
+  // The pile is the section's opening image: names must stay readable, so no chip may hide much of another.
+  it.each(geometries)('lets no chip cover more than 15% of another at $name', ({ cloud, column, chipHeight }) => {
+    const chips = chipsFor(column, chipHeight);
+    const placed = pileLayout(chips, cloud);
+    expect(worstOverlap(chips.map((c) => screenBox(c, placed.get(c.slug)!)))).toBeLessThanOrEqual(0.15);
+  });
+
+  it('is the same on every visit, whatever order the chips come in', () => {
+    const chips = chipsFor(258);
+    expect(pileLayout([...chips].reverse(), geometries[0].cloud)).toEqual(pileLayout(chips, geometries[0].cloud));
+  });
+
+  // Not a grid: rows are dealt in a seeded order, with uneven gaps, so columns do not line up.
+  it('mixes the groups and does not line chips up in columns', () => {
+    const chips = chipsFor(258);
+    const placed = pileLayout(chips, geometries[0].cloud);
+    // Each group of four or more spreads across at least half the pile (centres, in px).
+    for (const g of GROUP_ORDER.filter((g) => story.groups[g].length >= 4)) {
+      const centres = story.groups[g].map((c) => placed.get(c.slug)!.left + chips.find((x) => x.slug === c.slug)!.width / 2);
+      expect(Math.max(...centres) - Math.min(...centres)).toBeGreaterThan(geometries[0].cloud.width / 2);
+    }
+    const lefts = new Set([...placed.values()].map((p) => Math.round(p.left / 8)));
+    expect(lefts.size).toBeGreaterThan(chips.length * 0.75);
+  });
+
+  it('copes with no chips', () => {
+    expect(pileLayout([], geometries[0].cloud).size).toBe(0);
   });
 });

@@ -85,6 +85,8 @@ describe('SortStory', () => {
     for (const cls of ['min-h-[59rem]', 'min-[460px]:min-h-[50rem]', 'min-[500px]:min-h-[43rem]', 'min-[550px]:min-h-[38rem]', 'min-[690px]:min-h-[34rem]', 'md:min-h-[28rem]']) {
       expect(stage.classList).toContain(cls);
     }
+    // The pinned scroll range is CSS (wide, tall enough, motion allowed), so it is in the server HTML.
+    expect(within(host).getByRole('region', { name: HEADING }).className).toMatch(/(^|\s)pin:h-\[250vh\](\s|$)/);
     // Without JavaScript the stage stays empty, so it points to the directory.
     expect(stage.querySelector('noscript')?.innerHTML).toMatch(/href="\/programs\/?"[^>]*>Browse all programs</);
     host.remove();
@@ -289,6 +291,8 @@ describe('SortStory', () => {
     expect(within(message()!).getByRole('link', { name: 'Browse all programs' })).toHaveAttribute('href', path('/programs'));
     expect(document.querySelector('[data-stage]')!.className).not.toMatch(/min-h-/);
     expect(chips()).toHaveLength(0);
+    // Nothing to sort, so no pinned scroll range either (it would be 150vh of empty scrolling).
+    expect(screen.getByRole('region', { name: HEADING }).className).not.toMatch(/h-\[250vh\]/);
 
     fail = false;
     await act(() => vi.advanceTimersByTimeAsync(NOW_REFRESH_MS));

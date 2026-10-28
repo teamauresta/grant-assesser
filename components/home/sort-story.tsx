@@ -5,25 +5,30 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { PROGRAMS } from '@/content/programs';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
-import { chipProgress, chipScatter, cloudSlots, keepStory, pinProgress, scatterOffset, SORT_END, type Box, type Story } from '@/lib/showcase';
+import { chipProgress, chipScatter, cloudSlots, keepStory, pileLayout, pinProgress, scatterOffset, SORT_END, type Box, type Story } from '@/lib/showcase';
 import { prefersReducedMotion, tween } from '@/lib/motion';
 import { useNow } from '@/lib/use-now';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
 
-/** 'pinned': scroll drives the sort (wide screens). 'settle': one short settle in view (phones). 'still': sorted. */
+/**
+ * 'pinned': scroll drives the sort (wide screens tall enough for the whole block). 'settle': one
+ * short settle in view (phones, and short windows). 'still': sorted.
+ */
 type Mode = 'pinned' | 'settle' | 'still';
 
-const QUERIES = ['(prefers-reduced-motion: reduce)', '(min-width: 48rem)'];
+/** Where the section pins; the `pin` variant in app/globals.css is the same query plus motion allowed. */
+const PIN_QUERY = '(min-width: 48rem) and (min-height: 36rem)';
+const QUERIES = ['(prefers-reduced-motion: reduce)', PIN_QUERY];
 const SETTLE_MS = 1200;
 /**
  * The stage settles once its top passes 70% of the way down the screen. A share of the stage (an
  * IntersectionObserver threshold) could never be reached when the stage is taller than the screen.
  */
 const SETTLE_LINE = '0px 0px -30% 0px';
-/** Columns of the unsorted pile: the whole stage on wide screens, each group's own list on phones. */
-const PILE_COLUMNS = { pinned: 5, settle: 2 };
+/** Columns of each group's own pile when settling (phones); the pinned pile sizes its own (pileLayout). */
+const SETTLE_COLUMNS = 2;
 /** Room (px) kept clear inside the pile, so tilted chips are not clipped by the stage. */
 const PILE_INSET = 10;
 /**
@@ -111,21 +116,35 @@ function boxIn(el: HTMLElement, stage: HTMLElement): Box {
 }
 const inset = (b: Box, by: number): Box => ({ left: b.left + by, top: b.top + by, width: b.width - 2 * by, height: b.height - 2 * by });
 
+const setOffset = (el: HTMLElement, x: number, y: number) => {
+  el.style.setProperty('--sx', `${Math.round(x * 100) / 100}px`);
+  el.style.setProperty('--sy', `${Math.round(y * 100) / 100}px`);
+};
+
 /**
- * Writes each chip's unsorted place (--sx, --sy) from the real layout: on wide screens the pile
- * fills the stage under the column headings; on phones each chip is jumbled within its own list.
+ * Writes each chip's unsorted place (--sx, --sy) from the real layout: when pinned, one pile over
+ * the stage under the column headings, laid out from the chips' measured sizes; when settling, each
+ * chip is jumbled within its own list.
  */
 function placePile({ stage, chips, lists }: Parts, mode: 'pinned' | 'settle') {
-  const listTop = lists[0] ? boxIn(lists[0], stage).top : 0;
-  const piles = mode === 'pinned'
-    ? [{ cloud: { left: 0, top: listTop, width: stage.clientWidth, height: stage.clientHeight - listTop }, chips }]
-    : lists.map((ul) => ({ cloud: boxIn(ul, stage), chips: chips.filter((el) => ul.contains(el)) }));
-  for (const { cloud, chips: pile } of piles) {
-    const slots = cloudSlots(pile.map((el) => el.dataset.slug!), PILE_COLUMNS[mode]);
+  if (mode === 'pinned') {
+    const listTop = lists[0] ? boxIn(lists[0], stage).top : 0;
+    const cloud = inset({ left: 0, top: listTop, width: stage.clientWidth, height: stage.clientHeight - listTop }, PILE_INSET);
+    const boxes = new Map(chips.map((el) => [el, boxIn(el, stage)]));
+    const placed = pileLayout(chips.map((el) => ({ slug: el.dataset.slug!, width: boxes.get(el)!.width, height: boxes.get(el)!.height })), cloud);
+    for (const el of chips) {
+      const at = placed.get(el.dataset.slug!)!;
+      const box = boxes.get(el)!;
+      setOffset(el, at.left - box.left, at.top - box.top);
+    }
+    return;
+  }
+  for (const ul of lists) {
+    const pile = chips.filter((el) => ul.contains(el));
+    const slots = cloudSlots(pile.map((el) => el.dataset.slug!), SETTLE_COLUMNS);
     for (const el of pile) {
-      const { x, y } = scatterOffset(boxIn(el, stage), inset(cloud, PILE_INSET), slots.get(el.dataset.slug!)!);
-      el.style.setProperty('--sx', `${x}px`);
-      el.style.setProperty('--sy', `${y}px`);
+      const { x, y } = scatterOffset(boxIn(el, stage), inset(boxIn(ul, stage), PILE_INSET), slots.get(el.dataset.slug!)!);
+      setOffset(el, x, y);
     }
   }
 }
@@ -255,11 +274,14 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
   }, [story, mode]);
 
   return (
-    <section ref={sectionRef} aria-labelledby="sort-heading" className="overflow-x-clip md:motion-safe:h-[250vh]">
-      <div className="flex flex-col gap-6 md:motion-safe:sticky md:motion-safe:top-0 md:motion-safe:min-h-dvh md:motion-safe:justify-center md:motion-safe:py-10">
-        <div className="flex max-w-2xl flex-col gap-2">
-          <h2 id="sort-heading" className="text-3xl tracking-[-0.03em] md:text-5xl">Watch {PROGRAMS.length} programs sort themselves</h2>
-          <p className="text-sm text-muted-fg md:text-base">
+    // Pinned: the section is the scroll range and the block sticks. A short window (pin-short) gets a
+    // one-line heading and smaller gaps and chips, so the whole block, CTA included, fits on screen.
+    // With nothing to sort (the story failed to load) there is no scroll range.
+    <section ref={sectionRef} aria-labelledby="sort-heading" className={cn('overflow-x-clip', !broken && 'pin:h-[250vh]')}>
+      <div className="flex flex-col gap-6 pin:sticky pin:top-0 pin:min-h-dvh pin:justify-center pin:py-10 pin-short:gap-4 pin-short:py-4">
+        <div className="flex max-w-2xl flex-col gap-2 pin-short:max-w-none pin-short:gap-1">
+          <h2 id="sort-heading" className="text-3xl tracking-[-0.03em] md:text-5xl pin-short:text-4xl">Watch {PROGRAMS.length} programs sort themselves</h2>
+          <p className="text-sm text-muted-fg md:text-base pin-short:text-sm">
             Example: a pre-raise AI startup in Victoria, checked today against every program.
             {story && story.closed > 0 && ` ${story.closed} closed programs are left out.`}
           </p>
@@ -272,7 +294,7 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
         <div
           ref={stageRef}
           data-stage
-          className={cn('relative grid grid-cols-1 gap-6 overflow-clip p-1 md:grid-cols-4 md:gap-4', !broken && 'md:min-h-[28rem]', !story && !broken && RESERVED)}
+          className={cn('relative grid grid-cols-1 gap-6 overflow-clip p-1 md:grid-cols-4 md:gap-4', !broken && 'md:min-h-[28rem] pin-short:min-h-[23rem]', !story && !broken && RESERVED)}
         >
           <noscript>
             <p className="text-sm text-muted-fg">
@@ -295,7 +317,7 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
                 <span aria-hidden="true" data-landed={g} className="num text-muted-fg">{story.groups[g].length}</span>
                 <span className="sr-only">({story.groups[g].length})</span>
               </h3>
-              <ul aria-labelledby={`sort-${g}`} className="flex flex-wrap gap-1.5 md:flex-col md:flex-nowrap md:items-start">
+              <ul aria-labelledby={`sort-${g}`} className="flex flex-wrap gap-1.5 md:flex-col md:flex-nowrap md:items-start pin-short:gap-1">
                 {story.groups[g].map((chip) => {
                   const s = chipScatter(chip.slug);
                   return (
@@ -311,7 +333,7 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
                       <Link
                         href={`/programs/${chip.slug}/`}
                         title={chip.name}
-                        className={cn('block truncate rounded-full border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong', focusRing)}
+                        className={cn('block truncate rounded-full border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong pin-short:py-0.5', focusRing)}
                       >
                         {chip.name}
                       </Link>

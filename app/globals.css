@@ -4,6 +4,13 @@
 @source not "../docs";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+/*
+ * The sorting story pins (components/home/sort-story.tsx, whose PIN_QUERY must match) only where the
+ * whole block fits on screen while it sorts: wide, at least 36rem tall, motion allowed. Below 50rem
+ * tall it uses a tighter layout (pin-short). Elsewhere it settles once instead.
+ */
+@custom-variant pin (@media (min-width: 48rem) and (min-height: 36rem) and (prefers-reduced-motion: no-preference));
+@custom-variant pin-short (@media (min-width: 48rem) and (min-height: 36rem) and (max-height: 49.98rem) and (prefers-reduced-motion: no-preference));
 
 /*
  * Design tokens (docs/plans/2026-10-27-grant-navigator-design.md, "Visual system").
