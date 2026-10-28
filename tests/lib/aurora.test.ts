@@ -1,22 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { AURORA_ALPHA, AURORA_KEY, hexToRgb, readAuroraPaused, writeAuroraPaused } from '@/lib/aurora';
+import { AURORA_ALPHA, AURORA_KEY, readAuroraPaused, writeAuroraPaused } from '@/lib/aurora';
 
 afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
-
-describe('hexToRgb', () => {
-  it('turns #rrggbb into 0..1 channels', () => {
-    expect(hexToRgb('#ff8000')).toEqual([1, 128 / 255, 0]);
-  });
-  // The CSS minifier shortens tokens (the built light --bg is #fff), so the short form must work too.
-  it('reads the short #rgb form', () => {
-    expect(hexToRgb('#fff')).toEqual([1, 1, 1]);
-    expect(hexToRgb(' #0a8 ')).toEqual([0, 170 / 255, 136 / 255]);
-  });
-  it('falls back to black for anything else, so a missing token never throws mid-frame', () => {
-    expect(hexToRgb('')).toEqual([0, 0, 0]);
-  });
-});
 
 describe('aurora pause preference', () => {
   it('defaults to playing and remembers a pause', () => {

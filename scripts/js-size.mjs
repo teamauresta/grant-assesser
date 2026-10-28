@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Gzipped size of the JavaScript the home page references up front (out/index.html), against a
 // budget. Chunks loaded later with import() are not referenced there, so they do not count. Also
-// prints the same figure for a few other pages, for information only.
+// prints the same figure for a few other pages, for information only, and fails if code that must
+// load with import() (the aurora shader) has slipped into the home page's first-load chunks.
 import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
@@ -39,6 +40,18 @@ export function verdict(sizes) {
   };
 }
 
+/** Text that only lazily loaded chunks may contain: the aurora's GLSL (lib/aurora-shader.ts). */
+export const LAZY_ONLY = ['gl_FragColor'];
+
+/**
+ * First-load chunks that contain lazy-only code, with the marker found in each.
+ * @param {{ path: string, source: string }[]} chunks
+ * @returns {{ path: string, marker: string }[]}
+ */
+export function lazyLeaks(chunks) {
+  return chunks.flatMap(({ path, source }) => LAZY_ONLY.filter((marker) => source.includes(marker)).map((marker) => ({ path, marker })));
+}
+
 /** Other pages whose first-load JS is printed for information. Only the home page has a budget. */
 export const INFO_PAGES = ['programs/', 'plan/', 'report/', 'assess/results/'];
 
@@ -64,6 +77,12 @@ function main() {
   if (ok) console.log(message);
   else {
     console.error(message);
+    process.exitCode = 1;
+  }
+  const home = firstLoadScripts(readFileSync(join(out, 'index.html'), 'utf8'))
+    .map((path) => ({ path, source: readFileSync(join(out, path), 'utf8') }));
+  for (const { path, marker } of lazyLeaks(home)) {
+    console.error(`Home first-load chunk ${path} contains "${marker}", which must load with import() only.`);
     process.exitCode = 1;
   }
   for (const page of INFO_PAGES) console.log(infoLine(page, sizes(page)));

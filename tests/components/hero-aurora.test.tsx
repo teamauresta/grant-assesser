@@ -1,25 +1,39 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import userEvent from '@testing-library/user-event';
 
 let unsupported = false;
-vi.mock('@/components/home/aurora-canvas', () => ({
-  default: ({ playing, onUnsupported }: { playing: boolean; onUnsupported: () => void }) => {
-    if (unsupported) queueMicrotask(onUnsupported);
-    return <canvas data-testid="aurora" data-playing={String(playing)} />;
-  },
-}));
+let mounts = 0;
+let lose: () => void = () => {};
+vi.mock('@/components/home/aurora-canvas', async () => {
+  const { useState } = await import('react');
+  return {
+    default: function MockCanvas({ playing, onUnsupported, onLost }: { playing: boolean; onUnsupported: () => void; onLost: () => void }) {
+      const [instance] = useState(() => ++mounts);
+      if (unsupported) queueMicrotask(onUnsupported);
+      lose = onLost;
+      return <canvas data-testid="aurora" data-instance={instance} data-playing={String(playing)} />;
+    },
+  };
+});
 
 import { HeroAurora } from '@/components/home/hero-aurora';
 import { AURORA_KEY } from '@/lib/aurora';
 
-const media = (reduced: boolean) => vi.stubGlobal('matchMedia', (q: string) => ({
-  matches: reduced && q.includes('reduce'), addEventListener: () => {}, removeEventListener: () => {},
-}));
+/** Stubs matchMedia; returns a switch that changes the reduced-motion setting mid-session. */
+const media = (reduced: boolean) => {
+  const listeners = new Set<() => void>();
+  vi.stubGlobal('matchMedia', (q: string) => ({
+    get matches() { return reduced && q.includes('reduce'); },
+    addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+    removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+  }));
+  return (next: boolean) => { reduced = next; listeners.forEach((fn) => fn()); };
+};
 
-beforeEach(() => { unsupported = false; localStorage.clear(); });
+beforeEach(() => { unsupported = false; mounts = 0; lose = () => {}; localStorage.clear(); });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('HeroAurora', () => {
@@ -68,5 +82,40 @@ describe('HeroAurora', () => {
     media(false);
     render(<HeroAurora />);
     expect((await screen.findByTestId('aurora')).closest('[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it('stops and drops the button when reduced motion is turned on mid-session', async () => {
+    const setReduced = media(false);
+    render(<HeroAurora />);
+    expect(await screen.findByTestId('aurora')).toHaveAttribute('data-playing', 'true');
+    expect(screen.getByRole('button', { name: 'Pause background animation' })).toBeInTheDocument();
+    act(() => setReduced(true));
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-playing', 'false');
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  // iOS drops WebGL contexts when the page goes to the background: start again on a fresh canvas,
+  // and only settle for the still gradient if that one is lost too.
+  it('remounts the canvas after a lost context, keeping the pause button, and falls back after a second loss', async () => {
+    media(false);
+    const { container } = render(<HeroAurora />);
+    expect(await screen.findByTestId('aurora')).toHaveAttribute('data-instance', '1');
+    const button = screen.getByRole('button', { name: 'Pause background animation' });
+    button.focus();
+    act(() => lose());
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '2');
+    expect(screen.getByRole('button', { name: 'Pause background animation' })).toBe(button);
+    expect(button).toHaveFocus();
+    act(() => lose());
+    expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull();
+    expect(screen.queryByTestId('aurora')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('marks the full-bleed layer, so the page clips its overhang only where the aurora is', async () => {
+    media(false);
+    const { container } = render(<HeroAurora />);
+    await screen.findByTestId('aurora');
+    expect(container.querySelector('[data-hero-aurora]')).toHaveAttribute('aria-hidden', 'true');
   });
 });

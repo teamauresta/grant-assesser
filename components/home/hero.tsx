@@ -13,8 +13,7 @@ import { HeroStats } from './hero-stats';
 export function Hero() {
   const verified = latestVerified(PROGRAMS);
   return (
-    <section aria-labelledby="hero-heading" className="relative isolate -mx-4 -mt-6 px-4 pt-10 pb-16 md:-mt-10 md:pt-20 md:pb-12">
-      <HeroAurora />
+    <section aria-labelledby="hero-heading" className="relative isolate -mx-4 -mt-6 px-4 pt-10 pb-16 md:-mt-10 md:pt-20 md:pb-16">
       <div className="relative z-10 flex max-w-4xl flex-col items-start gap-6">
         <Link
           href="/programs/"
@@ -46,6 +45,9 @@ export function Hero() {
         </div>
         <HeroStats />
       </div>
+      {/* After the content, so its pause button follows the headline and links in reading and tab
+          order; the field itself sits behind (absolute, -z-10). */}
+      <HeroAurora />
     </section>
   );
 }

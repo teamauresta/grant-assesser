@@ -163,8 +163,12 @@
   body {
     @apply bg-bg text-fg font-sans antialiased;
     line-height: 1.6;
-    /* The hero aurora bleeds to the viewport's edges, and 100vw includes a classic scrollbar: clip
-       the few pixels it overhangs instead of scrolling sideways. */
+  }
+
+  /* The home hero's aurora is 100vw wide to bleed to the viewport's edges, and 100vw includes a
+     classic scrollbar: clip the few pixels it overhangs rather than scroll sideways. Only on pages
+     that have it, so nothing else loses its horizontal overflow. */
+  body:has([data-hero-aurora]) {
     overflow-x: clip;
   }
 

@@ -1,39 +1,69 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { AURORA_FRAGMENT, AURORA_VERTEX, readAuroraColours } from '@/lib/aurora';
+import { AURORA_FRAGMENT, AURORA_VERTEX, auroraFlow, readAuroraColours } from '@/lib/aurora-shader';
 
-/** The field is soft, so it renders at half resolution, and never above 1.5 device pixels per CSS pixel. */
+/**
+ * The field is soft, so it renders at half resolution: device pixel ratio capped at 1.5, then halved,
+ * so never more than 0.75 canvas pixels per CSS pixel.
+ */
 const SCALE = 0.5;
-/** A pleasing moment of the flow for the first frame (and the only one under reduced motion). */
+/** Seconds into the flow for the first frame: a pleasing moment (and the only one under reduced motion). */
 const START_TIME = 12;
+
+const dev = process.env.NODE_ENV !== 'production';
 
 function compile(gl: WebGLRenderingContext, type: number, source: string) {
   const shader = gl.createShader(type);
   if (!shader) return null;
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
-  return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+  if (dev) console.warn('Aurora shader failed to compile:', gl.getShaderInfoLog(shader));
+  gl.deleteShader(shader);
+  return null;
 }
 
+/** The linked program, or null. The shader objects are deleted either way: the program keeps what it needs. */
 function link(gl: WebGLRenderingContext) {
   const vs = compile(gl, gl.VERTEX_SHADER, AURORA_VERTEX);
   const fs = compile(gl, gl.FRAGMENT_SHADER, AURORA_FRAGMENT);
-  const program = gl.createProgram();
-  if (!vs || !fs || !program) return null;
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  return gl.getProgramParameter(program, gl.LINK_STATUS) ? program : null;
+  const program = vs && fs ? gl.createProgram() : null;
+  if (program && vs && fs) {
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+  }
+  const linked = !!program && gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (program && !linked && dev) console.warn('Aurora program failed to link:', gl.getProgramInfoLog(program));
+  if (program && vs) gl.detachShader(program, vs);
+  if (program && fs) gl.detachShader(program, fs);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
+  if (linked) return program;
+  gl.deleteProgram(program);
+  return null;
 }
+
+type Props = {
+  playing: boolean;
+  /** No WebGL, or the shader would not build: show the still fallback. */
+  onUnsupported: () => void;
+  /** The context was lost (iOS does this to background tabs): the parent may remount on a new canvas. */
+  onLost: () => void;
+};
 
 /**
  * Draws the hero aurora. Runs only while `playing`, on screen and in a visible tab; otherwise it
  * keeps its last frame. Follows the pointer gently, re-reads the colours when the theme changes,
  * and writes a frame count to `data-frame` about twice a second (the end-to-end tests read it).
  */
-export default function AuroraCanvas({ playing, onUnsupported }: { playing: boolean; onUnsupported: () => void }) {
+export default function AuroraCanvas({ playing, onUnsupported, onLost }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // The GL effect runs once per canvas; the callbacks are read through a ref so a new identity
+  // from the parent never rebuilds the context.
+  const callbacks = useRef({ onUnsupported, onLost });
+  useEffect(() => { callbacks.current = { onUnsupported, onLost }; });
   const playingRef = useRef(playing);
   const wakeRef = useRef<() => void>(() => {});
 
@@ -46,7 +76,7 @@ export default function AuroraCanvas({ playing, onUnsupported }: { playing: bool
     const canvas = ref.current;
     const gl = canvas?.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
     const program = gl && link(gl);
-    if (!canvas || !gl || !program) { onUnsupported(); return; }
+    if (!canvas || !gl || !program) { callbacks.current.onUnsupported(); return; }
 
     gl.useProgram(program);
     const buffer = gl.createBuffer();
@@ -56,7 +86,7 @@ export default function AuroraCanvas({ playing, onUnsupported }: { playing: bool
     gl.enableVertexAttribArray(pos);
     gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
     const u = (name: string) => gl.getUniformLocation(program, name);
-    const uRes = u('uRes'); const uTime = u('uTime'); const uPointer = u('uPointer');
+    const uRes = u('uRes'); const uFlow = u('uFlow'); const uPointer = u('uPointer');
 
     const setColours = () => {
       const { bg, stops, alpha } = readAuroraColours();
@@ -85,7 +115,7 @@ export default function AuroraCanvas({ playing, onUnsupported }: { playing: bool
 
     const draw = () => {
       gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.uniform1f(uTime, time);
+      gl.uniform1f(uFlow, auroraFlow(time));
       gl.uniform2f(uPointer, pointer.x, pointer.y);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
@@ -126,7 +156,8 @@ export default function AuroraCanvas({ playing, onUnsupported }: { playing: bool
       target.y = 1 - (e.clientY - r.top) / r.height;
     };
     window.addEventListener('pointermove', onPointer, { passive: true });
-    const onLost = (e: Event) => { e.preventDefault(); onUnsupported(); };
+    // No restore handling: the parent remounts on a fresh canvas, which gets a fresh context.
+    const onLost = () => { cancelAnimationFrame(raf); raf = 0; wakeRef.current = () => {}; callbacks.current.onLost(); };
     canvas.addEventListener('webglcontextlost', onLost);
 
     return () => {
@@ -138,12 +169,14 @@ export default function AuroraCanvas({ playing, onUnsupported }: { playing: bool
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pointermove', onPointer);
       canvas.removeEventListener('webglcontextlost', onLost);
-      // Free what this effect made but keep the context: Strict Mode runs the effect again on the
-      // same canvas, and a lost context would come back from getContext() unusable.
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
+      // A real unmount detaches the canvas first, so release the GPU context now rather than at
+      // garbage collection. Strict Mode's simulated unmount keeps it attached and runs the effect
+      // again on the same canvas, where a lost context would come back from getContext() unusable.
+      if (!canvas.isConnected) gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, [onUnsupported]);
+  }, []);
 
-  return <canvas ref={ref} className="size-full opacity-0 transition-opacity duration-700 ease-out" />;
+  return <canvas ref={ref} className="block size-full opacity-0 transition-opacity duration-700 ease-out" />;
 }

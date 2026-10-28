@@ -21,4 +21,8 @@ describe('mixHex', () => {
     expect(mixHex('#000000', '#ffffff', 0.5)).toBe('#808080');
     expect(mixHex('#ff0000', '#0000ff', 0.25)).toBe('#bf0040');
   });
+  it('rejects anything but #rrggbb, like luminance()', () => {
+    expect(() => mixHex('#fff', '#000000', 0.5)).toThrow(/#rrggbb/);
+    expect(() => mixHex('#000000', 'teal', 0.5)).toThrow(/#rrggbb/);
+  });
 });

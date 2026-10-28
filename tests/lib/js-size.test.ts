@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BUDGET_BYTES, INFO_PAGES, firstLoadScripts, infoLine, verdict } from '@/scripts/js-size.mjs';
+import { BUDGET_BYTES, INFO_PAGES, LAZY_ONLY, firstLoadScripts, infoLine, lazyLeaks, verdict } from '@/scripts/js-size.mjs';
 
 describe('firstLoadScripts', () => {
   it('lists each script under the base path once', () => {
@@ -45,5 +45,19 @@ describe('other pages (information only, no budget)', () => {
   });
   it('says so when a page references no scripts', () => {
     expect(infoLine('programs/', [])).toBe('/programs/ first-load JS: no scripts found (information only).');
+  });
+});
+
+describe('lazyLeaks', () => {
+  it('guards the aurora shader, which must load with import() only', () => {
+    expect(LAZY_ONLY).toContain('gl_FragColor');
+  });
+  it('names each first-load chunk that contains lazy-only code, and nothing when clean', () => {
+    const chunks = [
+      { path: 'a.js', source: 'console.log(1)' },
+      { path: 'b.js', source: 'const s = "void main(){gl_FragColor=vec4(1.0);}"' },
+    ];
+    expect(lazyLeaks(chunks)).toEqual([{ path: 'b.js', marker: 'gl_FragColor' }]);
+    expect(lazyLeaks(chunks.slice(0, 1))).toEqual([]);
   });
 });
