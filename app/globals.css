@@ -62,8 +62,8 @@
    * light, where the dark panel stands out; see the dark theme. */
   --panel-border: transparent;
 
-  /* Strength of the cursor spotlight; tests/lib/tokens.test.ts keeps text AA on it. */
-  --spot-mix: 4%;
+  /* Strength of the cursor spotlight; tests/lib/tokens.test.ts keeps text AA on it in each theme. */
+  --spot-mix: 6%;
 }
 
 [data-theme="dark"] {
@@ -90,6 +90,9 @@
   --lift-1: #2dd4bf;
   --lift-2: #60a5fa;
   --lift-3: #a78bfa;
+
+  /* Light text on a dark ground: the spotlight shows at a lower strength. */
+  --spot-mix: 4%;
 
   /* --panel-bg nearly matches --bg here (1.015:1), so the panel gets a visible decorative edge. */
   --panel-border: #3f3f46;
@@ -243,7 +246,12 @@
     0 10px 36px -10px color-mix(in srgb, var(--lift-2) 60%, transparent);
 }
 
-/* A soft highlight that follows the pointer (useSpotlight). Mouse-like pointers with motion allowed only. */
+/*
+ * A soft highlight that follows the pointer (useSpotlight). Mouse-like pointers with motion allowed
+ * only. The gradient is plain --fg and the strength is the layer's opacity (--spot-mix), not a
+ * color-mix(): the minifier's fallback for that would paint full --fg under the text in older
+ * browsers. --spot-size is the spot's radius.
+ */
 @utility spotlight {
   position: relative;
   isolation: isolate;
@@ -256,10 +264,10 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 200ms ease-out;
-    background: radial-gradient(240px circle at var(--spot-x, 50%) var(--spot-y, 50%), color-mix(in srgb, var(--fg) var(--spot-mix), transparent), transparent 70%);
+    background: radial-gradient(var(--spot-size, 240px) circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--fg), transparent 70%);
   }
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    &:hover::before { opacity: 1; }
+    &:hover::before { opacity: var(--spot-mix); }
   }
 }
 

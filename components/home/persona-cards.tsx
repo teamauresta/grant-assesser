@@ -34,7 +34,7 @@ export function PersonaCards() {
               data-spotlight=""
               style={{ '--tone': tone } as CSSProperties}
               className={cn(
-                'spotlight group flex h-full min-h-32 flex-col gap-2 rounded-lg border bg-surface p-6',
+                'spotlight group flex h-full min-h-32 flex-col gap-2 rounded-lg border bg-surface p-6 [--spot-size:200px]',
                 'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent motion-safe:hover:-translate-y-0.5',
                 'hover:shadow-[0_10px_30px_-14px_var(--tone)]',
                 selected ? 'border-accent' : 'border-border',

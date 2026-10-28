@@ -5,7 +5,6 @@ import { AURORA_ALPHA } from '@/lib/aurora';
 import { LIFT_COLOURS } from '@/lib/celebrate';
 
 const css = readFileSync('app/globals.css', 'utf8');
-const spot = Number(/--spot-mix:\s*(\d+)%/.exec(css)![1]) / 100;
 
 /** `--name: #hex;` pairs from the first block that starts with `selector {`. */
 function tokens(selector: string): Record<string, string> {
@@ -17,6 +16,14 @@ function tokens(selector: string): Record<string, string> {
 
 const light = tokens(':root');
 const dark = { ...light, ...tokens('[data-theme="dark"]') };
+
+/** The spotlight's strength (`--spot-mix: N%;`) in a theme block, as 0..1; the light value if unset. */
+function spotMix(selector: string): number | undefined {
+  const start = css.indexOf(`${selector} {`);
+  const m = /--spot-mix:\s*(\d+(?:\.\d+)?)%/.exec(css.slice(start, css.indexOf('}', start)));
+  return m ? Number(m[1]) / 100 : undefined;
+}
+const spots = { light: spotMix(':root')!, dark: spotMix('[data-theme="dark"]') ?? spotMix(':root')! };
 
 describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t) => {
   it.each(['--lift-1', '--lift-2', '--lift-3'])('%s meets AA on --bg', (name) => {
@@ -31,11 +38,12 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
       expect(contrast(t[name], mixHex(t['--bg'], field, AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(4.5);
     }
   });
-  // The cursor spotlight (useSpotlight) paints --fg at --spot-mix over the card. Persona cards are
+  // The cursor spotlight (useSpotlight) paints --fg at --spot-mix (per theme) over the card. Persona cards are
   // --surface; the type links sit on --bg. Text on either must stay AA at the highlight's centre.
   it.each(['--fg', '--muted-fg', '--accent'])('%s meets AA on the strongest spotlight', (name) => {
-    expect(contrast(t[name], mixHex(t['--surface'], t['--fg'], spot))).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(t[name], mixHex(t['--bg'], t['--fg'], spot))).toBeGreaterThanOrEqual(4.5);
+    expect(spots[theme]).toBeGreaterThan(0);
+    expect(contrast(t[name], mixHex(t['--surface'], t['--fg'], spots[theme]))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t[name], mixHex(t['--bg'], t['--fg'], spots[theme]))).toBeGreaterThanOrEqual(4.5);
   });
   it.each(['--panel-fg', '--panel-muted-fg', '--panel-lift-1', '--panel-lift-2', '--panel-lift-3'])('%s meets AA on --panel-bg', (name) => {
     expect(contrast(t[name], t['--panel-bg'])).toBeGreaterThanOrEqual(4.5);

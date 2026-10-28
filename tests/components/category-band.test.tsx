@@ -17,4 +17,12 @@ describe('CategoryBand', () => {
         .toHaveAttribute('href', expect.stringMatching(new RegExp(`^/programs/?\\?type=${type}$`)));
     }
   });
+
+  it('gives each type link the cursor spotlight', () => {
+    render(<CategoryBand />);
+    for (const link of within(screen.getByRole('region', { name: 'Browse by type' })).getAllByRole('link')) {
+      expect(link).toHaveAttribute('data-spotlight');
+      expect(link).toHaveClass('spotlight');
+    }
+  });
 });

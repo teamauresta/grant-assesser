@@ -56,8 +56,9 @@ export const FLOW_MAX = 16;
  * float (mediump on GPUs without highp) keeps about three significant digits, so raw seconds would
  * make the drift step after a while; this stays small forever. The noise played backwards is as
  * continuous as forwards, and the sine eases into each turn, so the field slows to a stop and drifts
- * back rather than rewinding. It starts at full pace through zero. On mediump-only GPUs the values
- * near the turns still step by about 1/64, so the slow drift there moves in small ticks.
+ * back rather than rewinding. It starts at full pace through zero. On mediump-only GPUs (rare; most
+ * phones expose highp) the drift moves in ticks of 1/128 to 1/64 once |flow| passes about 8,
+ * slowest near the turns.
  */
 export function auroraFlow(seconds: number): number {
   return FLOW_MAX * Math.sin((seconds * FLOW_SPEED) / FLOW_MAX);

@@ -36,10 +36,10 @@ const media = (reduced: boolean) => {
 /** Fakes the page clock that HeroAurora times its fresh canvases with. */
 const clock = (ms: number) => vi.spyOn(performance, 'now').mockReturnValue(ms);
 
-/** Fakes the tab being in the background or foreground; the latter fires visibilitychange. */
+/** Fakes the tab going to the background or coming back, with its visibilitychange event. */
 const setVisibility = (state: 'visible' | 'hidden') => {
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
-  if (state === 'visible') document.dispatchEvent(new Event('visibilitychange'));
+  document.dispatchEvent(new Event('visibilitychange'));
 };
 
 beforeEach(() => { unsupported = false; mounts = 0; lose = () => {}; localStorage.clear(); });
@@ -150,7 +150,7 @@ describe('HeroAurora', () => {
     clock(0);
     const { container } = render(<HeroAurora />);
     expect(await screen.findByTestId('aurora')).toHaveAttribute('data-instance', '1');
-    setVisibility('hidden');
+    act(() => setVisibility('hidden'));
     act(() => lose());
     expect(screen.queryByTestId('aurora')).toBeNull();
     expect(container.querySelector('[data-aurora-fallback]')).toBeNull();
@@ -162,6 +162,34 @@ describe('HeroAurora', () => {
     clock(3600_000 + 10_000);
     act(() => lose());
     expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull();
+  });
+
+  // Backgrounding is not a GPU failure, however soon it comes after a fresh canvas: a loss only
+  // counts when the tab stayed in view since that canvas appeared. Safari may report the loss after
+  // the tab is back, so having been hidden is enough.
+  it('does not count a loss after the tab was hidden, even within 30 seconds of a fresh canvas', async () => {
+    media(false);
+    clock(0);
+    const { container } = render(<HeroAurora />);
+    await screen.findByTestId('aurora');
+    act(() => lose());
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '2');
+    clock(5_000);
+    act(() => setVisibility('hidden'));
+    clock(10_000);
+    act(() => lose());
+    expect(screen.queryByTestId('aurora')).toBeNull();
+    expect(container.querySelector('[data-aurora-fallback]')).toBeNull();
+    clock(12_000);
+    act(() => setVisibility('visible'));
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '3');
+    // Hidden and back again, then the loss arrives late: still a background tab, so a fresh canvas.
+    clock(15_000);
+    act(() => setVisibility('hidden'));
+    act(() => setVisibility('visible'));
+    act(() => lose());
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '4');
+    expect(container.querySelector('[data-aurora-fallback]')).toBeNull();
   });
 
   it('marks the full-bleed layer, so the page clips its overhang only where the aurora is', async () => {

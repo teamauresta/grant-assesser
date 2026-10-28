@@ -31,4 +31,12 @@ describe('PersonaCards', () => {
     render(<PersonaCards />);
     for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(ONE_SIDED);
   });
+
+  it('gives each card the cursor spotlight', () => {
+    render(<PersonaCards />);
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).toHaveAttribute('data-spotlight');
+      expect(link).toHaveClass('spotlight');
+    }
+  });
 });

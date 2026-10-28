@@ -47,6 +47,22 @@ describe('useSpotlight', () => {
     expect(first.style.getPropertyValue('--spot-y')).toBe('');
   });
 
+  it('follows a pen too', () => {
+    const { second } = setup();
+    fireEvent.pointerMove(second, { pointerType: 'pen', clientX: 60, clientY: 45 });
+    expect(second.style.getPropertyValue('--spot-x')).toBe('50px');
+    expect(second.style.getPropertyValue('--spot-y')).toBe('40px');
+  });
+
+  it('stops listening when the list unmounts', () => {
+    const { unmount } = render(<List />);
+    const card = screen.getByText('first');
+    unmount();
+    // A detached tree still bubbles events, so a leftover listener would still write the position.
+    fireEvent.pointerMove(card, { pointerType: 'mouse', clientX: 30, clientY: 20 });
+    expect(card.style.getPropertyValue('--spot-x')).toBe('');
+  });
+
   it('ignores touch', () => {
     const { second } = setup();
     fireEvent.pointerMove(second, { pointerType: 'touch', clientX: 30, clientY: 20 });

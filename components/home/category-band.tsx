@@ -28,7 +28,7 @@ export function CategoryBand() {
               <Link
                 href={`/programs/?type=${type}`}
                 data-spotlight=""
-                className={cn('spotlight group flex flex-col items-center gap-2 rounded-xl px-2 py-3 text-center text-xs text-muted-fg hover:text-fg', focusRing)}
+                className={cn('spotlight group flex flex-col items-center gap-2 rounded-xl px-1 py-3 text-center [--spot-size:72px] md:px-2 text-xs text-muted-fg hover:text-fg', focusRing)}
               >
                 <span className="flex size-14 items-center justify-center rounded-full border border-border bg-surface transition-[border-color] duration-150 group-hover:border-border-strong">
                   <Icon aria-hidden="true" size={20} strokeWidth={1.5} className="text-fg" />

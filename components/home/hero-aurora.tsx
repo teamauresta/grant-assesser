@@ -43,7 +43,7 @@ function AuroraFallback() {
  * a pause button (WCAG 2.2.2), remembered per browser. Under reduced motion it draws one still frame
  * and offers no button; without WebGL it shows a still gradient. A lost WebGL context (iOS drops
  * them in background tabs) gets a fresh canvas, once the tab is visible again; only a loss within
- * 30 seconds of a fresh canvas settles for the gradient.
+ * 30 seconds of a fresh canvas, with the tab in view all that time, settles for the gradient.
  */
 export function HeroAurora() {
   const mode = useSyncExternalStore(subscribe, clientMode, serverMode);
@@ -70,15 +70,25 @@ export function HeroAurora() {
   }, [pending]);
 
   const onUnsupported = useCallback(() => setUnsupported(true), []);
+  // A loss counts as a failing GPU only if the tab stayed in view since the last fresh canvas: a
+  // background tab is iOS reclaiming memory, and Safari may report that loss after the tab is back.
+  const hiddenSinceFresh = useRef(false);
+  useEffect(() => {
+    if (pending) return;
+    const onVisibility = () => { if (document.visibilityState !== 'visible') hiddenSinceFresh.current = true; };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [pending]);
   const replace = useCallback(() => {
     freshAt.current = performance.now();
+    hiddenSinceFresh.current = false;
     setWaiting(false);
     setGeneration((n) => n + 1);
   }, []);
   const onLost = useCallback(() => {
-    if (freshAt.current !== null && performance.now() - freshAt.current < LOSS_WINDOW_MS) setFailed(true);
-    else if (document.visibilityState === 'visible') replace();
-    else setWaiting(true);
+    if (document.visibilityState !== 'visible') setWaiting(true);
+    else if (!hiddenSinceFresh.current && freshAt.current !== null && performance.now() - freshAt.current < LOSS_WINDOW_MS) setFailed(true);
+    else replace();
   }, [replace]);
   useEffect(() => {
     if (!waiting) return;
