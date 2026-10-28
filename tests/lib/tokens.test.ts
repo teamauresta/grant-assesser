@@ -38,6 +38,13 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
       expect(contrast(t[name], mixHex(t['--bg'], field, AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(4.5);
     }
   });
+  // The hero's gradient phrase (text-lift) is large text and can sit on the aurora on phones: each
+  // stop must keep 3:1 on every field colour at full strength.
+  it.each(stops)('%s meets 3:1 (large text) on the strongest aurora', (name) => {
+    for (const field of fields) {
+      expect(contrast(t[name], mixHex(t['--bg'], field, AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(3);
+    }
+  });
   // The cursor spotlight (useSpotlight) paints --fg at --spot-mix (per theme) over the card. Persona cards are
   // --surface; the type links sit on --bg. Text on either must stay AA at the highlight's centre.
   it.each(['--fg', '--muted-fg', '--accent'])('%s meets AA on the strongest spotlight', (name) => {
