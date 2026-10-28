@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { contrast } from '@/lib/contrast';
+import { contrast, mixHex } from '@/lib/contrast';
+import { AURORA_ALPHA } from '@/lib/aurora';
 import { LIFT_COLOURS } from '@/lib/celebrate';
 
 const css = readFileSync('app/globals.css', 'utf8');
@@ -16,9 +17,18 @@ function tokens(selector: string): Record<string, string> {
 const light = tokens(':root');
 const dark = { ...light, ...tokens('[data-theme="dark"]') };
 
-describe.each([['light', light], ['dark', dark]] as const)('%s theme', (_, t) => {
+describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t) => {
   it.each(['--lift-1', '--lift-2', '--lift-3'])('%s meets AA on --bg', (name) => {
     expect(contrast(t[name], t['--bg'])).toBeGreaterThanOrEqual(4.5);
+  });
+  // The hero aurora paints a mix of the stops over --bg, at most AURORA_ALPHA strong. Text that
+  // lands on it must stay AA: check each stop and each half-and-half pair at full strength.
+  const stops = ['--lift-1', '--lift-2', '--lift-3'];
+  const fields = [...stops.map((s) => t[s]), mixHex(t['--lift-1'], t['--lift-2'], 0.5), mixHex(t['--lift-2'], t['--lift-3'], 0.5), mixHex(t['--lift-1'], t['--lift-3'], 0.5)];
+  it.each(['--fg', '--muted-fg'])('%s meets AA on the strongest aurora', (name) => {
+    for (const field of fields) {
+      expect(contrast(t[name], mixHex(t['--bg'], field, AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(4.5);
+    }
   });
   it.each(['--panel-fg', '--panel-muted-fg', '--panel-lift-1', '--panel-lift-2', '--panel-lift-3'])('%s meets AA on --panel-bg', (name) => {
     expect(contrast(t[name], t['--panel-bg'])).toBeGreaterThanOrEqual(4.5);

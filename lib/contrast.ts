@@ -15,3 +15,11 @@ export function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 }
+
+/** `base` blended towards `over` by `amount` (0..1), per sRGB channel, as #rrggbb. */
+export function mixHex(base: string, over: string, amount: number): string {
+  const ch = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return '#' + [0, 1, 2]
+    .map((i) => Math.round(ch(base, i) + (ch(over, i) - ch(base, i)) * amount).toString(16).padStart(2, '0'))
+    .join('');
+}
