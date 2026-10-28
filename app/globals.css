@@ -142,6 +142,9 @@
   --animate-toast-in: toast-in 200ms ease-out;
   /* The hero headline, once on load. Ends visible, so with CSS animation off it simply shows. */
   --animate-rise: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Its second line, 80ms later. The delay lives in the shorthand: a separate animation-delay
+     utility can land before animate-rise in the built CSS, and the shorthand resets it. */
+  --animate-rise-late: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
 
   @keyframes route-in {
     from { opacity: 0; }

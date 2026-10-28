@@ -150,7 +150,9 @@ export default function AuroraCanvas({ playing, onUnsupported, onLost }: Props) 
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     const onVisibility = () => { visible = !document.hidden; wake(); };
     document.addEventListener('visibilitychange', onVisibility);
+    // Only while it plays: a paused, hidden or off-screen field needs no layout read per move.
     const onPointer = (e: PointerEvent) => {
+      if (!running()) return;
       const r = canvas.getBoundingClientRect();
       target.x = (e.clientX - r.left) / r.width;
       target.y = 1 - (e.clientY - r.top) / r.height;

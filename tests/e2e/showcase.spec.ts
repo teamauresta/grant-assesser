@@ -65,6 +65,14 @@ async function expectSorted(page: Page) {
 
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
 
+// The second line rises 80ms after the first. A delay written before the animation shorthand in the
+// built CSS is reset by it, so check the computed values rather than the class names.
+test('hero headline: the second line rises 80ms after the first', async ({ page }) => {
+  await page.goto('./');
+  const delays = await page.locator('#hero-heading > span').evaluateAll((els) => els.map((el) => getComputedStyle(el).animationDelay));
+  expect(delays).toEqual(['0s', '0.08s']);
+});
+
 test.describe('aurora', () => {
   test('plays, pauses, and remembers the pause', async ({ page }) => {
     await page.goto('./');
