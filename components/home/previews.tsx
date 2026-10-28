@@ -128,7 +128,8 @@ export function ReportPreview() {
         {['w-full', 'w-[92%]', 'w-[96%]', 'w-[70%]'].map((w, i) => (
           <DrawnLine key={w} className={cn('h-1.5 rounded-full bg-panel-fg/25', w)} start={290 + i * 90} />
         ))}
-        <span className="mt-2 grid grid-cols-2 gap-1.5">
+        {/* Below the card's bottom edge on phones, so hidden there rather than animating unseen. */}
+        <span className="mt-2 hidden grid-cols-2 gap-1.5 md:grid">
           <span data-anim="fade" className="block h-5 rounded-sm bg-panel-fg/[0.07]" style={at(650)} />
           <span data-anim="fade" className="block h-5 rounded-sm bg-panel-fg/[0.07]" style={at(740)} />
         </span>

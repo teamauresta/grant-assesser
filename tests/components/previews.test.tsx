@@ -147,6 +147,20 @@ describe('PlanPreview', () => {
   });
 });
 
+describe('ReportPreview', () => {
+  // On phones the page runs off the card's bottom edge before the summary row, so the row is hidden
+  // there rather than animating parts nobody can see.
+  it('shows the summary blocks only from md up', () => {
+    const { container } = render(<ReportPreview />);
+    const fades = root(container).querySelectorAll('[data-anim="fade"]');
+    expect(fades.length).toBe(2);
+    const row = fades[0].parentElement!;
+    expect(row).toBe(fades[1].parentElement);
+    expect(row.classList).toContain('hidden');
+    expect(row.classList).toContain('md:grid');
+  });
+});
+
 describe('preview CSS', () => {
   const css = readFileSync('app/globals.css', 'utf8').replace(/\s+/g, ' ');
   const rules = css.slice(css.indexOf('[data-play="ready"]'), css.lastIndexOf('@keyframes preview-'));
