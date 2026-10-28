@@ -26,6 +26,12 @@ const SETTLE_LINE = '0px 0px -30% 0px';
 const PILE_COLUMNS = { pinned: 5, settle: 2 };
 /** Room (px) kept clear inside the pile, so tilted chips are not clipped by the stage. */
 const PILE_INSET = 10;
+/**
+ * Height the stage reserves below 768px until the story arrives, stepped by width so it stays within
+ * about 60px of the filled stage (filled heights measured on 28 Oct 2026, 320-767px wide: 984px at
+ * 320 down to 504px at 767). Wider screens reserve md:min-h-[28rem], which the pile also uses.
+ */
+const RESERVED = 'min-h-[59rem] min-[460px]:min-h-[50rem] min-[500px]:min-h-[43rem] min-[550px]:min-h-[38rem] min-[690px]:min-h-[34rem]';
 
 function subscribe(onChange: () => void) {
   if (typeof window.matchMedia !== 'function') return () => {};
@@ -42,21 +48,33 @@ const serverMode = (): Mode => 'still';
 /**
  * The example's result, once "now" is known. The checks load with import(), so they are not in the
  * home page's first download. A new "now" that sorts every program the same way keeps the same
- * object, so the minute tick of useNow() does not restart anything.
+ * object, so the minute tick of useNow() does not restart anything. If the load fails (a redeploy
+ * can remove the chunk an open page asks for), `failed` says so; each tick tries once more, and a
+ * later success clears it.
  */
-function useStory(): Story | null {
+type StoryLoader = () => Promise<typeof import('@/lib/showcase-story')>;
+const loadStory: StoryLoader = () => import('@/lib/showcase-story');
+
+function useStory(load: StoryLoader): { story: Story | null; failed: boolean } {
   const now = useNow();
   const [story, setStory] = useState<Story | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!now) return;
     let cancelled = false;
-    import('@/lib/showcase-story').then(
-      ({ sortStory }) => { if (!cancelled) setStory((prev) => keepStory(prev, sortStory(PROGRAMS, now))); },
-      () => {},
-    );
+    load()
+      .then(({ sortStory }) => sortStory(PROGRAMS, now))
+      .then(
+        (next) => {
+          if (cancelled) return;
+          setFailed(false);
+          setStory((prev) => keepStory(prev, next));
+        },
+        () => { if (!cancelled) setFailed(true); },
+      );
     return () => { cancelled = true; };
-  }, [now]);
-  return story;
+  }, [now, load]);
+  return { story, failed };
 }
 
 /** The stage's moving parts, collected once per render of the chips rather than per frame. */
@@ -138,11 +156,13 @@ function paint({ chips, counts }: Parts, p: number) {
  * result, still, and so does a stage holding keyboard focus. The groups depend on "now", so the
  * stage fills in on the client, inside a reserved height.
  */
-export function SortStory() {
+export function SortStory({ load = loadStory }: { /** Loads the story module; tests pass one that fails. */ load?: StoryLoader } = {}) {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const mode = useSyncExternalStore(subscribe, clientMode, serverMode);
-  const story = useStory();
+  const { story, failed } = useStory(load);
+  /** The story could not load and there is nothing to show: no reserved height, just a way on. */
+  const broken = failed && !story;
   /** The phone settle has started: later changes (new groups, a resize) show the result sorted. */
   const settled = useRef(false);
   /** A chip in the stage has focus, so CSS shows everything sorted; the counts follow. */
@@ -246,13 +266,13 @@ export function SortStory() {
         </div>
         {/*
           `relative` makes the stage the chips' offset parent, which the pile measurement relies on.
-          Until the story arrives the stage reserves about its filled height (measured at 320-767px
-          wide), so nothing below it moves.
+          Until the story arrives the stage reserves about its filled height (RESERVED), so little
+          below it moves; if the story cannot load, it holds a line pointing to the directory instead.
         */}
         <div
           ref={stageRef}
           data-stage
-          className={cn('relative grid grid-cols-1 gap-6 overflow-clip p-1 md:min-h-[28rem] md:grid-cols-4 md:gap-4', !story && 'min-h-[59rem] sm:min-h-[36rem]')}
+          className={cn('relative grid grid-cols-1 gap-6 overflow-clip p-1 md:grid-cols-4 md:gap-4', !broken && 'md:min-h-[28rem]', !story && !broken && RESERVED)}
         >
           <noscript>
             <p className="text-sm text-muted-fg">
@@ -261,6 +281,13 @@ export function SortStory() {
               {' '}instead.
             </p>
           </noscript>
+          {broken && (
+            <p className="text-sm text-muted-fg">
+              The example could not load.{' '}
+              <Link href="/programs/" className={cn('rounded-sm text-accent underline underline-offset-4', focusRing)}>Browse all programs</Link>
+              {' '}instead.
+            </p>
+          )}
           {story && GROUP_ORDER.map((g) => (
             <div key={g} className="flex min-w-0 flex-col gap-2">
               <h3 id={`sort-${g}`} className="flex items-baseline gap-2 text-base">

@@ -79,11 +79,12 @@ describe('SortStory', () => {
     const region = within(host).getByRole('region', { name: HEADING });
     expect(within(region).getByText(/^Example: a pre-raise AI startup in Victoria/)).toBeInTheDocument();
     expect(within(region).getByRole('link', { name: 'Run it for your company' })).toHaveAttribute('href', path('/assess'));
-    // Reserved height, so nothing below moves when the chips fill in: phones, small tablets, then wider.
+    // Reserved height, so little below moves when the chips fill in: stepped by width on phones and
+    // small tablets (values measured in a browser), then the wide stage.
     const stage = host.querySelector<HTMLElement>('[data-stage]')!;
-    expect(stage.className).toMatch(/(^|\s)min-h-\[59rem\](\s|$)/);
-    expect(stage.className).toMatch(/(^|\s)sm:min-h-\[36rem\](\s|$)/);
-    expect(stage.className).toMatch(/(^|\s)md:min-h-\[28rem\](\s|$)/);
+    for (const cls of ['min-h-[59rem]', 'min-[460px]:min-h-[50rem]', 'min-[500px]:min-h-[43rem]', 'min-[550px]:min-h-[38rem]', 'min-[690px]:min-h-[34rem]', 'md:min-h-[28rem]']) {
+      expect(stage.classList).toContain(cls);
+    }
     // Without JavaScript the stage stays empty, so it points to the directory.
     expect(stage.querySelector('noscript')?.innerHTML).toMatch(/href="\/programs\/?"[^>]*>Browse all programs</);
     host.remove();
@@ -105,7 +106,7 @@ describe('SortStory', () => {
       });
     }
     if (story.closed > 0) expect(screen.getByText(new RegExp(`${story.closed} closed programs are left out`))).toBeInTheDocument();
-    expect(document.querySelector('[data-stage]')!.className).not.toMatch(/(^|\s)min-h-\[59rem\]/);
+    expect(document.querySelector('[data-stage]')!.className).not.toMatch(/(^|\s)min-h-\[59rem\]|min-\[\d+px\]:min-h/);
   });
 
   it('gives every chip its seeded tilt and stagger', async () => {
@@ -274,4 +275,25 @@ describe('SortStory', () => {
     await filled();
     expect(add.mock.calls.filter(([type]) => type === 'scroll')).toHaveLength(0);
   });
+
+  // A redeploy can remove the chunk an open page asks for. Say so instead of leaving a hole.
+  it('says so when the story cannot load, frees the reserved height, and recovers on the next tick', async () => {
+    fakeTimers();
+    media({});
+    let fail = true;
+    const load = () => (fail ? Promise.reject(new Error('chunk gone')) : import('@/lib/showcase-story'));
+    render(<SortStory load={load} />);
+    const message = () => screen.queryByText(/The example could not load/);
+    for (let i = 0; i < 50 && !message(); i++) await act(async () => { await Promise.resolve(); });
+    expect(message()).toBeInTheDocument();
+    expect(within(message()!).getByRole('link', { name: 'Browse all programs' })).toHaveAttribute('href', path('/programs'));
+    expect(document.querySelector('[data-stage]')!.className).not.toMatch(/min-h-/);
+    expect(chips()).toHaveLength(0);
+
+    fail = false;
+    await act(() => vi.advanceTimersByTimeAsync(NOW_REFRESH_MS));
+    await filled();
+    expect(message()).toBeNull();
+  });
 });
+
