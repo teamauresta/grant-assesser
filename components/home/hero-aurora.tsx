@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore, type ComponentType } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ComponentType } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { readAuroraPaused, writeAuroraPaused } from '@/lib/aurora';
 import { prefersReducedMotion } from '@/lib/motion';
@@ -11,6 +11,8 @@ type Mode = 'pending' | 'still' | 'live';
 type CanvasProps = { playing: boolean; onUnsupported: () => void; onLost: () => void };
 
 const REDUCED = '(prefers-reduced-motion: reduce)';
+/** A context lost this soon after a fresh canvas means WebGL is failing, not just a background tab. */
+const LOSS_WINDOW_MS = 30_000;
 
 /** Follows the reduced-motion setting, so turning it on mid-session stops the aurora and drops the button. */
 function subscribe(onChange: () => void) {
@@ -40,13 +42,18 @@ function AuroraFallback() {
  * import() so it is not in the first download. It moves for as long as the page is open, so it has
  * a pause button (WCAG 2.2.2), remembered per browser. Under reduced motion it draws one still frame
  * and offers no button; without WebGL it shows a still gradient. A lost WebGL context (iOS drops
- * them in background tabs) gets one fresh canvas; a second loss settles for the gradient.
+ * them in background tabs) gets a fresh canvas, once the tab is visible again; only a loss within
+ * 30 seconds of a fresh canvas settles for the gradient.
  */
 export function HeroAurora() {
   const mode = useSyncExternalStore(subscribe, clientMode, serverMode);
   const [Canvas, setCanvas] = useState<ComponentType<CanvasProps> | null>(null);
   const [unsupported, setUnsupported] = useState(false);
-  const [losses, setLosses] = useState(0);
+  const [failed, setFailed] = useState(false);
+  // The canvas's key, and whether a lost one waits for the tab to come back before it is replaced.
+  const [generation, setGeneration] = useState(0);
+  const [waiting, setWaiting] = useState(false);
+  const freshAt = useRef<number | null>(null);
   // Read once, lazily: safe for hydration because nothing that depends on it renders while the
   // mode is 'pending' (server and hydration), and blocked or missing storage reads as playing.
   const [paused, setPaused] = useState(readAuroraPaused);
@@ -63,8 +70,25 @@ export function HeroAurora() {
   }, [pending]);
 
   const onUnsupported = useCallback(() => setUnsupported(true), []);
-  const onLost = useCallback(() => setLosses((n) => n + 1), []);
-  const still = unsupported || losses > 1;
+  const replace = useCallback(() => {
+    freshAt.current = performance.now();
+    setWaiting(false);
+    setGeneration((n) => n + 1);
+  }, []);
+  const onLost = useCallback(() => {
+    if (freshAt.current !== null && performance.now() - freshAt.current < LOSS_WINDOW_MS) setFailed(true);
+    else if (document.visibilityState === 'visible') replace();
+    else setWaiting(true);
+  }, [replace]);
+  useEffect(() => {
+    if (!waiting) return;
+    const onVisibility = () => { if (document.visibilityState === 'visible') replace(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    // The tab may have come back before this effect ran.
+    onVisibility();
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [waiting, replace]);
+  const still = unsupported || failed;
   const toggle = () => {
     const next = !paused;
     writeAuroraPaused(next);
@@ -78,7 +102,7 @@ export function HeroAurora() {
       <div data-hero-aurora aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 overflow-hidden">
         {!pending && (still
           ? <AuroraFallback />
-          : Canvas && <Canvas key={losses} playing={mode === 'live' && !paused} onUnsupported={onUnsupported} onLost={onLost} />)}
+          : Canvas && !waiting && <Canvas key={generation} playing={mode === 'live' && !paused} onUnsupported={onUnsupported} onLost={onLost} />)}
       </div>
       {/* Outside the keyed canvas, so a remount after a lost context keeps the button and its focus. */}
       {mode === 'live' && Canvas && !still && (

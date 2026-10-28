@@ -33,8 +33,21 @@ const media = (reduced: boolean) => {
   return (next: boolean) => { reduced = next; listeners.forEach((fn) => fn()); };
 };
 
+/** Fakes the page clock that HeroAurora times its fresh canvases with. */
+const clock = (ms: number) => vi.spyOn(performance, 'now').mockReturnValue(ms);
+
+/** Fakes the tab being in the background or foreground; the latter fires visibilitychange. */
+const setVisibility = (state: 'visible' | 'hidden') => {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+  if (state === 'visible') document.dispatchEvent(new Event('visibilitychange'));
+};
+
 beforeEach(() => { unsupported = false; mounts = 0; lose = () => {}; localStorage.clear(); });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  delete (document as { visibilityState?: unknown }).visibilityState;
+});
 
 describe('HeroAurora', () => {
   it('is not in the server HTML', () => {
@@ -110,6 +123,45 @@ describe('HeroAurora', () => {
     expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull();
     expect(screen.queryByTestId('aurora')).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  // Backgrounding a tab twice, hours apart, is not a broken GPU: only a loss soon after a fresh
+  // canvas counts against it.
+  it('gives a fresh canvas again when the last one ran for more than 30 seconds', async () => {
+    media(false);
+    clock(1_000);
+    const { container } = render(<HeroAurora />);
+    expect(await screen.findByTestId('aurora')).toHaveAttribute('data-instance', '1');
+    act(() => lose());
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '2');
+    clock(1_000 + 2 * 3600_000);
+    act(() => lose());
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '3');
+    expect(screen.getByRole('button', { name: 'Pause background animation' })).toBeInTheDocument();
+    clock(1_000 + 2 * 3600_000 + 20_000);
+    act(() => lose());
+    expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull();
+    expect(screen.queryByTestId('aurora')).toBeNull();
+  });
+
+  // A canvas made in a background tab may be lost again at once: wait until the page is seen.
+  it('waits for the tab to be visible before replacing a canvas lost in the background', async () => {
+    media(false);
+    clock(0);
+    const { container } = render(<HeroAurora />);
+    expect(await screen.findByTestId('aurora')).toHaveAttribute('data-instance', '1');
+    setVisibility('hidden');
+    act(() => lose());
+    expect(screen.queryByTestId('aurora')).toBeNull();
+    expect(container.querySelector('[data-aurora-fallback]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Pause background animation' })).toBeInTheDocument();
+    clock(3600_000);
+    act(() => setVisibility('visible'));
+    expect(screen.getByTestId('aurora')).toHaveAttribute('data-instance', '2');
+    // The 30 seconds count from when the fresh canvas appeared, not from the loss.
+    clock(3600_000 + 10_000);
+    act(() => lose());
+    expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull();
   });
 
   it('marks the full-bleed layer, so the page clips its overhang only where the aurora is', async () => {

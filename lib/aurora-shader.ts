@@ -46,20 +46,21 @@ export function readAuroraColours(): AuroraColours {
   };
 }
 
-/** Flow units per second: how fast the field drifts. */
+/** Flow units per second at full pace (through zero): how fast the field drifts. */
 const FLOW_SPEED = 0.06;
-/** The flow clock turns back here (about 4.4 minutes each way). */
+/** The flow clock turns back at plus and minus this (a turn about every 14 minutes). */
 export const FLOW_MAX = 16;
 
 /**
- * The shader's clock, from seconds of play. A 16-bit float (mediump on GPUs without highp) keeps
- * about three significant digits, so raw seconds would make the drift step after a while. Instead
- * the clock runs to FLOW_MAX and back, forever small: no jump, since the noise played backwards is
- * as continuous as forwards, and the turn is invisible at this pace.
+ * The shader's clock, from seconds of play: a slow sine between -FLOW_MAX and FLOW_MAX. A 16-bit
+ * float (mediump on GPUs without highp) keeps about three significant digits, so raw seconds would
+ * make the drift step after a while; this stays small forever. The noise played backwards is as
+ * continuous as forwards, and the sine eases into each turn, so the field slows to a stop and drifts
+ * back rather than rewinding. It starts at full pace through zero. On mediump-only GPUs the values
+ * near the turns still step by about 1/64, so the slow drift there moves in small ticks.
  */
 export function auroraFlow(seconds: number): number {
-  const x = (seconds * FLOW_SPEED) % (2 * FLOW_MAX);
-  return x <= FLOW_MAX ? x : 2 * FLOW_MAX - x;
+  return FLOW_MAX * Math.sin((seconds * FLOW_SPEED) / FLOW_MAX);
 }
 
 export const AURORA_VERTEX = `

@@ -133,6 +133,7 @@ const s = StyleSheet.create({
   link: { color: C.body, textDecoration: 'none' },
 });
 
+// For tests only: importing this module anywhere else would pull @react-pdf/renderer into a bundle; it must stay behind import().
 export { C as REPORT_PALETTE, s as REPORT_STYLES };
 
 /**

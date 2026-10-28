@@ -49,20 +49,31 @@ describe('readAuroraColours', () => {
 });
 
 describe('auroraFlow', () => {
-  it('moves at a steady pace from the start', () => {
+  const speed = (s: number) => Math.abs(auroraFlow(s + 0.01) - auroraFlow(s)) / 0.01;
+  it('starts at full pace (0.06 a second), so the first minute is as lively as the rest', () => {
     expect(auroraFlow(0)).toBe(0);
-    expect(auroraFlow(10)).toBeCloseTo(auroraFlow(5) * 2, 10);
+    expect(speed(0)).toBeCloseTo(0.06, 4);
+    // The first frame (START_TIME in aurora-canvas.tsx, 12s) is the same moment as before the turns eased.
+    expect(auroraFlow(12)).toBeCloseTo(0.72, 3);
   });
   // A 16-bit float only has about three significant digits, so the shader's time must stay small.
-  it('stays within FLOW_MAX for hours, without a jump: it turns back at the ends', () => {
+  it('stays within FLOW_MAX for hours, without a jump or a speed-up: it turns back at the ends', () => {
     let previous = auroraFlow(0);
     for (let s = 0.5; s < 4 * 3600; s += 0.5) {
       const v = auroraFlow(s);
-      expect(v).toBeGreaterThanOrEqual(0);
-      expect(v).toBeLessThanOrEqual(FLOW_MAX);
-      expect(Math.abs(v - previous)).toBeLessThan(0.05);
+      expect(Math.abs(v)).toBeLessThanOrEqual(FLOW_MAX);
+      expect(Math.abs(v - previous)).toBeLessThanOrEqual(0.06 * 0.5 + 1e-9);
       previous = v;
     }
+  });
+  // A sudden reversal reads as the field rewinding: it must slow to a stop before it turns.
+  it('slows to a stop at the turns', () => {
+    let turns = 0;
+    for (let s = 0; s < 4 * 3600; s += 0.5) {
+      const v = auroraFlow(s);
+      if (Math.abs(v) > FLOW_MAX - 0.001) { turns++; expect(speed(s)).toBeLessThan(0.002); }
+    }
+    expect(turns).toBeGreaterThan(0);
   });
   it('is what the shader reads instead of raw seconds', () => {
     expect(AURORA_FRAGMENT).toContain('uniform float uFlow;');

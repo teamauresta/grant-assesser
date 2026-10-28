@@ -6,4 +6,8 @@ describe('PDF report rules', () => {
     expect(REPORT_STYLES.coverRule.backgroundColor).toBe(REPORT_PALETTE.hairline);
     expect(REPORT_STYLES.rule.backgroundColor).toBe(REPORT_PALETTE.hairline);
   });
+
+  it('has no accent colour in its palette', () => {
+    expect(REPORT_PALETTE).not.toHaveProperty('accent');
+  });
 });

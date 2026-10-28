@@ -2,13 +2,12 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { CategoryBand } from '@/components/home/category-band';
-import { MotionProvider } from '@/components/motion/motion-provider';
 import { PROGRAM_TYPES } from '@/lib/programs/filter';
 import { TYPE_LABELS } from '@/lib/format';
 
 describe('CategoryBand', () => {
   it('links each program type to the directory filtered by it, inside a "Browse by type" region', () => {
-    render(<MotionProvider><CategoryBand /></MotionProvider>);
+    render(<CategoryBand />);
     const region = screen.getByRole('region', { name: 'Browse by type' });
     const links = within(region).getAllByRole('link');
     expect(links).toHaveLength(PROGRAM_TYPES.length);

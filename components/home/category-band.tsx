@@ -18,7 +18,7 @@ const ICONS: Record<Program['type'], LucideIcon> = {
 export function CategoryBand() {
   const listRef = useSpotlight<HTMLUListElement>();
   return (
-    <section aria-labelledby="types-heading" className="flex flex-col gap-4 overflow-hidden py-2">
+    <section aria-labelledby="types-heading" className="flex flex-col gap-4 py-2">
       <h2 id="types-heading" className="text-xl">Browse by type</h2>
       <ul ref={listRef} className="grid grid-cols-4 gap-3 px-1 md:flex md:justify-center md:gap-4">
         {PROGRAM_TYPES.map((type) => {

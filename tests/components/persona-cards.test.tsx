@@ -19,8 +19,16 @@ describe('PersonaCards', () => {
     }
   });
 
-  it('has no coloured edge: only the icon badge and the hover glow carry the tone', () => {
+  // A one-sided border utility (border-t, border-l-4, border-s-2, border-x...) is how a coloured edge
+  // would come back; the full border (border, border-border, border-accent) is fine.
+  const ONE_SIDED = /\bborder-(?:[tlrbxyse])(?:-|\b)/;
+  it('the one-sided border check catches every side and spares the full border', () => {
+    for (const c of ['border-t', 'border-l-4', 'border-b-[var(--tone)]', 'border-s-2', 'border-e', 'border-x', 'border-y-2']) expect(c).toMatch(ONE_SIDED);
+    for (const c of ['border', 'border-border', 'border-border-strong', 'border-accent', 'border-surface', 'border-transparent', 'hover:border-accent']) expect(c).not.toMatch(ONE_SIDED);
+  });
+
+  it('has no one-sided border (no coloured edge): only the icon badge and the hover glow carry the tone', () => {
     render(<PersonaCards />);
-    for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(/border-[tlrb]-/);
+    for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(ONE_SIDED);
   });
 });
