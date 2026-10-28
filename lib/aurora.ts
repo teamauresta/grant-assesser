@@ -4,7 +4,7 @@
  */
 
 /** Strongest the field may paint over --bg, per theme. tests/lib/tokens.test.ts keeps text AA on it. */
-export const AURORA_ALPHA = { light: 0.3, dark: 0.18 } as const;
+export const AURORA_ALPHA = { light: 0.3, dark: 0.24 } as const;
 
 export const AURORA_KEY = 'gn-aurora';
 
@@ -20,11 +20,15 @@ export function writeAuroraPaused(paused: boolean): void {
   } catch { /* blocked storage: the choice lasts for this page only */ }
 }
 
-/** #rrggbb as 0..1 channels for a shader uniform; black for anything else. */
+/**
+ * #rrggbb or #rgb as 0..1 channels for a shader uniform; black for anything else. The short form
+ * matters: the CSS minifier turns `--bg: #ffffff` into `#fff` in the build.
+ */
 export function hexToRgb(hex: string): [number, number, number] {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [0, 0, 0];
-  const n = parseInt(m[1], 16);
+  const digits = m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1];
+  const n = parseInt(digits, 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 }
 
@@ -48,12 +52,19 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 `;
 
 /**
- * Domain-warped value noise mapped onto the three stops, blended over the page background and
- * strongest to the right (the text column is on the left). Fades out at the top and bottom edges
- * so the hero has no visible boundary. Output alpha never exceeds uAlpha.
+ * Domain-warped value noise. Colour runs along the three stops (teal, blue, violet: never a muddy
+ * three-way mix); strength gathers into soft folds with background between them, strongest to the
+ * right (the text column is on the left) and fading out at the top and bottom so the hero has no
+ * visible edge. The pointer swirls the flow nearby. Output never paints more than uAlpha of a stop
+ * over uBg (the dither is under half a level). highp where the GPU has it: the sin() hash breaks
+ * into blocks at 16-bit precision on phones.
  */
 export const AURORA_FRAGMENT = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform vec2 uRes;
 uniform float uTime;
 uniform vec2 uPointer;
@@ -73,23 +84,41 @@ float noise(vec2 p) {
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
-  for (int i = 0; i < 5; i++) { v += a * noise(p); p = p * 2.02 + vec2(1.7, 9.2); a *= 0.5; }
+  mat2 turn = mat2(0.8, 0.6, -0.6, 0.8);
+  for (int i = 0; i < 4; i++) { v += a * noise(p); p = turn * p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
   return v;
+}
+vec3 ramp(float h) {
+  return mix(mix(uC1, uC2, smoothstep(0.0, 0.55, h)), uC3, smoothstep(0.45, 1.0, h));
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uRes;
-  vec2 p = vec2(uv.x * uRes.x / uRes.y, uv.y) * 1.6;
-  float t = uTime * 0.04;
-  vec2 d = uv - uPointer;
-  float pull = exp(-dot(d, d) * 18.0) * 0.35;
-  vec2 q = vec2(fbm(p + t), fbm(p + vec2(5.2, 1.3) - t));
-  vec2 r = vec2(fbm(p + 3.0 * q + vec2(1.7, 9.2) + t * 1.3 + pull), fbm(p + 3.0 * q + vec2(8.3, 2.8) - t));
-  float f = fbm(p + 2.5 * r);
-  vec3 col = mix(uC1, uC2, smoothstep(0.2, 0.6, f));
-  col = mix(col, uC3, smoothstep(0.5, 0.85, r.x));
-  float reach = smoothstep(0.1, 0.85, uv.x) * (0.55 + 0.45 * f);
-  reach *= smoothstep(0.0, 0.2, uv.y) * smoothstep(1.0, 0.8, uv.y);
-  gl_FragColor = vec4(mix(uBg, col, uAlpha * clamp(reach, 0.0, 1.0)), 1.0);
+  float aspect = uRes.x / uRes.y;
+  // Stretched along a gentle diagonal, so the forms flow as long ribbons rather than blotches.
+  vec2 p = mat2(0.94, -0.34, 0.34, 0.94) * vec2(uv.x * aspect, uv.y) * vec2(0.8, 1.35);
+  float t = uTime * 0.06;
+
+  vec2 d = (uv - uPointer) * vec2(aspect, 1.0);
+  p += exp(-dot(d, d) * 4.0) * 0.3 * vec2(-d.y, d.x);
+
+  vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, 1.3) - t * 0.8));
+  vec2 r = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + t * 0.6), fbm(p + 2.6 * q + vec2(8.3, 2.8) - t * 0.5));
+  float f = fbm(p + 2.0 * r);
+
+  // fbm clusters around 0.5, so stretch it: whole regions of teal, blue and violet drift past,
+  // with teal leaning to the lower left (it tints white grey) and violet to the upper right.
+  vec3 col = ramp(clamp(0.6 + 3.0 * (r.y - 0.5) + 0.5 * (uv.x - 0.5) + 0.35 * (uv.y - 0.5), 0.0, 1.0));
+  float folds = smoothstep(0.3, 0.7, f);
+
+  // A mass of colour on the right, near full strength, with folds moving through it; wisps elsewhere.
+  vec2 c = (uv - vec2(0.8, 0.52)) * vec2(aspect * 0.55, 1.0);
+  float mass = 1.0 - smoothstep(0.12, 0.85, length(c) + 0.3 * (q.x - 0.5));
+  float strength = mix(0.25 * folds, mix(0.7, 1.0, folds), mass);
+  strength *= smoothstep(0.0, 0.3, uv.y) * smoothstep(1.0, 0.8, uv.y);
+
+  float a = uAlpha * clamp(strength, 0.0, 1.0);
+  vec3 dither = vec3((hash(gl_FragCoord.xy + fract(uTime)) - 0.5) / 255.0);
+  gl_FragColor = vec4(mix(uBg, col, a) + dither, 1.0);
 }
 `;

@@ -20,6 +20,13 @@ describe('Hero', () => {
     expect(screen.getByRole('link', { name: new RegExp(`${PROGRAMS.length} programs checked ${formatDate(latestVerified(PROGRAMS))}`) })).toBeInTheDocument();
   });
 
+  // The headline's two lines rise in as separate blocks; the space between them must survive, so
+  // the heading still reads as one sentence.
+  it('reads the headline as one sentence', () => {
+    render(<Hero />);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Find the funding your startup qualifies for');
+  });
+
   it('never puts "now"-based numbers in the server HTML', () => {
     const html = renderToString(<Hero />);
     expect(html).toContain('Programs');

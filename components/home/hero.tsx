@@ -6,13 +6,15 @@ import { formatDate } from '@/lib/dates';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { HeroAurora } from './hero-aurora';
 import { HeroStats } from './hero-stats';
 
 /** The home page's opening section: the promise, the two calls to action and live numbers. */
 export function Hero() {
   const verified = latestVerified(PROGRAMS);
   return (
-    <section aria-labelledby="hero-heading" className="relative isolate -mx-4 -mt-6 px-4 pt-10 pb-8 md:-mt-10 md:pt-20 md:pb-12">
+    <section aria-labelledby="hero-heading" className="relative isolate -mx-4 -mt-6 px-4 pt-10 pb-16 md:-mt-10 md:pt-20 md:pb-12">
+      <HeroAurora />
       <div className="relative z-10 flex max-w-4xl flex-col items-start gap-6">
         <Link
           href="/programs/"
@@ -29,7 +31,8 @@ export function Hero() {
           <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
         </Link>
         <h1 id="hero-heading" className="text-[clamp(2.5rem,7vw,5rem)] leading-[1.02] tracking-[-0.04em]">
-          Find the funding <span className="text-lift">your startup qualifies for</span>
+          <span className="block motion-safe:animate-rise">Find the funding</span>{' '}
+          <span className="block text-lift motion-safe:animate-rise [animation-delay:80ms]">your startup qualifies for</span>
         </h1>
         <p className="max-w-2xl text-base text-muted-fg md:text-xl">
           Grants, tax incentives, credits and accelerators across Australia, checked against official sources and matched to you in six short steps.
