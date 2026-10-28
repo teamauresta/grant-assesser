@@ -44,7 +44,7 @@ A new section after the persona cards that demonstrates the assessment.
 
 The dark panel stays. Each step gets a small preview built from page elements (no images), decorative and `aria-hidden`, which plays once when it scrolls into view (finite CSS animations, under 1.5 seconds):
 
-- **Assess:** a results card whose four group labels fill in with counts.
+- **Assess:** a results card listing the four groups, each with a bar that fills in (no counts: real counts depend on the visitor's answers, so any number would be invented).
 - **Plan:** a pipeline card that slides from Preparing to Submitted, and a tick.
 - **Report:** a PDF page whose lines draw in.
 
@@ -69,3 +69,53 @@ In-app pages (programs, results, plan, report, settings) keep Liftoff's calm mot
 - **End-to-end.** The sort story reaches its sorted state at the end of its scroll (chips' transforms back to none); the pause button stops the aurora's frame counter (a `data-frame` attribute on the canvas, updated about once a second) and resumes it; axe on the home page in light and dark; review screenshots at 375px and 1280px, including mid-sort.
 - **Docs.** `CLAUDE.md` (structure, motion rules, the strip rule), `README.md`, and this file.
 - **Delivery.** Branch `feature/showcase`, built task by task with reviews, screenshots to the owner before merging.
+
+## 8. What changed during the build
+
+Built on `feature/showcase` on 28 Oct 2026. Where the build differs from sections 1–7:
+
+**Hero aurora (§2)**
+
+- **Pause button.** It keeps one name, "Pause background animation", and reports its state with `aria-pressed`, instead of switching between "Pause" and "Play" names (a name that changes with the state contradicts the pressed state for screen readers). The icon still swaps. It comes after the hero's content in the DOM, so it follows the headline and links in reading and tab order, and it sits outside the keyed canvas so a remount keeps it and its focus.
+- **Strength.** One cap became a value per theme: `AURORA_ALPHA` is 0.30 in light and 0.24 in dark (`lib/aurora.ts`), each checked in `tests/lib/tokens.test.ts`. The no-WebGL gradient is one layer at no more than 14%, under both.
+- **Full bleed.** The field spans the viewport (`w-screen`, centred on the hero) rather than the 1120px column. `100vw` includes a classic scrollbar, so `body:has([data-hero-aurora]) { overflow-x: clip }` clips the overhang, on the home page only.
+- **Code split and leak check.** `lib/aurora.ts` (strength and the `gn-aurora` pause preference) is in the first load because the pause button needs it before the shader arrives; `lib/aurora-shader.ts` (GLSL, colour reading, flow clock) is imported only by the lazy `aurora-canvas.tsx`. `scripts/js-size.mjs` fails if `gl_FragColor` (`LAZY_ONLY`) appears in a first-load chunk. The lazy chunk is about 3KB gzipped, not 5KB.
+- **Colours.** `hexToRgb` accepts `#rgb` as well as `#rrggbb` (the CSS minifier shortens `#ffffff` to `#fff`), and `readAuroraColours` normalises every token through a 2D context's `fillStyle`, so a colour the minifier rewrote in another form still reads.
+- **Clock.** The shader gets `auroraFlow(t) = FLOW_MAX · sin(t · 0.06 / FLOW_MAX)` (`FLOW_MAX` 16) instead of raw seconds, so the value stays small for 16-bit floats on `mediump` GPUs; the field slows, turns and drifts back about every 14 minutes rather than stepping. The first frame (and the only one under reduced motion) is 12 seconds in.
+- **Resolution.** Device pixel ratio capped at 1.5, then halved: at most 0.75 canvas pixels per CSS pixel.
+- **Lost WebGL context.** Not in the design. iOS drops contexts in background tabs, so a loss remounts a fresh canvas, waiting until the tab is visible again. Only a loss within 30 seconds of a fresh canvas, with the tab in view all that time, is treated as a failing GPU and settles for the still gradient.
+- **Headline.** `rise` is 600ms, longer than the 150–300ms rule in `CLAUDE.md`; it runs once on load and is recorded there as an exception.
+
+**Sorting story (§3)**
+
+- **Measured pile instead of seeded offsets.** `chipScatter(slug)` now gives only a tilt and a start delay. Where each chip lies unsorted is measured from the real layout: `cloudSlots` deals the chips into a seeded, brick-shifted grid (5 columns across the whole stage on wide screens; 2 within each group's own list on phones) and `scatterOffset` turns a slot into a pixel offset that keeps the chip inside the pile. Random offsets bunched chips together and left holes. The pile is measured again on resize and when fonts finish loading.
+- **Counts tick up.** Each column's visible count starts at 0 and ticks up as its chips land, instead of fading in: text must never be transparent (axe reads it as a contrast failure). The visible count is `aria-hidden`; a hidden "(N)" gives screen readers the real total from the start.
+- **Hand-written scroll progress.** `pinProgress(top, height, viewport)` in `lib/showcase.ts`, read from `getBoundingClientRect()` on scroll and resize at most once a frame, instead of `motion`'s `useScroll`. A reload part-way down starts at the right place. Every chip has landed at `SORT_END` (0.8 of the pinned range); the rest holds the result.
+- **Phone settle trigger.** The settle starts when the stage's top passes 70% of the way down the screen (`rootMargin: 0px 0px -30% 0px`), not at a share of the stage in view, which a stage taller than the screen could never reach. It runs once per visit (1.2s, linear, each chip's own stagger and ease-out shape it); later changes show the result sorted. `tween()` gained an optional `ease` for this.
+- **Keyboard.** A focused chip shows the whole stage sorted (CSS `:focus-within`, and the counts follow), so a keyboard user never tabs through a pile.
+- **Loading the checks.** `lib/showcase.ts` (layout maths, in the first load) must not import the checks. `DEMO_PROFILE` and `sortStory()` live in `lib/showcase-story.ts`, loaded with `import()` once `now` is known (about 5KB gzipped). The group ids, order and labels moved to `lib/groups.ts`, re-exported by `lib/assess.ts` and `lib/assessment/results.ts`, so the stage headings do not pull in the checks. `keepStory` keeps the same story when `useNow()`'s minute tick sorts everything the same way, so the section never restarts.
+- **Reserved height and failure.** Below 768px the empty stage reserves a height stepped by width (within about 60px of the filled stage, 320–767px); wider screens reserve 28rem. If the story module fails to load (a redeploy can remove the chunk), the stage drops the reserved height and says "The example could not load. Browse all programs instead."; each minute tick retries. Without JavaScript a `noscript` line says the same.
+- **Caption.** "checked today against every program", followed by how many closed programs are left out.
+
+**Spotlight (§5)**
+
+- The highlight is a radial gradient of plain `--fg`, with its strength as the layer's opacity (`--spot-mix`), not a `color-mix()`: the minifier's fallback for `color-mix()` would paint full `--fg` under the text in older browsers.
+- Strength per theme: 6% in light, 4% in dark (light text on a dark ground shows the same highlight more strongly). Both are in the contrast tests.
+- Size per use with `--spot-size`: 240px by default, 200px on persona cards, 72px on the type links.
+
+**Previews (§4)**
+
+- Built as `components/home/previews.tsx`, with `data-play` (`ready` holds the start state, `run` plays) and `data-anim` (grow, slide, pop, fade) parts; CSS in `app/globals.css`. Like `<Reveal>`, the start state is held only after hydration, only below the first screen and only with motion allowed; the exported HTML and print show the end state. They play when half in view. Every part ends within 1.5 seconds (a component test adds each delay to its duration).
+- Extras beyond §4: the plan card has a second, faded row and the report page has a logo mark, a title line and two summary blocks. The plan's second row and the report's summary blocks show from 768px up only (on phones the report page runs off the card before them, so they would animate unseen).
+- No counts on the Assess preview (see §4).
+- Frames have a minimum height, not a fixed one (`min-h-32`, `md:min-h-44`), so they grow with large text, and they are shorter on phones.
+- The global reduced-motion rule now zeroes `animation-delay` as well as durations, so a preview already holding its start state when reduced motion is switched on does not wait out its delays.
+
+**Testing (§7)**
+
+- `data-frame` updates every 30 frames (about twice a second), not once a second.
+- `tests/e2e/showcase.spec.ts`: the aurora plays, pauses and remembers the pause across a reload; under reduced motion it draws one still frame and offers no button; the sorting story sorts every chip at the end of the pinned scroll (desktop), settles once in view (phone), is sorted without scrolling under reduced motion, and shows sorted when a chip has focus, with Enter opening the program; the previews play once when scrolled to and then rest; persona cards have one border colour on every side. `liftoff.spec.ts` now covers the hero numbers, the type links and celebrations. `screens.spec.ts` adds a mid-sort screenshot at 1280px.
+
+**Size (§7)**
+
+- Home first-load JavaScript: 279,175 bytes gzipped on 28 Oct 2026, within the 297,083-byte budget (Liftoff measured about 278KB). The aurora (about 3KB) and the story's checks (about 5KB) load later with `import()`.
