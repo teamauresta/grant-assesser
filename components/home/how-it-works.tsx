@@ -19,7 +19,7 @@ export function HowItWorks() {
   return (
     <section aria-labelledby="how-heading" className="relative isolate overflow-hidden rounded-3xl border border-panel-border bg-panel-bg px-6 py-10 text-panel-fg md:px-12 md:py-14">
       <h2 id="how-heading" className="text-3xl tracking-[-0.03em] md:text-5xl">How it works</h2>
-      <ol className="mt-8 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
+      <ol className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
         {STEPS.map(({ preview: Preview, ...s }, i) => (
           <li key={s.title}>
             <Reveal delay={i * 40} className="flex h-full flex-col gap-3">
@@ -30,7 +30,7 @@ export function HowItWorks() {
                 {s.cta}
                 <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
               </Link>
-              <div className="mt-auto pt-2">
+              <div className="mt-auto md:pt-2">
                 <Preview />
               </div>
             </Reveal>

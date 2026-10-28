@@ -61,6 +61,18 @@ describe('Reveal', () => {
     expect(observers[0].disconnected).toBe(true);
   });
 
+  it('shows when any entry in a batch reports an intersection', () => {
+    const { observers } = stubObserver();
+    startAt(window.innerHeight + 500);
+    render(<Reveal><p>Batched</p></Reveal>);
+    act(() => observers[0].callback(
+      [{ isIntersecting: false }, { isIntersecting: true }] as IntersectionObserverEntry[],
+      {} as IntersectionObserver,
+    ));
+    expect(screen.getByText('Batched').parentElement).toHaveAttribute('data-reveal', 'shown');
+    expect(observers[0].disconnected).toBe(true);
+  });
+
   it('does not hide an item that starts on the first screen', () => {
     stubObserver();
     startAt(100);

@@ -26,8 +26,10 @@ function stubObserver() {
     disconnect() { this.record.disconnected = true; }
     takeRecords() { return []; }
   });
-  const report = (isIntersecting: boolean) => act(() => {
-    for (const o of observers) if (!o.disconnected) o.callback([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver);
+  /** Delivers one batch of entries, one per flag, to every live observer. */
+  const report = (...flags: boolean[]) => act(() => {
+    const entries = flags.map((isIntersecting) => ({ isIntersecting }) as IntersectionObserverEntry);
+    for (const o of observers) if (!o.disconnected) o.callback(entries, {} as IntersectionObserver);
   });
   return { observers, report };
 }
@@ -66,6 +68,23 @@ describe.each(PREVIEWS)('%s', (_, Preview) => {
     expect(observers[0].disconnected).toBe(true);
   });
 
+  it('plays when any entry in a batch reports an intersection', () => {
+    const { report } = stubObserver();
+    startAt(window.innerHeight + 400);
+    const { container } = render(<Preview />);
+    report(false, true);
+    expect(root(container)).toHaveAttribute('data-play', 'run');
+  });
+
+  it('stops observing when it unmounts', () => {
+    const { observers } = stubObserver();
+    startAt(window.innerHeight + 400);
+    const { unmount } = render(<Preview />);
+    expect(observers[0].disconnected).toBe(false);
+    unmount();
+    expect(observers[0].disconnected).toBe(true);
+  });
+
   it('shows its end state when it starts on screen', () => {
     stubObserver();
     startAt(100);
@@ -90,10 +109,10 @@ describe.each(PREVIEWS)('%s', (_, Preview) => {
 
   // Durations come from app/globals.css: a shared default, overridden per kind of animation.
   it('finishes every animation within 1.5 seconds', () => {
-    const css = readFileSync('app/globals.css', 'utf8').replace(/\s+/g, ' ');
-    const base = Number(/\[data-play="run"\] \[data-anim\] \{ animation: (\d+)ms/.exec(css)![1]);
+    const css = readFileSync('app/globals.css', 'utf8');
+    const base = Number(/\[data-play="run"\]\s+\[data-anim\]\s*\{\s*animation:\s*(\d+)ms/.exec(css)![1]);
     const duration = (kind: string) => {
-      const own = new RegExp(`\\[data-play="run"\\] \\[data-anim="${kind}"\\] \\{[^}]*animation-duration: (\\d+)ms`).exec(css);
+      const own = new RegExp(`\\[data-play="run"\\]\\s+\\[data-anim="${kind}"\\]\\s*\\{[^}]*animation-duration:\\s*(\\d+)ms`).exec(css);
       return own ? Number(own[1]) : base;
     };
     const { container } = render(<Preview />);
@@ -141,7 +160,16 @@ describe('preview CSS', () => {
     }
   });
 
+  // A preview already holding its start state when reduced motion is switched on must not wait out its delays.
+  it('reduced motion zeroes animation delays as well as durations', () => {
+    const raw = readFileSync('app/globals.css', 'utf8');
+    const rule = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{\s*\*,\s*\*::before,\s*\*::after\s*\{([^}]*)\}/.exec(raw)![1];
+    expect(rule).toMatch(/animation-duration:\s*0s\s*!important/);
+    expect(rule).toMatch(/animation-delay:\s*0s\s*!important/);
+  });
+
   it('prints the end state', () => {
-    expect(css).toMatch(/@media print \{ \[data-play\] \[data-anim\] \{[^}]*animation: none !important;[^}]*\} \}/);
+    const raw = readFileSync('app/globals.css', 'utf8');
+    expect(raw).toMatch(/@media\s+print\s*\{\s*\[data-play\]\s+\[data-anim\]\s*\{[^}]*animation:\s*none\s*!important;[^}]*\}\s*\}/);
   });
 });

@@ -17,8 +17,8 @@ export function Reveal({ children, delay = 0, className }: { children: ReactNode
     if (!el || typeof IntersectionObserver === 'undefined' || prefersReducedMotion()) return;
     if (el.getBoundingClientRect().top < window.innerHeight) return;
     el.dataset.reveal = 'hidden';
-    const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
       el.dataset.reveal = 'shown';
       io.disconnect();
     });
