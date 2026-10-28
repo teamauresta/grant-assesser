@@ -41,6 +41,15 @@ for (const theme of ['light', 'dark'] as const) {
     await page.goto('./');
     await expect(page.getByText('Pick up where you left off')).toBeVisible();
     await capture(page, `home-${theme}`, info.project.name);
+    // The pinned sorting story part-way through (wide screens only: phones settle in one go).
+    if (info.project.name !== 'desktop') return;
+    await page.evaluate(() => {
+      const section = document.querySelector<HTMLElement>('section[aria-labelledby="sort-heading"]')!;
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + (section.offsetHeight - window.innerHeight) * 0.4);
+    });
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.screenshot({ path: join(OUT, `home-sort-${theme}-${info.project.name}.png`), fullPage: false });
   });
 }
 
