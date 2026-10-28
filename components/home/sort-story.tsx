@@ -1,13 +1,11 @@
 'use client';
 
-import { useLayoutEffect, useMemo, useRef, useSyncExternalStore, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useMotionValueEvent, useScroll } from 'motion/react';
 import { PROGRAMS } from '@/content/programs';
-import { GROUP_ORDER } from '@/lib/assess';
-import { GROUP_INFO } from '@/lib/assessment/results';
-import { chipProgress, chipScatter, cloudSlots, scatterOffset, sortStory, SORT_END, type Box } from '@/lib/showcase';
+import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
+import { chipProgress, chipScatter, cloudSlots, keepStory, pinProgress, scatterOffset, SORT_END, type Box, type Story } from '@/lib/showcase';
 import { prefersReducedMotion, tween } from '@/lib/motion';
 import { useNow } from '@/lib/use-now';
 import { cn } from '@/lib/cn';
@@ -41,23 +39,73 @@ const clientMode = (): Mode => {
 };
 const serverMode = (): Mode => 'still';
 
-/** Layout box relative to the stage (the chips' offset parent); transforms do not change it. */
-const boxOf = (el: HTMLElement): Box => ({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+/**
+ * The example's result, once "now" is known. The checks load with import(), so they are not in the
+ * home page's first download. A new "now" that sorts every program the same way keeps the same
+ * object, so the minute tick of useNow() does not restart anything.
+ */
+function useStory(): Story | null {
+  const now = useNow();
+  const [story, setStory] = useState<Story | null>(null);
+  useEffect(() => {
+    if (!now) return;
+    let cancelled = false;
+    import('@/lib/showcase-story').then(
+      ({ sortStory }) => { if (!cancelled) setStory((prev) => keepStory(prev, sortStory(PROGRAMS, now))); },
+      () => {},
+    );
+    return () => { cancelled = true; };
+  }, [now]);
+  return story;
+}
+
+/** The stage's moving parts, collected once per render of the chips rather than per frame. */
+type Parts = { stage: HTMLElement; chips: HTMLElement[]; counts: HTMLElement[]; lists: HTMLElement[] };
+
+const partsOf = (stage: HTMLElement): Parts => ({
+  stage,
+  chips: [...stage.querySelectorAll<HTMLElement>('[data-chip]')],
+  counts: [...stage.querySelectorAll<HTMLElement>('[data-landed]')],
+  lists: [...stage.querySelectorAll<HTMLElement>('ul')],
+});
+
+/** Offset from the page's offset root, summed up the offsetParent chain; transforms do not change it. */
+function offsetTo(el: HTMLElement, stop: Element | null) {
+  let left = 0;
+  let top = 0;
+  let node: Element | null = el;
+  while (node instanceof HTMLElement && node !== stop) {
+    left += node.offsetLeft;
+    top += node.offsetTop;
+    node = node.offsetParent;
+  }
+  return { left, top, reached: node === stop };
+}
+
+/**
+ * Layout box relative to the stage. The stage is `relative`, so it is normally the offset parent of
+ * every chip and list; if a style change ever breaks that, both are measured from the page instead.
+ */
+function boxIn(el: HTMLElement, stage: HTMLElement): Box {
+  const own = offsetTo(el, stage);
+  const origin = own.reached ? { left: 0, top: 0 } : offsetTo(stage, null);
+  return { left: own.left - origin.left, top: own.top - origin.top, width: el.offsetWidth, height: el.offsetHeight };
+}
 const inset = (b: Box, by: number): Box => ({ left: b.left + by, top: b.top + by, width: b.width - 2 * by, height: b.height - 2 * by });
 
 /**
  * Writes each chip's unsorted place (--sx, --sy) from the real layout: on wide screens the pile
  * fills the stage under the column headings; on phones each chip is jumbled within its own list.
  */
-function placePile(stage: HTMLElement, mode: 'pinned' | 'settle') {
-  const lists = [...stage.querySelectorAll<HTMLElement>('ul')];
+function placePile({ stage, chips, lists }: Parts, mode: 'pinned' | 'settle') {
+  const listTop = lists[0] ? boxIn(lists[0], stage).top : 0;
   const piles = mode === 'pinned'
-    ? [{ cloud: { left: 0, top: lists[0]?.offsetTop ?? 0, width: stage.clientWidth, height: stage.clientHeight - (lists[0]?.offsetTop ?? 0) }, chips: [...stage.querySelectorAll<HTMLElement>('[data-chip]')] }]
-    : lists.map((ul) => ({ cloud: boxOf(ul), chips: [...ul.querySelectorAll<HTMLElement>('[data-chip]')] }));
-  for (const { cloud, chips } of piles) {
-    const slots = cloudSlots(chips.map((el) => el.dataset.slug!), PILE_COLUMNS[mode]);
-    for (const el of chips) {
-      const { x, y } = scatterOffset(boxOf(el), inset(cloud, PILE_INSET), slots.get(el.dataset.slug!)!);
+    ? [{ cloud: { left: 0, top: listTop, width: stage.clientWidth, height: stage.clientHeight - listTop }, chips }]
+    : lists.map((ul) => ({ cloud: boxIn(ul, stage), chips: chips.filter((el) => ul.contains(el)) }));
+  for (const { cloud, chips: pile } of piles) {
+    const slots = cloudSlots(pile.map((el) => el.dataset.slug!), PILE_COLUMNS[mode]);
+    for (const el of pile) {
+      const { x, y } = scatterOffset(boxIn(el, stage), inset(cloud, PILE_INSET), slots.get(el.dataset.slug!)!);
       el.style.setProperty('--sx', `${x}px`);
       el.style.setProperty('--sy', `${y}px`);
     }
@@ -65,15 +113,16 @@ function placePile(stage: HTMLElement, mode: 'pinned' | 'settle') {
 }
 
 /** Moves every chip to overall progress `p` (0..1) and updates the visible landed counts. */
-function applyProgress(stage: HTMLElement, p: number) {
+function paint({ chips, counts }: Parts, p: number) {
   const sort = Math.min(1, p / SORT_END);
   const landed: Record<string, number> = {};
-  for (const el of stage.querySelectorAll<HTMLElement>('[data-chip]')) {
+  for (const el of chips) {
     const t = Math.round(chipProgress(sort, Number(el.dataset.delay)) * 1000) / 1000;
-    el.style.setProperty('--t', String(t));
+    const value = String(t);
+    if (el.style.getPropertyValue('--t') !== value) el.style.setProperty('--t', value);
     if (t >= 0.98) landed[el.dataset.group!] = (landed[el.dataset.group!] ?? 0) + 1;
   }
-  for (const el of stage.querySelectorAll<HTMLElement>('[data-landed]')) {
+  for (const el of counts) {
     const count = String(landed[el.dataset.landed!] ?? 0);
     if (el.textContent !== count) el.textContent = count;
   }
@@ -84,54 +133,106 @@ function applyProgress(stage: HTMLElement, p: number) {
  * (DEMO_PROFILE), with real results. The sorted layout is the real DOM, four lists of links, so
  * screen readers and keyboards always get the result; the unsorted pile is only a transform per
  * chip, driven by one progress value written straight to the style (no React render per frame).
- * On wide screens scrolling through the pinned section drives it; on phones it settles once, over
- * 1.2s, when the stage comes into view. Under reduced motion it shows the sorted result, still. The
- * groups depend on "now", so the stage fills in on the client.
+ * On wide screens scrolling through the pinned section drives it; on phones it settles once per
+ * visit, over 1.2s, when the stage comes into view. Under reduced motion it shows the sorted
+ * result, still, and so does a stage holding keyboard focus. The groups depend on "now", so the
+ * stage fills in on the client, inside a reserved height.
  */
 export function SortStory() {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const mode = useSyncExternalStore(subscribe, clientMode, serverMode);
-  const modeRef = useRef<Mode>(mode);
-  const now = useNow();
-  const story = useMemo(() => (now ? sortStory(PROGRAMS, now) : null), [now]);
-
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
-
-  useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    if (modeRef.current === 'pinned' && stageRef.current) applyProgress(stageRef.current, v);
-  });
+  const story = useStory();
+  /** The phone settle has started: later changes (new groups, a resize) show the result sorted. */
+  const settled = useRef(false);
+  /** A chip in the stage has focus, so CSS shows everything sorted; the counts follow. */
+  const focused = useRef(false);
 
   useLayoutEffect(() => {
-    modeRef.current = mode;
     const stage = stageRef.current;
-    if (!story || !stage) return;
-    const apply = (p: number) => applyProgress(stage, p);
-    if (mode === 'still' || (mode === 'settle' && typeof IntersectionObserver === 'undefined')) return apply(1);
+    const section = sectionRef.current;
+    if (!story || !stage || !section) return;
+    const parts = partsOf(stage);
+    let progress = 1;
+    const show = (p: number) => {
+      progress = p;
+      paint(parts, focused.current ? 1 : p);
+    };
 
-    // The pile depends on the layout, so it is measured again when the stage resizes or fonts load.
-    let live = true;
-    const place = () => { if (live) placePile(stage, mode); };
-    place();
-    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
-    resize?.observe(stage);
-    document.fonts?.ready.then(place, () => {});
-    const stop = () => { live = false; resize?.disconnect(); };
+    const onFocusIn = () => {
+      focused.current = true;
+      paint(parts, 1);
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      if (e.relatedTarget instanceof Node && stage.contains(e.relatedTarget)) return;
+      focused.current = false;
+      paint(parts, progress);
+    };
+    focused.current = stage.contains(document.activeElement);
+    stage.addEventListener('focusin', onFocusIn);
+    stage.addEventListener('focusout', onFocusOut);
+    const cleanups = [() => {
+      stage.removeEventListener('focusin', onFocusIn);
+      stage.removeEventListener('focusout', onFocusOut);
+    }];
+    const stop = () => cleanups.forEach((c) => c());
 
-    if (mode === 'pinned') {
-      apply(scrollYProgress.get());
+    if (mode === 'still' || (mode === 'settle' && (settled.current || typeof IntersectionObserver === 'undefined'))) {
+      show(1);
       return stop;
     }
-    apply(0);
+
+    // The pile depends on the layout: measured now, and again if the stage changes size or the
+    // fonts finish loading (both change where the chips sit).
+    placePile(parts, mode);
+    let size = `${stage.clientWidth}x${stage.clientHeight}`;
+    if (typeof ResizeObserver !== 'undefined') {
+      const resize = new ResizeObserver(() => {
+        const next = `${stage.clientWidth}x${stage.clientHeight}`;
+        if (next !== size) {
+          size = next;
+          placePile(parts, mode);
+        }
+      });
+      resize.observe(stage);
+      cleanups.push(() => resize.disconnect());
+    }
+    let live = true;
+    cleanups.push(() => { live = false; });
+    if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => { if (live) placePile(parts, mode); }, () => {});
+
+    if (mode === 'pinned') {
+      // Scroll and resize schedule at most one frame; progress is read straight from the layout,
+      // so a reload part-way down the section starts at the right place.
+      const read = () => pinProgress(section.getBoundingClientRect().top, section.offsetHeight, window.innerHeight);
+      let frame = 0;
+      const onScroll = () => {
+        if (!frame) frame = requestAnimationFrame(() => { frame = 0; show(read()); });
+      };
+      show(read());
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      cleanups.push(() => {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+        cancelAnimationFrame(frame);
+      });
+      return stop;
+    }
+
+    show(0);
     let cancel = () => {};
     const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
+      if (!entry?.isIntersecting) return;
       io.disconnect();
-      cancel = tween(0, 1, SETTLE_MS, apply);
+      settled.current = true;
+      // Linear to SORT_END: each chip's own stagger and ease-out shape the motion, over all 1.2s.
+      cancel = tween(0, SORT_END, SETTLE_MS, show, (t) => t);
     }, { rootMargin: SETTLE_LINE });
     io.observe(stage);
-    return () => { stop(); io.disconnect(); cancel(); };
-  }, [story, mode, scrollYProgress]);
+    cleanups.push(() => { io.disconnect(); cancel(); });
+    return stop;
+  }, [story, mode]);
 
   return (
     <section ref={sectionRef} aria-labelledby="sort-heading" className="overflow-x-clip md:motion-safe:h-[250vh]">
@@ -143,7 +244,23 @@ export function SortStory() {
             {story && story.closed > 0 && ` ${story.closed} closed programs are left out.`}
           </p>
         </div>
-        <div ref={stageRef} data-stage className="relative grid min-h-[28rem] grid-cols-1 gap-6 overflow-clip p-1 md:grid-cols-4 md:gap-4">
+        {/*
+          `relative` makes the stage the chips' offset parent, which the pile measurement relies on.
+          Until the story arrives the stage reserves about its filled height (measured at 320-767px
+          wide), so nothing below it moves.
+        */}
+        <div
+          ref={stageRef}
+          data-stage
+          className={cn('relative grid grid-cols-1 gap-6 overflow-clip p-1 md:min-h-[28rem] md:grid-cols-4 md:gap-4', !story && 'min-h-[59rem] sm:min-h-[36rem]')}
+        >
+          <noscript>
+            <p className="text-sm text-muted-fg">
+              This example needs JavaScript.{' '}
+              <Link href="/programs/" className={cn('rounded-sm text-accent underline underline-offset-4', focusRing)}>Browse all programs</Link>
+              {' '}instead.
+            </p>
+          </noscript>
           {story && GROUP_ORDER.map((g) => (
             <div key={g} className="flex min-w-0 flex-col gap-2">
               <h3 id={`sort-${g}`} className="flex items-baseline gap-2 text-base">
@@ -161,7 +278,7 @@ export function SortStory() {
                       data-slug={chip.slug}
                       data-group={g}
                       data-delay={s.delay}
-                      className="max-w-full will-change-transform"
+                      className="max-w-full"
                       style={{ '--sr': `${s.rotate}deg` } as CSSProperties}
                     >
                       <Link

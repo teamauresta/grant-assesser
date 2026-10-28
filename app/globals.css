@@ -262,6 +262,8 @@
 [data-stage]:focus-within [data-chip] { transform: none; }
 @media (prefers-reduced-motion: reduce) { [data-chip] { transform: none; } }
 @media print { [data-chip] { transform: none; } }
+/* The stage reserves its filled height until the story arrives; without JavaScript it never does. */
+@media (scripting: none) { [data-stage] { min-height: 0 !important; } }
 
 @media (prefers-reduced-motion: reduce) {
   *,

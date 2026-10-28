@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { PROGRAMS } from '@/content/programs';
 import { assessProgram, GROUP_ORDER } from '@/lib/assess';
 import { ProfileSchema } from '@/lib/schema';
-import { CHIP_SPAN, chipProgress, chipScatter, cloudSlots, DEMO_PROFILE, scatterOffset, sortStory } from '@/lib/showcase';
+import { readFileSync } from 'node:fs';
+import { CHIP_SPAN, chipProgress, chipScatter, cloudSlots, keepStory, pinProgress, scatterOffset, type Story } from '@/lib/showcase';
+import { DEMO_PROFILE, sortStory } from '@/lib/showcase-story';
 import { PERSONA_NOW, preRaiseVic } from '@/tests/fixtures/personas';
 
 describe('DEMO_PROFILE', () => {
@@ -113,5 +115,54 @@ describe('chipProgress', () => {
   it('never leaves 0..1, even for overscroll', () => {
     expect(chipProgress(-0.2, 0.5)).toBe(0);
     expect(chipProgress(1.4, 0.5)).toBe(1);
+  });
+});
+
+describe('keepStory', () => {
+  const story = sortStory(PROGRAMS, PERSONA_NOW);
+
+  // useNow() ticks every minute; a new instant that sorts the same way must not restart the story.
+  it('keeps the previous story when every group holds the same programs', () => {
+    const again = sortStory(PROGRAMS, new Date(PERSONA_NOW.getTime() + 60_000));
+    expect(again).not.toBe(story);
+    expect(keepStory(story, again)).toBe(story);
+  });
+
+  it('takes the new story when a program moves, or the closed count changes', () => {
+    const [first, ...rest] = story.groups['act-now'];
+    const moved: Story = { ...story, groups: { ...story.groups, 'act-now': rest, watch: [...story.groups.watch, { ...first, group: 'watch' }] } };
+    expect(keepStory(story, moved)).toBe(moved);
+    const fewer: Story = { ...story, closed: story.closed + 1 };
+    expect(keepStory(story, fewer)).toBe(fewer);
+  });
+
+  it('takes the new story when there was none', () => {
+    expect(keepStory(null, story)).toBe(story);
+  });
+});
+
+describe('pinProgress', () => {
+  // A 2000px section in an 800px window pins for 1200px of scrolling.
+  it('runs 0 to 1 while the section is pinned', () => {
+    expect(pinProgress(300, 2000, 800)).toBe(0);
+    expect(pinProgress(0, 2000, 800)).toBe(0);
+    expect(pinProgress(-600, 2000, 800)).toBe(0.5);
+    expect(pinProgress(-1200, 2000, 800)).toBe(1);
+    expect(pinProgress(-1900, 2000, 800)).toBe(1);
+  });
+
+  it('jumps straight to sorted once a section no taller than the window reaches the top', () => {
+    expect(pinProgress(10, 700, 800)).toBe(0);
+    expect(pinProgress(0, 700, 800)).toBe(1);
+  });
+});
+
+// The section's first load must not include the eligibility checks: they load with import().
+describe('first-load modules', () => {
+  it('lib/showcase and lib/groups do not import lib/assess or lib/gates', () => {
+    for (const file of ['lib/showcase.ts', 'lib/groups.ts']) {
+      const source = readFileSync(file, 'utf8');
+      expect(source).not.toMatch(/^import (?!type )[^;]*from '@\/lib\/(assess|gates|scoring|assessment\/)/m);
+    }
   });
 });

@@ -1,13 +1,9 @@
 import type { Program } from '@/lib/schema';
 import type { GateResult } from '@/lib/gates';
-import { GROUP_ORDER, type Assessment, type FundingEstimate, type Group, type Track } from '@/lib/assess';
+import type { Assessment, FundingEstimate, Track } from '@/lib/assess';
+import { GROUP_INFO, GROUP_ORDER, type Group } from '@/lib/groups';
 
-export const GROUP_INFO: Record<Group, { label: string; description: string }> = {
-  'act-now': { label: 'Act now', description: 'Open, and you meet every required check.' },
-  prepare: { label: 'Prepare', description: 'Open, but something needs answering or fixing before you apply.' },
-  watch: { label: 'Watch', description: 'Not open yet, paused or unconfirmed. Get ready for the next round.' },
-  'not-a-fit': { label: 'Not a fit', description: 'A required check fails and cannot be fixed. Listed so you can see why.' },
-};
+export { GROUP_INFO };
 
 export const TRACK_INFO: Record<Track, { label: string; description: string }> = {
   funding: { label: 'Funding', description: 'Grants, tax offsets and other cash.' },

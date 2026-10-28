@@ -1,47 +1,33 @@
-import type { Profile, Program } from '@/lib/schema';
-import { assessAll, GROUP_ORDER, type Group } from '@/lib/assess';
+import { GROUP_ORDER, type Group } from '@/lib/groups';
 
-/**
- * The example founder in the home page's sorting story: a pre-raise AI product company in Victoria,
- * about 18 months old, women-led, with angel money. Fixed answers, presented as an example only.
- * A copy of the `preRaiseVic` test fixture (lib code must not import from tests/; a test keeps them equal).
+/*
+ * Layout and motion for the home page's sorting story. This module is in the page's first load, so
+ * it must not import the checks (lib/assess, lib/gates): the story itself is in lib/showcase-story,
+ * loaded with import().
  */
-export const DEMO_PROFILE: Profile = {
-  persona: 'pre-raise',
-  hasAcn: true,
-  gstRegistered: true,
-  incorporatedOn: '2025-04-27',
-  foreignSubsidiary: false,
-  state: 'vic',
-  turnover: 'under-1m',
-  rdSpend: '20k-100k',
-  cashMatch: '20k-60k',
-  experimental: true,
-  contemporaneousRecords: true,
-  businessModel: 'product',
-  hasMvp: true,
-  hasWebsite: true,
-  fundingStage: 'angel',
-  vcBacked: false,
-  priorCreditsUsd: { aws: 0, azure: 0, gcp: 0 },
-  researchPartner: 'informal',
-  industryPartners: 0,
-  customerEvidence: 'pilots',
-  sectors: ['other'],
-  founderHoursPerWeek: '2-5',
-  urgency: 'now',
-  womenLed: 'yes',
-};
 
 export type StoryChip = { slug: string; name: string; group: Group };
 export type Story = { groups: Record<Group, StoryChip[]>; closed: number };
 
-/** Every program checked against DEMO_PROFILE, best first within each group; closed ones are only counted. */
-export function sortStory(programs: Program[], now: Date): Story {
-  const groups = Object.fromEntries(GROUP_ORDER.map((g) => [g, [] as StoryChip[]])) as Record<Group, StoryChip[]>;
-  const assessed = assessAll(programs, DEMO_PROFILE, now);
-  for (const a of assessed) groups[a.group!].push({ slug: a.program.slug, name: a.program.name, group: a.group! });
-  return { groups, closed: programs.length - assessed.length };
+const storyKey = (s: Story) => `${GROUP_ORDER.map((g) => s.groups[g].map((c) => c.slug).join(',')).join('|')}|${s.closed}`;
+
+/**
+ * The previous story when the new one sorts every program the same way, so a fresh "now" (useNow
+ * ticks every minute) does not restart the section; otherwise the new one.
+ */
+export function keepStory(prev: Story | null, next: Story): Story {
+  return prev && storyKey(prev) === storyKey(next) ? prev : next;
+}
+
+/**
+ * Progress (0..1) through a pinned section from its top edge (px from the top of the window, as
+ * getBoundingClientRect gives it), its height and the window's height. A section no taller than the
+ * window has no pinned range, so it is sorted as soon as it reaches the top.
+ */
+export function pinProgress(top: number, height: number, viewport: number): number {
+  const range = height - viewport;
+  if (range <= 0) return top <= 0 ? 1 : 0;
+  return Math.min(1, Math.max(0, -top / range));
 }
 
 export type Scatter = { rotate: number; delay: number };

@@ -2,12 +2,12 @@ import type { Profile, Program } from '@/lib/schema';
 import { evaluateGates, type GateResult } from '@/lib/gates';
 import { deriveStatus, type DerivedState, type StatusInfo } from '@/lib/status';
 import { scoreProgram, type ScoreBreakdown } from '@/lib/scoring';
+import { GROUP_ORDER, type Group } from '@/lib/groups';
 
-export type Group = 'act-now' | 'prepare' | 'watch' | 'not-a-fit';
+export { GROUP_ORDER, type Group };
+
 export type Track = 'funding' | 'quick-wins';
 export type Assessment = { program: Program; status: StatusInfo; gates: GateResult[]; group: Group | null; track: Track; score: ScoreBreakdown };
-
-export const GROUP_ORDER: Group[] = ['act-now', 'prepare', 'watch', 'not-a-fit'];
 
 /** The first required check that fails and cannot be fixed: why a program is not a fit. */
 export const blockingGate = (gates: GateResult[]): GateResult | undefined =>

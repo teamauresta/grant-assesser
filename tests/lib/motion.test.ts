@@ -28,4 +28,16 @@ describe('tween', () => {
     expect(seen.at(-1)).toBe(100);
     expect(frames).toHaveLength(0);
   });
+
+  it('takes another easing, such as linear, when the caller shapes the motion itself', () => {
+    const frames: ((t: number) => void)[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: (t: number) => void) => { frames.push(cb); return frames.length; });
+    vi.stubGlobal('cancelAnimationFrame', () => {});
+    const seen: number[] = [];
+    tween(0, 100, 1000, (v) => seen.push(v), (t) => t);
+    frames.shift()!(0);
+    frames.shift()!(250);
+    frames.shift()!(1000);
+    expect(seen).toEqual([0, 25, 100]);
+  });
 });
