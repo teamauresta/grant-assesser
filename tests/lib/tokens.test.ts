@@ -40,6 +40,10 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it.each(['--panel-fg', '--panel-muted-fg', '--panel-lift-1', '--panel-lift-2', '--panel-lift-3'])('%s meets AA on --panel-bg', (name) => {
     expect(contrast(t[name], t['--panel-bg'])).toBeGreaterThanOrEqual(4.5);
   });
+  // The How it works previews are cards on the panel: their labels sit on --panel-surface.
+  it.each(['--panel-fg', '--panel-muted-fg'])('%s meets AA on --panel-surface', (name) => {
+    expect(contrast(t[name], t['--panel-surface'])).toBeGreaterThanOrEqual(4.5);
+  });
   it('the accent focus ring stays visible on the panel (3:1)', () => {
     expect(contrast(t['--accent'], t['--panel-bg'])).toBeGreaterThanOrEqual(3);
   });

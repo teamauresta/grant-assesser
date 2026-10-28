@@ -56,6 +56,8 @@
   --panel-lift-1: #2dd4bf;
   --panel-lift-2: #60a5fa;
   --panel-lift-3: #a78bfa;
+  /* Cards on the panel: the How it works previews. */
+  --panel-surface: #17171f;
   /* Decorative edge (WCAG 1.4.11 does not apply), so not in the AA contrast tests. Not needed in
    * light, where the dark panel stands out; see the dark theme. */
   --panel-border: transparent;
@@ -119,6 +121,7 @@
   --color-panel-bg: var(--panel-bg);
   --color-panel-fg: var(--panel-fg);
   --color-panel-muted-fg: var(--panel-muted-fg);
+  --color-panel-surface: var(--panel-surface);
   --color-panel-border: var(--panel-border);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -287,6 +290,27 @@
 @media print { [data-chip] { transform: none; } }
 /* The stage reserves its filled height until the story arrives; without JavaScript it never does. */
 @media (scripting: none) { [data-stage] { min-height: 0 !important; } }
+
+/*
+ * How it works previews (components/home/previews.tsx). They play once, when scrolled into view:
+ * "ready" (set only after hydration, below the first screen, motion allowed) holds the start
+ * state; "run" plays to the end state. Without the attribute they show the end state. --d is each
+ * part's delay; every part ends within 1.5 seconds (tests/components/previews.test.tsx).
+ */
+[data-play="ready"] [data-anim="grow"] { scale: 0 1; }
+[data-play="ready"] [data-anim="slide"] { translate: calc(-100% - var(--slide-gap, 0px)) 0; }
+[data-play="ready"] [data-anim="pop"] { opacity: 0; scale: 0.6; }
+[data-play="ready"] [data-anim="fade"] { opacity: 0; }
+[data-play="run"] [data-anim] { animation: 500ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
+[data-play="run"] [data-anim="grow"] { animation-name: preview-grow; }
+[data-play="run"] [data-anim="slide"] { animation-name: preview-slide; animation-duration: 650ms; }
+[data-play="run"] [data-anim="pop"] { animation-name: preview-pop; animation-duration: 300ms; }
+[data-play="run"] [data-anim="fade"] { animation-name: preview-fade; animation-duration: 300ms; }
+@keyframes preview-grow { from { scale: 0 1; } }
+@keyframes preview-slide { from { translate: calc(-100% - var(--slide-gap, 0px)) 0; } }
+@keyframes preview-pop { from { opacity: 0; scale: 0.6; } }
+@keyframes preview-fade { from { opacity: 0; } }
+@media print { [data-play] [data-anim] { animation: none !important; opacity: 1 !important; scale: none !important; translate: none !important; } }
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -21,6 +21,16 @@ describe('HowItWorks', () => {
     });
   });
 
+  it('shows a decorative preview of the product in each step', () => {
+    render(<HowItWorks />);
+    const items = within(screen.getByRole('region', { name: 'How it works' })).getAllByRole('listitem');
+    items.forEach((item) => {
+      const preview = item.querySelector('[data-preview]');
+      expect(preview).not.toBeNull();
+      expect(preview).toHaveAttribute('aria-hidden', 'true');
+    });
+  });
+
   it('hides the step numerals from assistive technology', () => {
     render(<HowItWorks />);
     const items = within(screen.getByRole('region', { name: 'How it works' })).getAllByRole('listitem');
