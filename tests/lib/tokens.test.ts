@@ -109,6 +109,12 @@ it('no Liftoff token remains', () => {
   expect(css).not.toMatch(/--(panel-)?lift-|--logo-\d|--on-lift/);
 });
 
+// Eucalyptus has no gradient text (design doc, section 2).
+it('no Liftoff utility or gradient text remains', () => {
+  expect(css).not.toMatch(/@utility (text-lift|text-lift-panel|glow-lift)\b/);
+  expect(css).not.toMatch(/background-clip:\s*text/);
+});
+
 // Status pills keep their colours through the Eucalyptus retheme (design doc, section 1).
 it('the status tokens are unchanged', () => {
   const dk = tokens('[data-theme="dark"]');

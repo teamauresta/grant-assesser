@@ -31,13 +31,13 @@ export function Hero() {
         </Link>
         <h1 id="hero-heading" className="text-[clamp(2.5rem,7vw,5rem)] leading-[1.02] tracking-[-0.04em]">
           <span className="block motion-safe:animate-rise">Find the funding</span>{' '}
-          <span className="block text-lift motion-safe:animate-rise-late">your startup qualifies for</span>
+          <span className="block text-accent motion-safe:animate-rise-late">your startup qualifies for</span>
         </h1>
         <p className="max-w-2xl text-base text-muted-fg md:text-xl">
           Grants, tax incentives, credits and accelerators across Australia, checked against official sources and matched to you in six short steps.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Link href="/assess/" className={buttonClasses({ variant: 'primary', className: 'glow-lift min-h-12 px-6 text-base' })}>
+          <Link href="/assess/" className={buttonClasses({ variant: 'primary', className: 'glow-brand min-h-12 px-6 text-base' })}>
             Start free assessment
             <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
           </Link>

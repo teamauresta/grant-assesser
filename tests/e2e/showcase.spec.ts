@@ -221,6 +221,22 @@ test('How it works previews play once when scrolled to, then rest', async ({ pag
   await expect.poll(async () => (await states()).filter((s) => s !== 'finished'), { timeout: 2_500 }).toEqual([]);
 });
 
+// Eucalyptus has no gradient text (design doc, section 2): every heading, number and phrase is a
+// solid colour.
+test('no gradient text on the home page', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  const clipped = await page.evaluate(() =>
+    [...document.querySelectorAll('*')]
+      .filter((el) => {
+        const s = getComputedStyle(el);
+        return s.backgroundClip === 'text' || s.getPropertyValue('-webkit-background-clip') === 'text';
+      })
+      .map((el) => `${el.tagName.toLowerCase()} ${el.getAttribute('class') ?? ''}`),
+  );
+  expect(clipped).toEqual([]);
+});
+
 test('persona cards have no coloured strip: every border side is the same colour and width', async ({ page }, info) => {
   // A saved persona, so one card shows its selected border too.
   await seedStorage(page, { workspace: populatedWorkspace() });

@@ -51,4 +51,13 @@ describe('HowItWorks', () => {
       expect(numeral).toHaveAttribute('aria-hidden', 'true');
     });
   });
+
+  // Solid ochre on the panel, never gradient text (design doc, section 2).
+  it('colours the step numerals in --panel-spark', () => {
+    render(<HowItWorks />);
+    const items = within(screen.getByRole('region', { name: 'How it works' })).getAllByRole('listitem');
+    items.forEach((item, i) => {
+      expect(within(item).getByText(String(i + 1).padStart(2, '0'))).toHaveClass('text-panel-spark');
+    });
+  });
 });

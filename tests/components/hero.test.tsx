@@ -27,6 +27,16 @@ describe('Hero', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Find the funding your startup qualifies for');
   });
 
+  // Eucalyptus: the phrase is plain --accent, never gradient text; the call to action has a quiet
+  // eucalyptus shadow (design doc, section 2).
+  it('colours the headline phrase in solid accent and gives the primary link the brand glow', () => {
+    render(<Hero />);
+    const phrase = screen.getByText('your startup qualifies for');
+    expect(phrase).toHaveClass('text-accent');
+    expect(phrase).not.toHaveClass('text-lift');
+    expect(screen.getByRole('link', { name: 'Start free assessment' })).toHaveClass('glow-brand');
+  });
+
   it('never puts "now"-based numbers in the server HTML', () => {
     const html = renderToString(<Hero />);
     expect(html).toContain('Programs');

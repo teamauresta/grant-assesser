@@ -15,6 +15,14 @@ describe('ProgressRing', () => {
     expect(svg).toHaveAttribute('aria-hidden', 'true');
   });
 
+  // Eucalyptus: a solid arc, no gradient (design doc, section 2).
+  it('draws the arc in solid --brand', () => {
+    const { container } = render(<ProgressRing percent={42} />);
+    expect(container.querySelector('linearGradient')).toBeNull();
+    const [, arc] = container.querySelectorAll('circle');
+    expect(arc).toHaveAttribute('stroke', 'var(--brand)');
+  });
+
   it('clamps the percentage to 0–100', () => {
     const { unmount } = render(<ProgressRing percent={140} />);
     expect(screen.getByText('100%', { selector: '.sr-only' })).toBeInTheDocument();

@@ -222,19 +222,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* One highlighted phrase, in plain --accent (no gradient text). Interim: Task 2 of the Eucalyptus
-   plan removes these three utilities with their users. */
-@utility text-lift {
-  color: var(--accent);
-}
-
-/* The same on the dark panel. */
-@utility text-lift-panel {
-  color: var(--panel-spark);
-}
-
-/* A soft glow: the primary call to action in the hero. */
-@utility glow-lift {
+/* A quiet eucalyptus shadow: the primary call to action in the hero. */
+@utility glow-brand {
   box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--brand) 55%, transparent);
 }
 

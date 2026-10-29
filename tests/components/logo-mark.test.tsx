@@ -12,9 +12,17 @@ describe('LogoMark', () => {
     // tests/lib/tokens.test.ts).
     expect(container.innerHTML).toContain('var(--logo)');
     expect(container.innerHTML).toContain('var(--on-logo)');
-    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{6}/i);
-    // Two marks on one page must not share a gradient id.
-    const ids = [...container.querySelectorAll('linearGradient')].map((g) => g.id);
-    expect(new Set(ids).size).toBe(2);
+    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  });
+
+  // Eucalyptus: one solid colour, no gradient (design doc, section 2).
+  it('is a solid tile: no gradient, tile and centre dot in --logo, compass in --on-logo', () => {
+    const { container } = render(<LogoMark />);
+    expect(container.querySelector('linearGradient')).toBeNull();
+    expect(container.querySelector('rect')).toHaveAttribute('fill', 'var(--logo)');
+    const [ring, dot] = container.querySelectorAll('circle');
+    expect(ring).toHaveAttribute('stroke', 'var(--on-logo)');
+    expect(dot).toHaveAttribute('fill', 'var(--logo)');
+    expect(container.querySelector('path')).toHaveAttribute('fill', 'var(--on-logo)');
   });
 });
