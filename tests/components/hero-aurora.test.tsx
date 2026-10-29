@@ -20,7 +20,7 @@ vi.mock('@/components/home/aurora-canvas', async () => {
 });
 
 import { HeroAurora } from '@/components/home/hero-aurora';
-import { AURORA_KEY } from '@/lib/aurora';
+import { AURORA_ALPHA, AURORA_KEY } from '@/lib/aurora';
 
 /** Stubs matchMedia; returns a switch that changes the reduced-motion setting mid-session. */
 const media = (reduced: boolean) => {
@@ -91,6 +91,12 @@ describe('HeroAurora', () => {
     const classes = [fallback, ...fallback.querySelectorAll('*')].map((el) => el.getAttribute('class') ?? '').join(' ');
     expect(classes).toContain('repeating-radial-gradient');
     expect(classes).toContain('var(--brand)');
+    // The rings are solid --brand; only the layer's opacity keeps them under the contrast cap that
+    // tests/lib/tokens.test.ts checks text against. Dropping it would paint full --brand behind text.
+    const opacity = /(?:^|\s)opacity-\[([\d.]+)\]/.exec(classes);
+    expect(opacity).not.toBeNull();
+    expect(Number(opacity![1])).toBeGreaterThan(0);
+    expect(Number(opacity![1])).toBeLessThanOrEqual(Math.min(...Object.values(AURORA_ALPHA)));
     expect(screen.queryByTestId('aurora')).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
   });

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { AURORA_FRAGMENT, FLOW_MAX, auroraFlow, hexToRgb, readAuroraColours } from '@/lib/aurora-shader';
+import { AURORA_FRAGMENT, FLOW_MAX, auroraFlow, canvasScale, hexToRgb, readAuroraColours } from '@/lib/aurora-shader';
 import { AURORA_ALPHA } from '@/lib/aurora';
 
 afterEach(() => {
@@ -50,6 +50,19 @@ describe('AURORA_FRAGMENT', () => {
     expect(AURORA_FRAGMENT).toContain('fwidth(');
     expect(AURORA_FRAGMENT).toContain('uniform vec3 uLine;');
     for (const stop of ['uC1', 'uC2', 'uC3']) expect(AURORA_FRAGMENT).not.toContain(stop);
+  });
+  // mod(n, 5.0) can return 5.0 for a whole n on some GPUs, which would drop an index contour.
+  it('finds index contours by distance to the nearest multiple of five, not mod()', () => {
+    expect(AURORA_FRAGMENT).not.toContain('mod(');
+    expect(AURORA_FRAGMENT).toContain('n - 5.0 * floor(n / 5.0 + 0.5)');
+  });
+});
+
+describe('canvasScale', () => {
+  // One canvas pixel per device pixel up to dpr 1 (never more than the device has when zoomed out),
+  // so lines stay crisp on standard screens; above that 0.75 of a dpr capped at 1.5, at most 1.125.
+  it.each([[0.67, 0.67], [1, 1], [1.25, 1], [2, 1.125], [3, 1.125]])('dpr %s gives %s canvas pixels per CSS pixel', (dpr, k) => {
+    expect(canvasScale(dpr)).toBeCloseTo(k, 10);
   });
 });
 

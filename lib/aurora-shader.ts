@@ -46,6 +46,18 @@ export function readAuroraColours(): AuroraColours {
   };
 }
 
+/** Canvas pixels per CSS pixel above dpr 1: lines need sharper pixels than a soft field did. */
+const SCALE = 0.75;
+
+/**
+ * Canvas pixels per CSS pixel for a device pixel ratio: one per device pixel up to dpr 1 (never more
+ * than the device has when zoomed out), so lines stay crisp on standard screens; above that the ratio
+ * capped at 1.5, times SCALE, but never below 1. At most 1.125: crisp on retina, and the cost stays low.
+ */
+export function canvasScale(dpr: number): number {
+  return Math.min(dpr, Math.max(1, Math.min(dpr, 1.5) * SCALE));
+}
+
 /** Flow units per second at full pace (through zero): how fast the field drifts. */
 const FLOW_SPEED = 0.06;
 /** The flow clock turns back at plus and minus this (a turn about every 14 minutes). */
@@ -71,7 +83,7 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 
 /**
  * Topographic contour lines over a slowly drifting height field (domain-warped value noise). Lines
- * are about one canvas pixel wide whatever the slope (fwidth, from OES_standard_derivatives), every
+ * are one to two canvas pixels wide whatever the slope (fwidth, from OES_standard_derivatives), every
  * fifth one stronger like an index contour on a survey map. The pointer raises a soft hill, so lines
  * bend around it. Strongest to the right (the text column is on the left) and fading out at the top
  * and bottom so the hero has no visible edge. Output never paints more than uAlpha of uLine over uBg
@@ -125,7 +137,9 @@ void main() {
   float v = h * 18.0;
   float f = fract(v);
   float px = min(f, 1.0 - f) / max(fwidth(v), 1e-4);
-  float index = 1.0 - step(0.5, abs(mod(floor(v + 0.5), 5.0)));
+  // Every fifth level, by distance to the nearest multiple of five: a GLSL modulo can return 5.0 on some GPUs.
+  float n = floor(v + 0.5);
+  float index = 1.0 - step(0.1, abs(n - 5.0 * floor(n / 5.0 + 0.5)));
   float line = (1.0 - smoothstep(0.4, 1.3, px)) * mix(0.5, 1.0, index);
 
   // Strongest on the right, fading behind the text column and at the top and bottom.

@@ -1,13 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { AURORA_FRAGMENT, AURORA_VERTEX, auroraFlow, readAuroraColours } from '@/lib/aurora-shader';
+import { AURORA_FRAGMENT, AURORA_VERTEX, auroraFlow, canvasScale, readAuroraColours } from '@/lib/aurora-shader';
 
-/**
- * Lines need sharper pixels than a soft field: device pixel ratio capped at 1.5, times 0.75, so never
- * more than about 1.1 canvas pixels per CSS pixel. Lines stay crisp on retina and the cost stays low.
- */
-const SCALE = 0.75;
 /** Seconds into the flow for the first frame: a pleasing moment (and the only one under reduced motion). */
 const START_TIME = 12;
 
@@ -98,7 +93,8 @@ export default function AuroraCanvas({ playing, onUnsupported, onLost }: Props) 
     };
     const resize = () => {
       const { width, height } = canvas.getBoundingClientRect();
-      const k = Math.min(window.devicePixelRatio || 1, 1.5) * SCALE;
+      // Canvas pixels per CSS pixel: see canvasScale.
+      const k = canvasScale(window.devicePixelRatio || 1);
       canvas.width = Math.max(1, Math.round(width * k));
       canvas.height = Math.max(1, Math.round(height * k));
       gl.viewport(0, 0, canvas.width, canvas.height);
