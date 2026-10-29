@@ -28,8 +28,6 @@ describe('readAuroraColours', () => {
     const root = document.documentElement;
     root.style.setProperty('--bg', 'white');
     root.style.setProperty('--brand', 'teal');
-    root.style.setProperty('--brand-2', '#2563eb');
-    root.style.setProperty('--spark', '#7c3aed');
     root.dataset.theme = 'dark';
     const names: Record<string, string> = { white: '#ffffff', teal: '#008080' };
     // jsdom has no canvas: a stand-in that behaves like the browser's fillStyle (normalised, and an
@@ -41,10 +39,17 @@ describe('readAuroraColours', () => {
         set fillStyle(v: string) { const c = names[v.trim()] ?? (/^#[0-9a-f]{6}$/i.test(v.trim()) ? v.trim() : null); if (c) fill = c; },
       } as unknown as CanvasRenderingContext2D;
     } as never);
-    const colours = readAuroraColours();
-    expect(colours.bg).toEqual([1, 1, 1]);
-    expect(colours.stops[0]).toEqual([0, 128 / 255, 128 / 255]);
-    expect(colours.alpha).toBe(AURORA_ALPHA.dark);
+    expect(readAuroraColours()).toEqual({ bg: [1, 1, 1], line: [0, 128 / 255, 128 / 255], alpha: AURORA_ALPHA.dark });
+  });
+});
+
+describe('AURORA_FRAGMENT', () => {
+  // Lines about one pixel wide whatever the slope need screen-space derivatives.
+  it('draws contour lines with fwidth, in one line colour', () => {
+    expect(AURORA_FRAGMENT).toContain('#extension GL_OES_standard_derivatives : enable');
+    expect(AURORA_FRAGMENT).toContain('fwidth(');
+    expect(AURORA_FRAGMENT).toContain('uniform vec3 uLine;');
+    for (const stop of ['uC1', 'uC2', 'uC3']) expect(AURORA_FRAGMENT).not.toContain(stop);
   });
 });
 

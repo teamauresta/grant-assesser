@@ -4,10 +4,10 @@ import { useEffect, useRef } from 'react';
 import { AURORA_FRAGMENT, AURORA_VERTEX, auroraFlow, readAuroraColours } from '@/lib/aurora-shader';
 
 /**
- * The field is soft, so it renders at half resolution: device pixel ratio capped at 1.5, then halved,
- * so never more than 0.75 canvas pixels per CSS pixel.
+ * Lines need sharper pixels than a soft field: device pixel ratio capped at 1.5, times 0.75, so never
+ * more than about 1.1 canvas pixels per CSS pixel. Lines stay crisp on retina and the cost stays low.
  */
-const SCALE = 0.5;
+const SCALE = 0.75;
 /** Seconds into the flow for the first frame: a pleasing moment (and the only one under reduced motion). */
 const START_TIME = 12;
 
@@ -54,7 +54,7 @@ type Props = {
 };
 
 /**
- * Draws the hero aurora. Runs only while `playing`, on screen and in a visible tab; otherwise it
+ * Draws the hero's contour lines. Runs only while `playing`, on screen and in a visible tab; otherwise it
  * keeps its last frame. Follows the pointer gently, re-reads the colours when the theme changes,
  * and writes a frame count to `data-frame` about twice a second (the end-to-end tests read it).
  */
@@ -75,7 +75,9 @@ export default function AuroraCanvas({ playing, onUnsupported, onLost }: Props) 
   useEffect(() => {
     const canvas = ref.current;
     const gl = canvas?.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
-    const program = gl && link(gl);
+    // The contour shader needs fwidth(); without the extension, treat it like no WebGL.
+    const derivatives = gl?.getExtension('OES_standard_derivatives');
+    const program = gl && derivatives && link(gl);
     if (!canvas || !gl || !program) { callbacks.current.onUnsupported(); return; }
 
     gl.useProgram(program);
@@ -89,11 +91,9 @@ export default function AuroraCanvas({ playing, onUnsupported, onLost }: Props) 
     const uRes = u('uRes'); const uFlow = u('uFlow'); const uPointer = u('uPointer');
 
     const setColours = () => {
-      const { bg, stops, alpha } = readAuroraColours();
+      const { bg, line, alpha } = readAuroraColours();
       gl.uniform3fv(u('uBg'), bg);
-      gl.uniform3fv(u('uC1'), stops[0]);
-      gl.uniform3fv(u('uC2'), stops[1]);
-      gl.uniform3fv(u('uC3'), stops[2]);
+      gl.uniform3fv(u('uLine'), line);
       gl.uniform1f(u('uAlpha'), alpha);
     };
     const resize = () => {

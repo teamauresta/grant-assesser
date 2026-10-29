@@ -25,25 +25,26 @@ const clientMode = (): Mode => (prefersReducedMotion() ? 'still' : 'live');
 const serverMode = (): Mode => 'pending';
 
 /**
- * Without WebGL: a still wash in the same stops. One layer, so no spot passes 14%, under both themes'
- * AURORA_ALPHA. Masked at the top and bottom like the shader, so the hero has no visible edge.
+ * Without WebGL: still contour rings in --brand, centred to the right, masked at the top, bottom and
+ * left like the shader. One line colour at 18% (layer opacity, not color-mix(), whose build fallback
+ * would paint full --brand), under both themes' AURORA_ALPHA. Each ring is a 2px ramp, so it stays
+ * smooth. One mask cannot fade both ways: the outer layer fades the top and bottom, the rings the left.
  */
 function AuroraFallback() {
   return (
-    <div
-      data-aurora-fallback
-      className="absolute inset-0 bg-[radial-gradient(70%_80%_at_80%_45%,color-mix(in_srgb,var(--brand)_14%,transparent),color-mix(in_srgb,var(--brand-2)_10%,transparent)_40%,transparent_75%)] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_70%,transparent)]"
-    />
+    <div data-aurora-fallback className="absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_70%,transparent)]">
+      <div className="absolute inset-0 bg-[repeating-radial-gradient(circle_at_78%_45%,transparent_0_25px,var(--brand)_26px,transparent_27px)] opacity-[0.18] [mask-image:linear-gradient(to_right,transparent_30%,black_70%)]" />
+    </div>
   );
 }
 
 /**
- * The hero's background. Nothing in the server HTML; on the client the aurora shader, loaded with
+ * The hero's background. Nothing in the server HTML; on the client the contour shader, loaded with
  * import() so it is not in the first download. It moves for as long as the page is open, so it has
  * a pause button (WCAG 2.2.2), remembered per browser. Under reduced motion it draws one still frame
- * and offers no button; without WebGL it shows a still gradient. A lost WebGL context (iOS drops
+ * and offers no button; without WebGL it shows still contour rings. A lost WebGL context (iOS drops
  * them in background tabs) gets a fresh canvas, once the tab is visible again; only a loss within
- * 30 seconds of a fresh canvas, with the tab in view all that time, settles for the gradient.
+ * 30 seconds of a fresh canvas, with the tab in view all that time, settles for the still rings.
  */
 export function HeroAurora() {
   const mode = useSyncExternalStore(subscribe, clientMode, serverMode);

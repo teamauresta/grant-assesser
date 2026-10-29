@@ -82,11 +82,15 @@ describe('HeroAurora', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
-  it('without WebGL shows a still gradient and no button', async () => {
+  it('without WebGL shows still contour rings and no button', async () => {
     media(false);
     unsupported = true;
     const { container } = render(<HeroAurora />);
     await waitFor(() => expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull());
+    const fallback = container.querySelector('[data-aurora-fallback]')!;
+    const classes = [fallback, ...fallback.querySelectorAll('*')].map((el) => el.getAttribute('class') ?? '').join(' ');
+    expect(classes).toContain('repeating-radial-gradient');
+    expect(classes).toContain('var(--brand)');
     expect(screen.queryByTestId('aurora')).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
   });
@@ -108,7 +112,7 @@ describe('HeroAurora', () => {
   });
 
   // iOS drops WebGL contexts when the page goes to the background: start again on a fresh canvas,
-  // and only settle for the still gradient if that one is lost too.
+  // and only settle for the still contour rings if that one is lost too.
   it('remounts the canvas after a lost context, keeping the pause button, and falls back after a second loss', async () => {
     media(false);
     const { container } = render(<HeroAurora />);

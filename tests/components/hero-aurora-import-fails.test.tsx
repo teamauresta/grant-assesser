@@ -9,7 +9,7 @@ import { HeroAurora } from '@/components/home/hero-aurora';
 
 afterEach(() => vi.unstubAllGlobals());
 
-it('shows the still gradient and no button when the shader cannot load', async () => {
+it('shows the still contour rings and no button when the shader cannot load', async () => {
   vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }));
   const { container } = render(<HeroAurora />);
   await waitFor(() => expect(container.querySelector('[data-aurora-fallback]')).not.toBeNull());

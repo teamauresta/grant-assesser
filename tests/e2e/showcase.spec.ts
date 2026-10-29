@@ -79,7 +79,7 @@ test.describe('aurora', () => {
     await expect(auroraCanvas(page)).toHaveCount(1);
     // Headless Chromium can take a moment before its first 30 frames: poll rather than sample.
     await expect.poll(() => frameCount(page), { timeout: 10_000 }).toBeGreaterThan(0);
-    // Drawing, so WebGL works here and the still gradient is not standing in for the canvas.
+    // Drawing, so WebGL works here and the still contour rings are not standing in for the canvas.
     await expect(page.locator('[data-aurora-fallback]')).toHaveCount(0);
     // Running, the counter moves within the window the paused checks below use.
     await advancesWithin(page, await frameCount(page), STILL_WINDOW);

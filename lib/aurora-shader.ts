@@ -1,5 +1,5 @@
 /**
- * The aurora's WebGL side: shader sources, the flow clock and the theme colours as uniforms. Only
+ * The hero's WebGL side: the contour shader, the flow clock and the theme colours as uniforms. Only
  * components/home/aurora-canvas.tsx imports this, so the GLSL stays out of the home page's first
  * download (scripts/js-size.mjs fails the build check if it slips back in).
  */
@@ -17,7 +17,7 @@ export function hexToRgb(hex: string): [number, number, number] {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 }
 
-export type AuroraColours = { bg: number[]; stops: number[][]; alpha: number };
+export type AuroraColours = { bg: number[]; line: number[]; alpha: number };
 
 let probe: CanvasRenderingContext2D | null | undefined;
 
@@ -41,7 +41,7 @@ export function readAuroraColours(): AuroraColours {
   const read = (name: string) => hexToRgb(normalise(style.getPropertyValue(name)));
   return {
     bg: read('--bg'),
-    stops: ['--brand', '--brand-2', '--spark'].map(read),
+    line: read('--brand'),
     alpha: AURORA_ALPHA[root.dataset.theme === 'dark' ? 'dark' : 'light'],
   };
 }
@@ -70,14 +70,16 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 `;
 
 /**
- * Domain-warped value noise. Colour runs along the three stops (teal, blue, violet: never a muddy
- * three-way mix); strength gathers into soft folds with background between them, strongest to the
- * right (the text column is on the left) and fading out at the top and bottom so the hero has no
- * visible edge. The pointer swirls the flow nearby. Output never paints more than uAlpha of a stop
- * over uBg (the dither is under half a level). highp where the GPU has it: the sin() hash breaks
- * into blocks at 16-bit precision on phones.
+ * Topographic contour lines over a slowly drifting height field (domain-warped value noise). Lines
+ * are about one canvas pixel wide whatever the slope (fwidth, from OES_standard_derivatives), every
+ * fifth one stronger like an index contour on a survey map. The pointer raises a soft hill, so lines
+ * bend around it. Strongest to the right (the text column is on the left) and fading out at the top
+ * and bottom so the hero has no visible edge. Output never paints more than uAlpha of uLine over uBg
+ * (the dither is under half a level). highp where the GPU has it: the sin() hash breaks into blocks
+ * at 16-bit precision on phones.
  */
 export const AURORA_FRAGMENT = `
+#extension GL_OES_standard_derivatives : enable
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -87,9 +89,7 @@ uniform vec2 uRes;
 uniform float uFlow;
 uniform vec2 uPointer;
 uniform vec3 uBg;
-uniform vec3 uC1;
-uniform vec3 uC2;
-uniform vec3 uC3;
+uniform vec3 uLine;
 uniform float uAlpha;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -103,40 +103,37 @@ float fbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
   mat2 turn = mat2(0.8, 0.6, -0.6, 0.8);
-  for (int i = 0; i < 4; i++) { v += a * noise(p); p = turn * p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+  for (int i = 0; i < 4; i++) { v += a * noise(p); p = turn * p * 2.03 + vec2(1.7, 9.2); a *= 0.42; }
   return v;
-}
-vec3 ramp(float h) {
-  return mix(mix(uC1, uC2, smoothstep(0.0, 0.55, h)), uC3, smoothstep(0.45, 1.0, h));
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uRes;
   float aspect = uRes.x / uRes.y;
-  // Stretched along a gentle diagonal, so the forms flow as long ribbons rather than blotches.
-  vec2 p = mat2(0.94, -0.34, 0.34, 0.94) * vec2(uv.x * aspect, uv.y) * vec2(0.8, 1.35);
+  vec2 p = vec2(uv.x * aspect, uv.y) * 1.15;
   float t = uFlow;
 
+  // Terrain: gentle warping keeps the lines flowing, never noisy.
+  vec2 w = vec2(fbm(p + vec2(0.0, t * 0.4)), fbm(p + vec2(5.2, 1.3) - t * 0.35));
+  float h = fbm(p + 0.9 * w + vec2(t * 0.15, 0.0));
+
+  // The pointer raises a soft hill.
   vec2 d = (uv - uPointer) * vec2(aspect, 1.0);
-  p += exp(-dot(d, d) * 4.0) * 0.3 * vec2(-d.y, d.x);
+  h += 0.07 * exp(-dot(d, d) * 7.0);
 
-  vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, 1.3) - t * 0.8));
-  vec2 r = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + t * 0.6), fbm(p + 2.6 * q + vec2(8.3, 2.8) - t * 0.5));
-  float f = fbm(p + 2.0 * r);
+  // Contours: distance to the nearest level, in pixels.
+  float v = h * 18.0;
+  float f = fract(v);
+  float px = min(f, 1.0 - f) / max(fwidth(v), 1e-4);
+  float index = 1.0 - step(0.5, abs(mod(floor(v + 0.5), 5.0)));
+  float line = (1.0 - smoothstep(0.4, 1.3, px)) * mix(0.5, 1.0, index);
 
-  // fbm clusters around 0.5, so stretch it: whole regions of teal, blue and violet drift past,
-  // with teal leaning to the lower left (it tints white grey) and violet to the upper right.
-  vec3 col = ramp(clamp(0.6 + 3.0 * (r.y - 0.5) + 0.5 * (uv.x - 0.5) + 0.35 * (uv.y - 0.5), 0.0, 1.0));
-  float folds = smoothstep(0.3, 0.7, f);
+  // Strongest on the right, fading behind the text column and at the top and bottom.
+  float mass = smoothstep(0.25, 0.75, uv.x + 0.15 * (w.x - 0.5));
+  float strength = mix(0.2, 1.0, mass) * smoothstep(0.0, 0.25, uv.y) * smoothstep(1.0, 0.8, uv.y);
 
-  // A mass of colour on the right, near full strength, with folds moving through it; wisps elsewhere.
-  vec2 c = (uv - vec2(0.8, 0.52)) * vec2(aspect * 0.55, 1.0);
-  float mass = 1.0 - smoothstep(0.12, 0.85, length(c) + 0.3 * (q.x - 0.5));
-  float strength = mix(0.25 * folds, mix(0.7, 1.0, folds), mass);
-  strength *= smoothstep(0.0, 0.3, uv.y) * smoothstep(1.0, 0.8, uv.y);
-
-  float a = uAlpha * clamp(strength, 0.0, 1.0);
+  float a = uAlpha * clamp(line * strength, 0.0, 1.0);
   vec3 dither = vec3((hash(gl_FragCoord.xy + fract(uFlow * 50.0)) - 0.5) / 255.0);
-  gl_FragColor = vec4(mix(uBg, col, a) + dither, 1.0);
+  gl_FragColor = vec4(mix(uBg, uLine, a) + dither, 1.0);
 }
 `;
