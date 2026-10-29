@@ -13,7 +13,7 @@ import { useSpotlight } from '@/components/ui/spotlight';
 const ICONS: Record<Persona, LucideIcon> = { bootstrapped: Sprout, 'pre-raise': Target, 'vc-backed': Rocket };
 
 /**
- * The three persona cards, each in its own Liftoff stop (icon badge, hover glow), with a cursor spotlight. Choosing one stores the persona, then opens
+ * The three persona cards, each in its own brand colour (icon badge, hover glow), with a cursor spotlight. Choosing one stores the persona, then opens
  * the assessment; the query parameter is kept so the wizard can pre-select it even if the store has not loaded yet.
  */
 export function PersonaCards() {

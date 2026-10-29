@@ -32,7 +32,7 @@ describe('cheer', () => {
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 
-  it('fires two side bursts for an award, in the Liftoff colours', async () => {
+  it('fires two side bursts for an award, in the brand colours', async () => {
     await cheer('a1:awarded', { message: 'Awarded.', burst: 'awarded' });
     expect(confetti).toHaveBeenCalledTimes(2);
     expect(confetti.mock.calls[0][0].colors).toHaveLength(6);

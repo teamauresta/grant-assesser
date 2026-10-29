@@ -6,12 +6,16 @@ import { BRAND_COLOURS } from '@/lib/celebrate';
 
 const css = readFileSync('app/globals.css', 'utf8');
 
-/** `--name: #hex;` pairs from the first block that starts with `selector {`. */
-function tokens(selector: string): Record<string, string> {
+/** The text of the first block that starts with `selector {`, up to its closing brace. */
+function block(selector: string): string {
   const start = css.indexOf(`${selector} {`);
   if (start < 0) throw new Error(`No ${selector} block`);
-  const body = css.slice(start, css.indexOf('}', start));
-  return Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[1], m[2]]));
+  return css.slice(start, css.indexOf('}', start));
+}
+
+/** `--name: #hex;` pairs from the first block that starts with `selector {`. */
+function tokens(selector: string): Record<string, string> {
+  return Object.fromEntries([...block(selector).matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[1], m[2]]));
 }
 
 const light = tokens(':root');
@@ -19,14 +23,13 @@ const dark = { ...light, ...tokens('[data-theme="dark"]') };
 
 /** The spotlight's strength (`--spot-mix: N%;`) in a theme block, as 0..1; the light value if unset. */
 function spotMix(selector: string): number | undefined {
-  const start = css.indexOf(`${selector} {`);
-  const m = /--spot-mix:\s*(\d+(?:\.\d+)?)%/.exec(css.slice(start, css.indexOf('}', start)));
+  const m = /--spot-mix:\s*(\d+(?:\.\d+)?)%/.exec(block(selector));
   return m ? Number(m[1]) / 100 : undefined;
 }
 const spots = { light: spotMix(':root')!, dark: spotMix('[data-theme="dark"]') ?? spotMix(':root')! };
 
 describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t) => {
-  it.each(['--fg', '--muted-fg'])('%s meets AA on --surface and --neutral-bg', (name) => {
+  it.each(['--fg', '--muted-fg', '--danger', '--accent'])('%s meets AA on --surface and --neutral-bg', (name) => {
     expect(contrast(t[name], t['--surface'])).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t[name], t['--neutral-bg'])).toBeGreaterThanOrEqual(4.5);
   });
@@ -40,6 +43,11 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it('--border-strong meets 3:1 on --bg and --surface', () => {
     expect(contrast(t['--border-strong'], t['--bg'])).toBeGreaterThanOrEqual(3);
     expect(contrast(t['--border-strong'], t['--surface'])).toBeGreaterThanOrEqual(3);
+  });
+  // The accent focus ring (WCAG 1.4.11, 3:1) on the page. On --surface it is implied by the accent's
+  // AA check above.
+  it('the accent focus ring stays visible on --bg (3:1)', () => {
+    expect(contrast(t['--accent'], t['--bg'])).toBeGreaterThanOrEqual(3);
   });
   const brand = ['--brand', '--brand-2', '--spark'];
   it.each(brand)('%s meets AA on --bg and --surface', (name) => {
@@ -87,7 +95,8 @@ it('the panel border is defined in both themes', () => {
 
 it('the logo is the light --brand and only defined in :root', () => {
   expect(light['--logo']).toBe(light['--brand']);
-  expect(Object.keys(tokens('[data-theme="dark"]')).filter((k) => k === '--logo' || k === '--on-logo')).toEqual([]);
+  // The raw block text, not the hex-only map, so a non-hex override such as var(--brand) is caught too.
+  expect(block('[data-theme="dark"]')).not.toMatch(/--(on-)?logo\s*:/);
 });
 
 // canvas-confetti needs literal colours, so lib/celebrate.ts repeats the brand colours; keep them in step.
@@ -97,7 +106,7 @@ it('the confetti colours are the brand colours of both themes', () => {
 });
 
 it('no Liftoff token remains', () => {
-  expect(css).not.toMatch(/--(panel-)?lift-/);
+  expect(css).not.toMatch(/--(panel-)?lift-|--logo-\d|--on-lift/);
 });
 
 // Status pills keep their colours through the Eucalyptus retheme (design doc, section 1).
