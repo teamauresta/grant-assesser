@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MotionProvider, useMotionFeaturesLoaded, useMotionReady } from '@/components/motion/motion-provider';
@@ -24,6 +24,10 @@ function Probe() {
 const hidden = (els: HTMLElement[]) => els.filter((el) => el.style.opacity !== '' && Number(el.style.opacity) < 1);
 
 describe('with reduced motion', () => {
+  // A fixed day, so a program closing never changes how many cards the directory lists.
+  beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-27T00:00:00Z') }));
+  afterEach(() => vi.useRealTimers());
+
   it('directory cards and report sections never start hidden, even with features loaded', async () => {
     const now = new Date('2026-10-27T00:00:00Z');
     const sections = (cover: boolean) => ({ ...Object.fromEntries(REPORT_SECTIONS.map((s) => [s, false])), cover }) as ReportSections;

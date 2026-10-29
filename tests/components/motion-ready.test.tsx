@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Directory } from '@/components/programs/directory';
@@ -16,6 +16,10 @@ vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams()
 const hidden = (els: HTMLElement[]) => els.filter((el) => el.style.opacity !== '' && Number(el.style.opacity) < 1);
 
 describe('before motion features load', () => {
+  // A fixed day, so a program closing never changes how many cards the directory lists.
+  beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-27T00:00:00Z') }));
+  afterEach(() => vi.useRealTimers());
+
   it('directory cards that appear after a filter change are visible', async () => {
     render(<Directory />);
     // Narrow the list with a search, then clear it: the cards that come back mount anew.
