@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { focusRing } from '@/components/ui/focus-ring';
+import { panelFocusRing } from '@/components/ui/focus-ring';
 import { Reveal } from '@/components/motion/reveal';
 import { AssessPreview, PlanPreview, ReportPreview } from '@/components/home/previews';
 
@@ -26,7 +26,7 @@ export function HowItWorks() {
               <span aria-hidden="true" className="text-lift-panel num self-start font-mono text-5xl font-semibold">{String(i + 1).padStart(2, '0')}</span>
               <h3 className="text-xl">{s.title}</h3>
               <p className="text-sm text-panel-muted-fg">{s.text}</p>
-              <Link href={s.href} className={cn('inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium text-panel-fg underline underline-offset-4', focusRing)}>
+              <Link href={s.href} className={cn('inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium text-panel-fg underline underline-offset-4', panelFocusRing)}>
                 {s.cta}
                 <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
               </Link>

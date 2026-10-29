@@ -21,6 +21,7 @@ describe('aurora pause preference', () => {
   });
 });
 
-it('is weaker in the dark theme, where the stops are brighter', () => {
+// Pale sage lines on a near-black page read stronger than dark green lines on sand at the same strength.
+it('is weaker in the dark theme, where pale lines on a dark page read stronger', () => {
   expect(AURORA_ALPHA.dark).toBeLessThan(AURORA_ALPHA.light);
 });

@@ -31,6 +31,18 @@ describe('HowItWorks', () => {
     });
   });
 
+  // The light --accent is 2.07:1 on the forest-green panel, too faint for a focus ring (3:1), so the
+  // step links use --panel-fg instead; tests/lib/tokens.test.ts checks that colour on the panel.
+  it('outlines the step links in --panel-fg on focus, not the accent', () => {
+    render(<HowItWorks />);
+    const links = within(screen.getByRole('region', { name: 'How it works' })).getAllByRole('link');
+    expect(links).toHaveLength(3);
+    links.forEach((link) => {
+      expect(link.className).toContain('focus-visible:outline-panel-fg');
+      expect(link.className).not.toContain('focus-visible:outline-accent');
+    });
+  });
+
   it('hides the step numerals from assistive technology', () => {
     render(<HowItWorks />);
     const items = within(screen.getByRole('region', { name: 'How it works' })).getAllByRole('listitem');

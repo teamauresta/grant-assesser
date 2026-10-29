@@ -18,21 +18,22 @@
  * --border is decorative separation only; --border-strong (>= 3:1) outlines form controls
  * and outline pills so their boundaries meet WCAG 1.4.11.
  * Status colours are for StatusPill only; the accent is never used for status.
- * The Liftoff gradient (--lift-*) is for brand moments only: the logo, the hero phrase, the hero aurora,
- * the progress ring, celebrations and the primary-CTA glow. Never for status or body text.
- * The panel (--panel-*) is dark in both themes.
+ * The Eucalyptus brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo, the
+ * hero phrase and contour lines, the progress ring, persona tones and celebrations. Never for status
+ * or body text.
+ * The panel (--panel-*) is deep forest green in both themes.
  */
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --border: #e4e4e7;
-  --border-strong: #8a8a93;
-  --fg: #09090b;
-  --muted-fg: #52525b;
-  --primary: #18181b;
+  --bg: #faf8f3;
+  --surface: #f2eee4;
+  --border: #e3ddd0;
+  --border-strong: #8a8274;
+  --fg: #1b1a16;
+  --muted-fg: #5b564c;
+  --primary: #1f5c4a;
   --on-primary: #ffffff;
-  --accent: #0f766e;
+  --accent: #1f5c4a;
   --danger: #b91c1c;
   --scrim: rgb(9 9 11 / 0.5);
 
@@ -40,31 +41,26 @@
   --ok-fg: #166534;
   --warn-bg: #fffbeb;
   --warn-fg: #92400e;
-  --neutral-bg: #f4f4f5;
-  --neutral-fg: #3f3f46;
+  --neutral-bg: #ece7dc;
+  --neutral-fg: #45413a;
 
-  --lift-1: #0f766e;
-  --lift-2: #2563eb;
-  --lift-3: #7c3aed;
+  /* Eucalyptus brand colours: brand moments only (logo, hero phrase and contour lines, progress ring,
+   * persona tones, celebrations). Never for status or body text. */
+  --brand: #1f5c4a;
+  --brand-2: #3f6e5a;
+  --spark: #a4531b;
 
-  /*
-   * The logo mark: the light stops in both themes, because white fails 3:1 on the dark-theme
-   * --lift-* stops. --on-lift sits only on this gradient. Not redefined in the dark theme.
-   */
-  --logo-1: #0f766e;
-  --logo-2: #2563eb;
-  --logo-3: #7c3aed;
-  --on-lift: #ffffff;
+  /* The logo: the light --brand in both themes, with a sand compass. Not redefined in the dark theme. */
+  --logo: #1f5c4a;
+  --on-logo: #faf8f3;
 
-  /* The "How it works" panel is dark in both themes. */
-  --panel-bg: #0b0b12;
-  --panel-fg: #fafafa;
-  --panel-muted-fg: #a1a1aa;
-  --panel-lift-1: #2dd4bf;
-  --panel-lift-2: #60a5fa;
-  --panel-lift-3: #a78bfa;
+  /* The "How it works" panel is deep forest green in both themes. */
+  --panel-bg: #12241d;
+  --panel-fg: #f5f1e8;
+  --panel-muted-fg: #b5bdb3;
+  --panel-spark: #e0a060;
   /* Cards on the panel: the How it works previews. */
-  --panel-surface: #17171f;
+  --panel-surface: #1b3229;
   /* Decorative edge (WCAG 1.4.11 does not apply), so not in the AA contrast tests. Not needed in
    * light, where the dark panel stands out; see the dark theme. */
   --panel-border: transparent;
@@ -75,15 +71,15 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #09090b;
-  --surface: #18181b;
-  --border: #27272a;
-  --border-strong: #71717a;
-  --fg: #fafafa;
-  --muted-fg: #a1a1aa;
-  --primary: #fafafa;
-  --on-primary: #09090b;
-  --accent: #2dd4bf;
+  --bg: #0e1311;
+  --surface: #161d1a;
+  --border: #25302b;
+  --border-strong: #6f7b74;
+  --fg: #f2efe6;
+  --muted-fg: #a7ada5;
+  --primary: #86c9a9;
+  --on-primary: #0e1311;
+  --accent: #86c9a9;
   --danger: #f87171;
   --scrim: rgb(0 0 0 / 0.7);
 
@@ -91,18 +87,18 @@
   --ok-fg: #86efac;
   --warn-bg: #451a03;
   --warn-fg: #fcd34d;
-  --neutral-bg: #27272a;
-  --neutral-fg: #d4d4d8;
+  --neutral-bg: #25302b;
+  --neutral-fg: #d6d9d2;
 
-  --lift-1: #2dd4bf;
-  --lift-2: #60a5fa;
-  --lift-3: #a78bfa;
+  --brand: #86c9a9;
+  --brand-2: #9fd3b8;
+  --spark: #e3a266;
 
   /* Light text on a dark ground: the spotlight shows at a lower strength. */
   --spot-mix: 4%;
 
-  /* --panel-bg nearly matches --bg here (1.015:1), so the panel gets a visible decorative edge. */
-  --panel-border: #3f3f46;
+  /* The forest-green panel sits close to the dark page (about 1.2:1), so it gets a visible decorative edge. */
+  --panel-border: #2c4a3d;
 }
 
 @theme inline {
@@ -125,12 +121,13 @@
   --color-neutral-bg: var(--neutral-bg);
   --color-neutral-fg: var(--neutral-fg);
 
-  --color-lift-1: var(--lift-1);
-  --color-lift-2: var(--lift-2);
-  --color-lift-3: var(--lift-3);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-spark: var(--spark);
   --color-panel-bg: var(--panel-bg);
   --color-panel-fg: var(--panel-fg);
   --color-panel-muted-fg: var(--panel-muted-fg);
+  --color-panel-spark: var(--panel-spark);
   --color-panel-surface: var(--panel-surface);
   --color-panel-border: var(--panel-border);
 
@@ -225,35 +222,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Gradient text for one highlighted phrase. Falls back to plain text in forced-colours mode. */
+/* One highlighted phrase, in plain --accent (no gradient text). Interim: Task 2 of the Eucalyptus
+   plan removes these three utilities with their users. */
 @utility text-lift {
-  background-image: linear-gradient(90deg, var(--lift-1), var(--lift-2) 55%, var(--lift-3));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  @media (forced-colors: active) {
-    background: none;
-    color: CanvasText;
-  }
+  color: var(--accent);
 }
 
 /* The same on the dark panel. */
 @utility text-lift-panel {
-  background-image: linear-gradient(90deg, var(--panel-lift-1), var(--panel-lift-2) 55%, var(--panel-lift-3));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  @media (forced-colors: active) {
-    background: none;
-    color: CanvasText;
-  }
+  color: var(--panel-spark);
 }
 
-/* A soft gradient glow: the primary call to action in the hero. */
+/* A soft glow: the primary call to action in the hero. */
 @utility glow-lift {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--lift-2) 35%, transparent),
-    0 10px 36px -10px color-mix(in srgb, var(--lift-2) 60%, transparent);
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--brand) 55%, transparent);
 }
 
 /*

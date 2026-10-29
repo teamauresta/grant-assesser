@@ -41,7 +41,7 @@ export function readAuroraColours(): AuroraColours {
   const read = (name: string) => hexToRgb(normalise(style.getPropertyValue(name)));
   return {
     bg: read('--bg'),
-    stops: ['--lift-1', '--lift-2', '--lift-3'].map(read),
+    stops: ['--brand', '--brand-2', '--spark'].map(read),
     alpha: AURORA_ALPHA[root.dataset.theme === 'dark' ? 'dark' : 'light'],
   };
 }

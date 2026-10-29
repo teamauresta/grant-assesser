@@ -8,7 +8,7 @@ const R = 26;
 const C = 2 * Math.PI * R;
 
 /**
- * A ring in the Liftoff gradient. The arc draws in from empty; the number counts up. Assistive tech
+ * A ring in the brand colour. The arc draws in from empty; the number counts up. Assistive tech
  * reads it as one image, "40% of goals done"; the counting number inside is hidden from it.
  */
 export function ProgressRing({ percent, size = 64, className }: { percent: number; size?: number; className?: string }) {
@@ -30,9 +30,9 @@ export function ProgressRing({ percent, size = 64, className }: { percent: numbe
       <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" className="absolute inset-0 -rotate-90">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" style={{ stopColor: 'var(--lift-1)' }} />
-            <stop offset="0.55" style={{ stopColor: 'var(--lift-2)' }} />
-            <stop offset="1" style={{ stopColor: 'var(--lift-3)' }} />
+            <stop offset="0" style={{ stopColor: 'var(--brand)' }} />
+            <stop offset="0.55" style={{ stopColor: 'var(--brand)' }} />
+            <stop offset="1" style={{ stopColor: 'var(--brand)' }} />
           </linearGradient>
         </defs>
         <circle cx="32" cy="32" r={R} fill="none" stroke="var(--border)" strokeWidth="6" />

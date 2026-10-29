@@ -11,10 +11,11 @@ export type Cheer = { message: string; action?: ToastAction; burst?: BurstKind }
 export type Origin = { x: number; y: number };
 
 /**
- * Confetti colours: the Liftoff stops of both themes. Hex values are fine here: canvas-confetti
- * needs literal colours and this is not component styling. Keep in step with app/globals.css.
+ * Confetti colours: the Eucalyptus brand colours of both themes (eucalyptus, sage, ochre, then the
+ * lighter night versions). Hex values are fine here: canvas-confetti needs literal colours and this
+ * is not component styling. Keep in step with app/globals.css.
  */
-export const LIFT_COLOURS = ['#0f766e', '#2563eb', '#7c3aed', '#2dd4bf', '#60a5fa', '#a78bfa'];
+export const BRAND_COLOURS = ['#1f5c4a', '#3f6e5a', '#a4531b', '#86c9a9', '#9fd3b8', '#e3a266'];
 
 const BURSTS: Record<BurstKind, Options[]> = {
   results: [{ particleCount: 90, spread: 70, startVelocity: 38 }],
@@ -56,7 +57,7 @@ export async function burst(kind: BurstKind, origin?: Origin): Promise<void> {
     for (const options of BURSTS[kind]) {
       // `...options` comes last so the award bursts keep their own side origins.
       void confetti({
-        colors: LIFT_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
+        colors: BRAND_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
         ...(origin && kind !== 'awarded' ? { origin } : { origin: { y: 0.6 } }),
         ...options,
       });

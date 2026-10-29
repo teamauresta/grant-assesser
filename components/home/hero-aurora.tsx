@@ -32,7 +32,7 @@ function AuroraFallback() {
   return (
     <div
       data-aurora-fallback
-      className="absolute inset-0 bg-[radial-gradient(70%_80%_at_80%_45%,color-mix(in_srgb,var(--lift-2)_14%,transparent),color-mix(in_srgb,var(--lift-3)_10%,transparent)_40%,transparent_75%)] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_70%,transparent)]"
+      className="absolute inset-0 bg-[radial-gradient(70%_80%_at_80%_45%,color-mix(in_srgb,var(--brand)_14%,transparent),color-mix(in_srgb,var(--brand-2)_10%,transparent)_40%,transparent_75%)] [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_70%,transparent)]"
     />
   );
 }

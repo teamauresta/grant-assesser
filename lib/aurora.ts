@@ -4,8 +4,8 @@
  * lib/aurora-shader.ts, which only the lazily loaded canvas imports.
  */
 
-/** Strongest the field may paint over --bg, per theme. tests/lib/tokens.test.ts keeps text AA on it. */
-export const AURORA_ALPHA = { light: 0.3, dark: 0.24 } as const;
+/** Strongest a contour line may paint over --bg, per theme. tests/lib/tokens.test.ts keeps text AA on it. */
+export const AURORA_ALPHA = { light: 0.25, dark: 0.22 } as const;
 
 export const AURORA_KEY = 'gn-aurora';
 

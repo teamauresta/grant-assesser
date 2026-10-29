@@ -1,25 +1,25 @@
 import type { Persona, Profile } from '@/lib/schema';
 import type { Track } from '@/lib/assess';
 
-/** A Liftoff stop that colours a persona's card. Every stop meets AA on the page background. */
-export type PersonaTone = 'var(--lift-1)' | 'var(--lift-2)' | 'var(--lift-3)';
+/** A brand colour that colours a persona's card. Each meets AA on the page background. */
+export type PersonaTone = 'var(--brand)' | 'var(--brand-2)' | 'var(--spark)';
 
 /** Persona copy, defaults, results intro and starter goals. Icons are mapped in the component. */
 export const PERSONAS_INFO: Record<Persona, { label: string; description: string; tone: PersonaTone }> = {
   bootstrapped: {
     label: 'Bootstrapped',
     description: 'Self-funded or customer-funded. Start with low-cost wins and matched vouchers.',
-    tone: 'var(--lift-1)',
+    tone: 'var(--brand)',
   },
   'pre-raise': {
     label: 'Pre-raise',
     description: 'Getting ready to raise. Build eligibility and evidence before the round.',
-    tone: 'var(--lift-2)',
+    tone: 'var(--brand-2)',
   },
   'vc-backed': {
     label: 'VC-backed',
     description: 'Institutionally funded. Unlock VC-gated credits and larger grants.',
-    tone: 'var(--lift-3)',
+    tone: 'var(--spark)',
   },
 };
 

@@ -27,9 +27,9 @@ describe('readAuroraColours', () => {
   it('normalises any CSS colour through a 2D context, so a minifier writing a name still works', () => {
     const root = document.documentElement;
     root.style.setProperty('--bg', 'white');
-    root.style.setProperty('--lift-1', 'teal');
-    root.style.setProperty('--lift-2', '#2563eb');
-    root.style.setProperty('--lift-3', '#7c3aed');
+    root.style.setProperty('--brand', 'teal');
+    root.style.setProperty('--brand-2', '#2563eb');
+    root.style.setProperty('--spark', '#7c3aed');
     root.dataset.theme = 'dark';
     const names: Record<string, string> = { white: '#ffffff', teal: '#008080' };
     // jsdom has no canvas: a stand-in that behaves like the browser's fillStyle (normalised, and an
