@@ -4,8 +4,8 @@ import { SORT_END } from '@/lib/showcase';
 import { frames, populatedWorkspace, scrollSort, seedStorage } from './helpers';
 
 /**
- * The Showcase home page in a real browser: the aurora's pause button, the sorting story, the How
- * it works previews and the persona cards' borders.
+ * The Showcase home page in a real browser: the contour lines' pause button, the sorting story, the
+ * How it works previews, the persona cards' borders and the absence of gradient text.
  *
  * Covered elsewhere, so not repeated here: the story's maths (tests/lib/showcase.test.ts), the
  * stage and its load failure (tests/components/sort-story.test.tsx), the previews' timings

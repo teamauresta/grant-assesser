@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { populatedWorkspace, seedStorage } from './helpers';
 
 /**
- * Liftoff in a real browser: the hero and celebrations.
+ * The hero numbers, type links and celebrations in a real browser (from the Liftoff release; the file
+ * keeps its name).
  *
  * Covered elsewhere, so not repeated here:
  * - content staying visible (opacity 1) when motion's features fail to load: motion.spec.ts;

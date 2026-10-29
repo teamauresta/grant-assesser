@@ -28,7 +28,7 @@ Brand colours replace the `--lift-*` gradient stops:
 |---|---|---|---|
 | `--brand` | `#1f5c4a` eucalyptus | `#86c9a9` | logo tile, progress ring, contour lines, persona tone |
 | `--brand-2` | `#3f6e5a` sage (5.5) | `#9fd3b8` (11.2) | persona tone, icon tint |
-| `--spark` | `#a4531b` ochre (5.2) | `#e3a266` (8.6) | small touches only: the Verified tick, an icon tint, a persona tone |
+| `--spark` | `#a4531b` ochre (5.2) | `#e3a266` (8.6) | small touches only: the Private icon tint and the VC-backed persona tone (the panel numbers use `--panel-spark`). The Verified badge stays `--primary` |
 
 The logo uses the light `--brand` in both themes (`--logo`), with a sand compass (`--on-logo: #faf8f3`), so the mark looks the same everywhere.
 
@@ -70,3 +70,12 @@ The aurora's engine stays; its drawing changes.
 - e2e: `showcase.spec.ts` as before, plus a check that no element on the home page uses gradient text (`background-clip: text`); axe on every page in light and dark.
 - Review screenshots (`SCREENS=1`), viewed before the work is called done.
 - `pnpm size` passes.
+
+## 6. What changed during the build
+
+- **Focus ring on the panel.** The light `--accent` is only 2.07:1 on `--panel-bg`, too faint for a focus ring, so links on the panel use `panelFocusRing` (`components/ui/focus-ring.ts`), an outline in `--panel-fg` (14.4:1). The token test covers it.
+- **Dark contour strength 0.22**, not 0.25: pale lines on a dark page read stronger than dark lines on sand. Light stays 0.25.
+- **Shader constants tuned from screenshots:** fbm falloff 0.42, field scale 1.15, warp 0.9, 18 contour levels, pointer hill `0.07 * exp(-d² * 7)`. Lines are one to two canvas pixels wide whatever the slope (`fwidth`), which needs `OES_standard_derivatives`; without it the hero shows the fallback.
+- **Index contour** (every fifth line) is chosen by the distance to the nearest multiple of five, not `mod()`: on some GPUs `mod(n, 5.0)` returns 5.0 for a multiple of five, which would drop that index line.
+- **Canvas scale.** `canvasScale(dpr)` gives one canvas pixel per device pixel up to dpr 1, then the ratio (capped at 1.5) times 0.75, at most 1.125. The aurora's soft colour field could be drawn at a lower resolution; thin lines blur there.
+- **Fallback.** Without WebGL, the rings are solid `--brand` 2px ramps on a layer at `opacity: 0.18`, not `color-mix()`: Tailwind's build fallback for `color-mix()` paints the colour at 100%. A test keeps the layer's opacity at or below the lower `AURORA_ALPHA`.

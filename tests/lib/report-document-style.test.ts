@@ -10,7 +10,7 @@ describe('PDF report rules', () => {
   it('has no accent colour in its palette: every colour is a neutral grey', () => {
     expect(REPORT_PALETTE).not.toHaveProperty('accent');
     // Tailwind's zinc greys lean a touch blue (channels up to 9 apart); any real colour, such as the
-    // teal accent #0f766e, is far beyond that.
+    // eucalyptus accent #1f5c4a, is far beyond that.
     for (const [name, hex] of Object.entries(REPORT_PALETTE)) {
       expect(hex, name).toMatch(/^#[0-9a-f]{6}$/i);
       const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));

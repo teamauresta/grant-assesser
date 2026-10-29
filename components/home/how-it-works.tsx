@@ -12,8 +12,8 @@ const STEPS = [
 ] as const;
 
 /**
- * Deep forest green in both themes: the page's one dramatic panel. Each step has a small preview of the product,
- * aligned along the bottom of the row on wide screens.
+ * Deep forest green in both themes: the page's one dramatic panel. Each step has a small preview of
+ * the product, aligned along the bottom of the row on wide screens.
  */
 export function HowItWorks() {
   return (

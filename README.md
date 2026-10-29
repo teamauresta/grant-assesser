@@ -9,7 +9,7 @@ A free tool that helps Australian AI startups find the grants, tax incentives, c
 - **Assessment.** A short wizard checks your answers against each program's eligibility rules. Each program lands in one of four groups: Act now, Prepare, Watch or Not a fit. Each group comes with reasons and fixes, and you get an estimate of the funding you could reach.
 - **Plan and calendar.** Track applications on a pipeline board, work through goals generated from each program, and add deadlines to Google Calendar or Outlook, or download them as `.ics` files.
 - **PDF report.** Build a report of your results and plan, preview it and download it as a PDF.
-- **Motion and celebrations.** On the home page, a slow aurora behind the hero (with a pause button, remembered in your browser), every program sorting itself into the four groups for an example founder as you scroll (or once, as it comes into view on phones), and small previews of each step in How it works. Elsewhere, gentle transitions, a plan progress ring and a short burst of confetti when you finish the assessment, submit or win an application, or finish an application's goals. All motion stops when your device is set to reduce motion, and confetti can be turned off in **Settings**.
+- **Motion and celebrations.** On the home page, slowly drifting contour lines behind the hero, like a survey map, that bend around your cursor (with a pause button, remembered in your browser), every program sorting itself into the four groups for an example founder as you scroll (or once, as it comes into view on phones), and small previews of each step in How it works. Elsewhere, gentle transitions, a plan progress ring and a short burst of confetti when you finish the assessment, submit or win an application, or finish an application's goals. All motion stops when your device is set to reduce motion, and confetti can be turned off in **Settings**.
 
 Program status (open, closing soon, closed) is worked out in your browser from today's date, so it never goes stale between deploys.
 
@@ -40,7 +40,7 @@ Then open http://localhost:3000/grant-assesser/ (the app is served under the `/g
 | `pnpm lint` | ESLint |
 | `pnpm build` | Static export into `out/` |
 | `pnpm serve` | Serves `out/` the way GitHub Pages does, at http://localhost:4173/grant-assesser/ |
-| `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget (279,175 of 297,083 bytes on 28 Oct 2026), checks the aurora shader stays out of the first load, and prints the figure for programs, plan, report and results. Run after `pnpm build` |
+| `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget (279,493 of 297,083 bytes on 29 Oct 2026), checks the contour shader stays out of the first load, and prints the figure for programs, plan, report and results. Run after `pnpm build` |
 | `pnpm freshness` | Prints a Markdown report of stale program data, closes within 30 days, past closes that need a decision, and broken or blocked source links |
 
 Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright install chromium`. `SCREENS=1 pnpm e2e tests/e2e/screens.spec.ts` saves review screenshots of the home (light and dark, plus the sorting story part-way through on desktop), plan and results pages to `test-results/screens/`.
@@ -100,7 +100,7 @@ The original single-file app (`index.html`, `base.jsx` and its `404.html`) is in
 
 ## Tech stack
 
-Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Lucide icons, `@react-pdf/renderer`, `motion`, WebGL (the hero aurora, no library), `canvas-confetti`, Vitest and Playwright with axe.
+Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Lucide icons, `@react-pdf/renderer`, `motion`, WebGL (the hero contour lines, no library), `canvas-confetti`, Vitest and Playwright with axe.
 
 ## License
 

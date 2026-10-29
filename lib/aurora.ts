@@ -1,7 +1,7 @@
 /**
- * The home hero's aurora: its strength and the remembered pause. Small and in the home page's first
- * download (HeroAurora needs the pause before the shader loads). The shader itself lives in
- * lib/aurora-shader.ts, which only the lazily loaded canvas imports.
+ * The home hero's contour lines (still "aurora" in code): their strength and the remembered pause.
+ * Small and in the home page's first download (HeroAurora needs the pause before the shader loads).
+ * The shader itself lives in lib/aurora-shader.ts, which only the lazily loaded canvas imports.
  */
 
 /** Strongest a contour line may paint over --bg, per theme. tests/lib/tokens.test.ts keeps text AA on it. */
