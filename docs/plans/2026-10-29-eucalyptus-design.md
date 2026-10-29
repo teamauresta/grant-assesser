@@ -45,7 +45,7 @@ Geist stays the typeface.
 - `text-lift`, `text-lift-panel` and `glow-lift` are removed. The hero's primary button gets a quiet shadow in `--brand` instead of the blue glow.
 - The progress ring and the logo are solid `--brand`; `app/icon.svg` matches.
 - Persona tones: `--brand`, `--brand-2`, `--spark`. The Verified / Honest / Private icon tints use the same three.
-- Confetti colours: eucalyptus, sage, ochre and sand in both themes.
+- Confetti colours: `--brand`, `--brand-2` and `--spark` of both themes (eucalyptus, sage, ochre and their lighter night versions).
 
 ## 3. Hero: living contour lines
 

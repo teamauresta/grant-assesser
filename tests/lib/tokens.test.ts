@@ -29,7 +29,8 @@ function spotMix(selector: string): number | undefined {
 const spots = { light: spotMix(':root')!, dark: spotMix('[data-theme="dark"]') ?? spotMix(':root')! };
 
 describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t) => {
-  it.each(['--fg', '--muted-fg', '--danger', '--accent'])('%s meets AA on --surface and --neutral-bg', (name) => {
+  it.each(['--fg', '--muted-fg', '--danger', '--accent'])('%s meets AA on --bg, --surface and --neutral-bg', (name) => {
+    expect(contrast(t[name], t['--bg'])).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t[name], t['--surface'])).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t[name], t['--neutral-bg'])).toBeGreaterThanOrEqual(4.5);
   });
@@ -38,6 +39,10 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   });
   it('--on-primary meets AA on --primary', () => {
     expect(contrast(t['--on-primary'], t['--primary'])).toBeGreaterThanOrEqual(4.5);
+  });
+  // The calendar's today cell is --bg text on --accent.
+  it('--bg meets AA on --accent', () => {
+    expect(contrast(t['--bg'], t['--accent'])).toBeGreaterThanOrEqual(4.5);
   });
   // Form controls and outline pills are outlined in --border-strong (WCAG 1.4.11, 3:1).
   it('--border-strong meets 3:1 on --bg and --surface', () => {
@@ -53,6 +58,11 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it.each(brand)('%s meets AA on --bg and --surface', (name) => {
     expect(contrast(t[name], t['--bg'])).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t[name], t['--surface'])).toBeGreaterThanOrEqual(4.5);
+  });
+  // A persona card's icon is its tone on a 14% tint of the same tone over --surface: a non-text
+  // graphic, so 3:1.
+  it.each(brand)('%s stays visible (3:1) on its own persona badge tint', (name) => {
+    expect(contrast(t[name], mixHex(t['--surface'], t[name], 0.14))).toBeGreaterThanOrEqual(3);
   });
   // The hero paints --brand contour lines over --bg, at most AURORA_ALPHA strong. Text that lands on
   // the strongest line must stay AA; the headline phrase is --accent.
