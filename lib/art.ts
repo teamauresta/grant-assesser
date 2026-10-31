@@ -4,8 +4,10 @@
  * for the hero, its dark-theme partner. The character sheet (platypus-reference.png) is a generation
  * aid and is not listed.
  *
- * Plain TypeScript with no imports, so scripts/process-art.mjs can import it under Node's type
- * stripping. Which processed files exist is in lib/art-ready.json, written by `pnpm art`.
+ * scripts/process-art.mjs imports this file (`pnpm art` runs it with tsx). Keep it import-free and to
+ * erasable TypeScript syntax only (annotations, `type`, `as const`; no enums, namespaces or parameter
+ * properties), so the script also runs under Node's own type stripping. Which processed files exist
+ * is in lib/art-ready.json, written by `pnpm art`.
  */
 
 export type ArtName =

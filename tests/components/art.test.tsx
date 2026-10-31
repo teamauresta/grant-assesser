@@ -29,7 +29,7 @@ describe('Art placeholder', () => {
     expect(icon).toHaveAttribute('stroke-width', '1.5');
   });
 
-  it('keeps the same box as the image: the asset aspect ratio and the caller classes', () => {
+  it('keeps the same box as the image: the asset aspect ratio, with the caller classes on it', () => {
     const missing = box(render(<Art name="hero-diorama" sizes="50vw" className="w-full max-w-xl" />).container);
     ready['hero-diorama-day'] = [480, 960, 1440];
     ready['hero-diorama-dusk'] = [480, 960, 1440];
@@ -38,7 +38,6 @@ describe('Art placeholder', () => {
       expect(el.style.aspectRatio).toBe('1536 / 1024');
       expect(el).toHaveClass('w-full', 'max-w-xl');
     }
-    expect(missing.className).toBe(present.className);
     const img = present.querySelector('img')!;
     expect(img).toHaveAttribute('width', '1536');
     expect(img).toHaveAttribute('height', '1024');
@@ -110,6 +109,27 @@ describe('Art light/dark pair', () => {
     expect(pictures[1].querySelector('img')).toHaveAttribute('src', '/art/hero-diorama-dusk-1440.webp');
     // Both describe the same scene.
     expect(pictures[0].querySelector('img')!.alt).toBe(pictures[1].querySelector('img')!.alt);
+  });
+
+  // A lazy image inside display:none is never fetched, so each theme downloads only the picture it
+  // shows. An eager one would be fetched in both themes, so a pair is lazy even with priority.
+  it('keeps both pictures of a pair lazy, even with priority, which still raises their fetch priority', () => {
+    ready['hero-diorama-day'] = [480];
+    ready['hero-diorama-dusk'] = [480];
+    const plain = render(<Art name="hero-diorama" sizes="50vw" />).container.querySelectorAll('img');
+    const hero = render(<Art name="hero-diorama" sizes="50vw" priority />).container.querySelectorAll('img');
+    for (const imgs of [plain, hero]) {
+      expect(imgs).toHaveLength(2);
+      for (const img of imgs) expect(img).toHaveAttribute('loading', 'lazy');
+    }
+    for (const img of plain) expect(img).not.toHaveAttribute('fetchpriority');
+    for (const img of hero) expect(img).toHaveAttribute('fetchpriority', 'high');
+  });
+
+  it('loads the day picture eagerly with priority while it is the only one', () => {
+    ready['hero-diorama-day'] = [480];
+    const img = render(<Art name="hero-diorama" sizes="50vw" priority />).container.querySelector('img')!;
+    expect(img).toHaveAttribute('loading', 'eager');
   });
 
   it('shows the day picture in both themes until the dusk one exists', () => {

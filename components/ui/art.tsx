@@ -9,9 +9,15 @@ export type ArtProps = {
   sizes: string;
   /** Overrides the manifest's alt text. An empty string makes the image decorative. */
   alt?: string;
-  /** Load at once, for the hero: eager, with high fetch priority. Otherwise lazy. */
+  /**
+   * For the hero: high fetch priority, and eager loading unless the asset is a light/dark pair (a
+   * pair stays lazy, so each theme fetches only the picture it shows). Otherwise lazy.
+   */
   priority?: boolean;
-  /** Classes for the box, usually a width (`w-40`); its height follows the asset's aspect ratio. */
+  /**
+   * Classes for the box. Give it a width (`w-40`, `w-full`) or put it in a parent that sizes it: the
+   * box sets only its aspect ratio, so in a flex column with `items-center` it would shrink to nothing.
+   */
   className?: string;
 };
 
@@ -40,6 +46,8 @@ export function Art({ name, sizes, alt, priority = false, className }: ArtProps)
   const base = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/art/`;
   const lightWidths = readyWidths(asset.file);
   const darkWidths = asset.dark ? readyWidths(asset.dark) : [];
+  // A lazy image in display:none is never fetched, so a pair stays lazy: an eager one would make
+  // every visitor download both the day and the dusk picture.
   const pair = asset.dark !== undefined && darkWidths.length > 0;
 
   const srcSet = (file: string, widths: number[], format: ArtFormat) =>
@@ -55,7 +63,7 @@ export function Art({ name, sizes, alt, priority = false, className }: ArtProps)
         alt={text}
         width={asset.width}
         height={asset.height}
-        loading={priority ? 'eager' : 'lazy'}
+        loading={priority && !pair ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}
         decoding="async"
         className="h-full w-full object-contain"

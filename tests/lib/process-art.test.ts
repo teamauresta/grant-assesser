@@ -1,10 +1,10 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ART, ART_WIDTHS, artFileName, artFiles, artWidths, type ArtName } from '@/lib/art';
-import { HERO_AVIF_LIMIT, heroOverLimit, missing, outputsFor, processArt, readiness, unexpected } from '@/scripts/process-art.mjs';
+import { HERO_AVIF_LIMIT, heroOverLimit, leftovers, missing, outputsFor, processArt, readiness, shapeMatches, unexpected } from '@/scripts/process-art.mjs';
 import committedReady from '@/lib/art-ready.json';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -110,6 +110,32 @@ describe('readiness', () => {
   });
 });
 
+describe('shapeMatches', () => {
+  it('accepts an original within 1% of the asset aspect ratio, and nothing further off', () => {
+    const hero = ART['hero-diorama'];
+    expect(shapeMatches(1536, 1024, hero)).toBe(true);
+    expect(shapeMatches(3072, 2048, hero)).toBe(true);
+    expect(shapeMatches(1536, 1030, hero)).toBe(true); // 0.6% off
+    expect(shapeMatches(1024, 1024, hero)).toBe(false);
+    expect(shapeMatches(1024, 1024, ART['platypus-wave'])).toBe(true);
+    expect(shapeMatches(1024, 1040, ART['platypus-wave'])).toBe(false); // 1.5% off
+    expect(shapeMatches(1024, 1536, ART['platypus-wave'])).toBe(false);
+  });
+});
+
+describe('leftovers', () => {
+  it('lists public/art files no manifest file produces, ignoring dotfiles', () => {
+    const files = ['platypus-search-480.avif', 'platypus-search-480.webp', 'hero-diorama-dusk-1440.avif',
+      'old-mascot-480.avif', 'platypus-search-1200.webp', 'platypus-search.png', '.DS_Store'];
+    expect(leftovers(ART, files)).toEqual(['old-mascot-480.avif', 'platypus-search-1200.webp', 'platypus-search.png']);
+  });
+
+  it('finds none among the committed files in public/art', () => {
+    const dir = join(ROOT, 'public', 'art');
+    expect(leftovers(ART, existsSync(dir) ? readdirSync(dir) : [])).toEqual([]);
+  });
+});
+
 describe('heroOverLimit', () => {
   it('flags a hero 1440 AVIF over 120KB, and nothing else', () => {
     expect(HERO_AVIF_LIMIT).toBe(120 * 1024);
@@ -147,6 +173,9 @@ describe('processArt', () => {
     const out = temp();
     const report = await processArt({ originals: join(temp(), 'absent'), out, manifest: ART });
     expect(report.written).toEqual([]);
+    expect(report.failed).toEqual([]);
+    expect(report.wrongShape).toEqual([]);
+    expect(report.leftovers).toEqual([]);
     expect(report.missing).toHaveLength(12);
     expect(report.ready).toEqual(readiness(ART, []));
     expect(readdirSync(out)).toEqual([]);
@@ -170,5 +199,61 @@ describe('processArt', () => {
       expect(meta.width).toBe(480);
       expect(meta.hasAlpha).toBe(true);
     }
+  });
+
+  const png = (path: string, width: number, height: number) =>
+    sharp({ create: { width, height, channels: 4, background: { r: 64, g: 128, b: 96, alpha: 0.5 } } }).png().toFile(path);
+
+  it('skips an original of the wrong shape, keeping its earlier outputs', async () => {
+    const originals = temp();
+    const out = temp();
+    writeFileSync(join(out, 'platypus-search-480.avif'), 'old');
+    writeFileSync(join(out, 'platypus-search-480.webp'), 'old');
+    await png(join(originals, 'platypus-search.png'), 900, 600);
+    const report = await processArt({ originals, out, manifest: ART });
+    expect(report.wrongShape).toEqual(['platypus-search.png']);
+    expect(report.written).toEqual([]);
+    expect(readFileSync(join(out, 'platypus-search-480.avif'), 'utf8')).toBe('old');
+    expect(report.ready['platypus-search']).toEqual([480]);
+  });
+
+  it('skips an original narrower than the smallest width, keeping its earlier outputs', async () => {
+    const originals = temp();
+    const out = temp();
+    writeFileSync(join(out, 'platypus-search-480.avif'), 'old');
+    writeFileSync(join(out, 'platypus-search-480.webp'), 'old');
+    await png(join(originals, 'platypus-search.png'), 300, 300);
+    const report = await processArt({ originals, out, manifest: ART });
+    expect(report.tooSmall).toEqual(['platypus-search.png']);
+    expect(readdirSync(out).sort()).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp']);
+    expect(report.ready['platypus-search']).toEqual([480]);
+  });
+
+  it('reports an unreadable original and carries on with the rest, keeping its earlier outputs', async () => {
+    const originals = temp();
+    const out = temp();
+    writeFileSync(join(out, 'platypus-wave-480.avif'), 'old');
+    writeFileSync(join(out, 'platypus-wave-480.webp'), 'old');
+    writeFileSync(join(originals, 'platypus-wave.png'), 'not a png');
+    await png(join(originals, 'platypus-search.png'), 600, 600);
+    const report = await processArt({ originals, out, manifest: ART });
+    expect(report.failed).toHaveLength(1);
+    expect(report.failed[0]).toMatch(/^platypus-wave\.png: \S/);
+    expect(report.written.map((w: { name: string }) => w.name)).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp']);
+    expect(report.ready['platypus-wave']).toEqual([480]);
+    expect(report.ready['platypus-search']).toEqual([480]);
+    // No temporary files are left behind.
+    expect(readdirSync(out).sort()).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp', 'platypus-wave-480.avif', 'platypus-wave-480.webp']);
+  });
+
+  it('replaces every earlier output of a reprocessed file, so no stale width stays', async () => {
+    const originals = temp();
+    const out = temp();
+    mkdirSync(out, { recursive: true });
+    for (const name of ['platypus-search-960.avif', 'platypus-search-960.webp']) writeFileSync(join(out, name), 'old');
+    await png(join(originals, 'platypus-search.png'), 600, 600);
+    const report = await processArt({ originals, out, manifest: ART });
+    expect(readdirSync(out).sort()).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp']);
+    expect(report.ready['platypus-search']).toEqual([480]);
   });
 });
