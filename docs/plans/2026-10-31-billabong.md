@@ -228,6 +228,8 @@ export function Window({ title, as: Heading = 'h2', actions, className, bodyClas
 
 Tones set `--hl` (`[--hl:var(--hl-sage)]`, …). Forced-colors: `@media (forced-colors: active) { mark { background: Mark; color: MarkText; } }`.
 
+Task 1 review notes: write the highlight as this custom rule, never a Tailwind `/35` opacity modifier (its `@supports` fallback paints the tone at full strength, and `--fg` on a full-strength highlight is under 2:1 in dark); check the built CSS for a non-mixed fallback. Add a tokens test that reads the `35%` from the `highlight` rule in `globals.css` and checks it equals `HIGHLIGHT_ALPHA * 100`, and fix `lib/highlight.ts`'s comment to point at the real rule.
+
 **Step 3: Tabs.** The active tab gets a 3px `--accent` underline and `text-fg font-semibold`; inactive `text-muted-fg hover:text-fg`; keep roles, keyboard and the existing tests (assertions unchanged).
 
 **Step 4: Pills.** `Badge` and `StatusPill`: `rounded-full`, 1px outline (`border-border-strong` for neutral/outline tones, transparent for filled status tones), `text-xs font-medium`, icons 16px. Status colours unchanged. Existing assertions stay.
@@ -343,9 +345,10 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 3. Persona cards: cards with spotlight, `platypus-wave` art on the first card (or above the row), tones kept.
 4. Sorting story: chips as small `bg-surface` cards with outline; all motion rules unchanged (`showcase.spec` sorting tests must pass unchanged).
 5. How it works: three `Window`s ("1. Answer six questions", "2. See what fits", "3. Plan the applications": a real sequence, so numbering is allowed) on the page background, each with its `step-*` art and its existing preview animation; remove the forest panel and the `--panel-*` tokens and their tests if nothing else uses them (feature replaced; cite).
-6. Celebrations: `BRAND_COLOURS` in `lib/celebrate.ts` become amber, sage and sky (light and dark); update the confetti test.
-7. `pnpm size`: the home page must stay within budget (it should drop: the contour canvas chunk is gone from the lazy set, and nothing new loads up front).
-8. Gate (all showcase, liftoff, motion specs); commit `feat(home): Billabong hero, personas and How it works; contour hero removed`.
+6. The hero's `glow-brand` utility (a eucalyptus glow) sits under an amber button now: remove it, or retune it to a soft amber with its comment updated (Task 1 review).
+7. Celebrations: `BRAND_COLOURS` in `lib/celebrate.ts` become amber, sage and sky (light and dark); update the confetti test.
+8. `pnpm size`: the home page must stay within budget (it should drop: the contour canvas chunk is gone from the lazy set, and nothing new loads up front).
+9. Gate (all showcase, liftoff, motion specs); commit `feat(home): Billabong hero, personas and How it works; contour hero removed`.
 
 ---
 
