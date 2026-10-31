@@ -12,8 +12,9 @@ import { MotionProvider } from '@/components/motion/motion-provider';
 import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
 
-// Self-hosted at build time by next/font: the export makes no request to Google at runtime.
-const rubik = Rubik({ subsets: ['latin'], weight: ['400', '500', '700'], display: 'swap', variable: '--font-rubik' });
+// Self-hosted at build time by next/font: the export makes no request to Google at runtime. No
+// weight list: Rubik is a variable font (300 to 900 in one file per subset), so every weight is real.
+const rubik = Rubik({ subsets: ['latin'], display: 'swap', variable: '--font-rubik' });
 
 export const metadata: Metadata = {
   title: { default: 'Grant Navigator', template: '%s · Grant Navigator' },

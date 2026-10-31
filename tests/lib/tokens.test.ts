@@ -150,17 +150,17 @@ it('the status tokens are unchanged', () => {
 
 /** Every file under `dirs`, recursively, as paths relative to the repo root. */
 function walk(dirs: string[]): string[] {
-  return dirs.flatMap((dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    const path = join(dir, e.name);
-    return e.isDirectory() ? walk([path]) : [path];
-  }));
+  return dirs.flatMap((dir) => readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile()).map((e) => join(e.parentPath, e.name)));
 }
 
 // Billabong uses one family, Rubik, with tabular digits for numbers (design doc section 3). The match
-// is on the raw text, so a comment that names monospace counts too.
-it('no monospace in app/ or components/', () => {
-  const files = walk(['app', 'components']).filter((f) => /\.(m?[jt]sx?|css)$/.test(f));
+// is on the raw text, so a comment that names monospace counts too. The one allowed line is the
+// @theme entry that unsets --font-mono, which removes the font-mono utility.
+it('no monospace in app/, components/ or lib/', () => {
+  const files = walk(['app', 'components', 'lib']).filter((f) => /\.(m?[jt]sx?|css)$/.test(f));
   const hits = files.flatMap((f) => readFileSync(f, 'utf8').split('\n').map((line, i) => [f, i + 1, line] as const))
-    .filter(([, , line]) => /\bfont-mono\b|monospace/.test(line));
+    .filter(([, , line]) => /\bfont-mono\b|--font-mono|monospace/.test(line))
+    .filter(([f, , line]) => !(f === join('app', 'globals.css') && /^\s*--font-mono: initial;$/.test(line)));
   expect(hits.map(([f, n]) => `${f}:${n}`)).toEqual([]);
 });

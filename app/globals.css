@@ -40,7 +40,7 @@
   --primary-ledge: #b87512;
   --accent: #1f5c4a;
   --danger: #b91c1c;
-  /* The danger button's label (the old white --on-primary: dark text fails on this red). */
+  /* Label on --danger: white in light (dark text is 2.8:1 on this red), near-black in dark. */
   --on-danger: #ffffff;
   --scrim: rgb(9 9 11 / 0.5);
 
@@ -156,8 +156,10 @@
   --color-panel-surface: var(--panel-surface);
   --color-panel-border: var(--panel-border);
 
-  /* One family, Rubik (app/layout.tsx); numbers use the num utility's tabular digits. */
+  /* One family, Rubik (app/layout.tsx); numbers use the num utility's tabular digits. Unsetting
+     the mono family below removes its utility class (tests/lib/tokens.test.ts). */
   --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: initial;
 
   /* Type scale 12/14/16/20/24/32/48 = text-xs, text-sm, text-base, text-xl, text-2xl, text-3xl, text-5xl. */
   --text-3xl: 2rem;

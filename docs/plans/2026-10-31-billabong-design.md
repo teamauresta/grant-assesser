@@ -52,7 +52,7 @@ All pairs checked against WCAG; the numbers are contrast ratios.
 
 ## 3. Type
 
-- Rubik (Google Fonts, through `next/font/google`, self-hosted at build) for everything. Weights 400, 500, 700.
+- Rubik (Google Fonts, through `next/font/google`, self-hosted at build) for everything. The variable font, so every weight from 300 to 900 is real; the app uses 400 to 700.
 - Body text 16px with a 1.6 line height. Headings bold and tight. The hero headline is the only display size.
 - `num` (tabular digits) for dates, amounts, scores and counts. No monospace anywhere in the app.
 - The PDF report keeps its own embedded Geist.
@@ -148,3 +148,5 @@ Each task ends with typecheck, lint, unit tests, e2e with axe, build and size, a
 (Filled in as tasks land.)
 
 - **Task 1 (palette, Rubik, plain numbers).** The section 2 values went in unchanged: every existing contrast check passed with them (`--spark` on `--neutral-bg` is 4.39 in light, but no check pairs them and brand colours never sit on title bars). One token added: the danger button's label used `--on-primary`, which is now dark, and dark text on the light `--danger` is 2.8:1 (axe failed on `/settings/`). New `--on-danger`, `#ffffff` light (as before) and `#151515` dark (6.5 / 6.6), with its own check in `tests/lib/tokens.test.ts`. Rubik is self-hosted by `next/font` (latin preloaded, other subsets by `unicode-range`; no request to Google from `out/`); the `geist` package is removed and the PDF keeps its Geist TTFs. Home first-load JS 279,481 bytes gzipped (279,493 before).
+- **Task 1 follow-up.** Rubik loads as the variable font (no weight list): the first cut listed 400, 500 and 700, so `font-semibold` (600) drew at 700. Same files and the same 35KB latin preload; `@font-face` now declares `font-weight: 300 900`. `--font-mono` is unset in `@theme`, so the `font-mono` utility no longer exists, and the no-monospace test also scans `lib/` and matches `--font-mono`. `code`, `pre` and `kbd` fall back to Tailwind's system monospace stack; the app renders none.
+- **Builds need network access**: `next/font` downloads Rubik from Google at build time (the deployed site makes no request to Google).
