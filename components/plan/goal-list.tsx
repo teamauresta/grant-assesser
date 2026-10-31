@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/dates';
 import { appBaseUrl, goalFilename, hasDueDate, workspaceGoalEvent } from '@/lib/calendar/events';
 import { goalsByApplication, isOverdue, type GoalGroup } from '@/lib/plan/selectors';
 import { completesApplication } from '@/lib/plan/progress';
-import { cheer, originOf } from '@/lib/celebrate';
+import { cheer, goalsDoneCheer, originOf } from '@/lib/celebrate';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
@@ -133,7 +133,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
   const done = group.goals.filter((g) => g.status === 'done').length;
   const sectionRef = useRef<HTMLElement>(null);
   const celebrate = (appId: string) => {
-    void cheer(`${appId}:goals-done`, { message: `All goals done for ${group.name}. Not a box left unticked.`, burst: 'goals-done' }, originOf(sectionRef.current));
+    void cheer(`${appId}:goals-done`, goalsDoneCheer(group.name), originOf(sectionRef.current));
   };
   return (
     <section ref={sectionRef} id={headingId} aria-labelledby={`${headingId}-h`} className="flex scroll-mt-24 flex-col gap-3">

@@ -113,6 +113,11 @@ export function stageCheer(stage: Stage): Cheer | null {
   }
 }
 
+/** What finishing every goal of an application says: its name first, then one light line. */
+export function goalsDoneCheer(name: string): Cheer {
+  return { message: `All goals done for ${name}. Not a box left unticked.`, burst: 'goals-done' };
+}
+
 /** The Results cheer: confetti only when there is something to act on or prepare for. */
 export function resultsCelebration(actNow: number, prepare: number): Cheer {
   const message = resultsCheer(actNow, prepare);

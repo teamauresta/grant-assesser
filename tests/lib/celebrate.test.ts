@@ -8,7 +8,7 @@ const { confetti, create } = vi.hoisted(() => {
 });
 vi.mock('canvas-confetti', () => ({ default: Object.assign(vi.fn(), { create }) }));
 
-import { CONFETTI_COLOURS, cheer, consumeAssessmentFinish, consumeAssessmentFinished, markAssessmentFinished, resetCelebrations, resultsCelebration, resultsCheer, stageCheer } from '@/lib/celebrate';
+import { CONFETTI_COLOURS, cheer, consumeAssessmentFinish, consumeAssessmentFinished, goalsDoneCheer, markAssessmentFinished, resetCelebrations, resultsCelebration, resultsCheer, stageCheer } from '@/lib/celebrate';
 import { useToasts } from '@/lib/toast';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
@@ -123,14 +123,16 @@ describe('stageCheer', () => {
 
 describe('celebration voice', () => {
   // Billabong design doc, section 7: celebrations may be playful, with at most one exclamation mark
-  // and no em-dash asides; the declined message and the "nothing open" line stay plain.
+  // and no dash asides (en or em dash, Task 12 review); the declined message and the "nothing open"
+  // line stay plain.
   const messages = [
     stageCheer('submitted')!.message, stageCheer('awarded')!.message, stageCheer('declined')!.message,
     resultsCheer(1, 0), resultsCheer(3, 0), resultsCheer(0, 2), resultsCheer(0, 0),
+    goalsDoneCheer('Angel round').message,
   ];
-  it.each(messages)('%s: at most one exclamation mark, no em dash', (m) => {
+  it.each(messages)('%s: at most one exclamation mark, no en or em dash', (m) => {
     expect(m.split('!').length - 1).toBeLessThanOrEqual(1);
-    expect(m).not.toMatch(/\u2014/);
+    expect(m).not.toMatch(/[\u2013\u2014]/);
   });
   it('keeps the declined and "nothing open" lines free of exclamation marks', () => {
     expect(stageCheer('declined')!.message).not.toMatch(/!/);
@@ -138,6 +140,14 @@ describe('celebration voice', () => {
   });
   it('keeps the plain instruction in the award message', () => {
     expect(stageCheer('awarded')!.message).toMatch(/Add the reporting dates to your calendar\.$/);
+  });
+});
+
+describe('goalsDoneCheer', () => {
+  // The goals-done toast lives here with the other celebrations, so the voice checks cover it
+  // (Billabong design doc, section 7; Task 12 review). The application's name stays first.
+  it('names the application first and bursts', () => {
+    expect(goalsDoneCheer('Angel round')).toEqual({ message: 'All goals done for Angel round. Not a box left unticked.', burst: 'goals-done' });
   });
 });
 
