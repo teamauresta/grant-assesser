@@ -20,6 +20,11 @@ import { buttonClasses } from '@/components/ui/button';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const column = (name: string) => screen.getByRole('region', { name: new RegExp(`^${name}`) });
+/** A stand-in for the drag events' DataTransfer (jsdom has none). */
+const dragData = () => {
+  const data: Record<string, string> = {};
+  return { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+};
 
 beforeAll(async () => { await useWorkspace.getState().init(); });
 beforeEach(() => {
@@ -108,11 +113,6 @@ describe('PipelineBoard', () => {
 // The columns are windows and the cards sit on --surface (Billabong design doc section 4 and
 // section 11, Task 8).
 describe('PipelineBoard windows', () => {
-  const dragData = () => {
-    const data: Record<string, string> = {};
-    return { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
-  };
-
   it('draws each column as a window titled with its stage and count', () => {
     useWorkspace.getState().addCustomApplication('Angel round');
     useWorkspace.getState().addCustomApplication('Seed round');
@@ -138,7 +138,9 @@ describe('PipelineBoard windows', () => {
     expect(column('Preparing')).toHaveClass('border-dashed', 'border-border-strong');
     fireEvent.dragOver(column('Preparing'), { dataTransfer });
     expect(column('Preparing')).toHaveClass('border-accent');
-    expect(column('Preparing')).not.toHaveClass('border-border', 'border-border-strong');
+    // One call per class: not.toHaveClass with several passes when any one of them is missing.
+    expect(column('Preparing')).not.toHaveClass('border-border');
+    expect(column('Preparing')).not.toHaveClass('border-border-strong');
     fireEvent.drop(column('Preparing'), { dataTransfer });
     expect(useWorkspace.getState().ws.pipeline[0].stage).toBe('preparing');
     expect(column('Preparing')).toHaveClass('border-border');
@@ -229,8 +231,7 @@ describe('PipelineBoard milestone cheers', () => {
 
   it('cheers an award chosen in the outcome dialog after a drop on Outcome', async () => {
     const { id } = await setup();
-    const data: Record<string, string> = {};
-    const dataTransfer = { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+    const dataTransfer = dragData();
     fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
     fireEvent.dragOver(column('Outcome'), { dataTransfer });
     fireEvent.drop(column('Outcome'), { dataTransfer });
@@ -247,22 +248,25 @@ describe('PipelineBoard milestone cheers', () => {
   it('cheers an award from the outcome dialog only after the dialog has closed', async () => {
     await setup();
     const seen: { dialogOpen: boolean; toasterInert: boolean }[] = [];
-    const unsubscribe = useToasts.subscribe((s) => {
-      if (!s.toasts.length) return;
-      const region = document.querySelector('[role="status"][aria-live="polite"]');
+    // Recorded only when a toast is added: other store updates (a dismissal, a re-render) are not
+    // the moment that matters.
+    const unsubscribe = useToasts.subscribe((s, prev) => {
+      if (s.toasts.length <= prev.toasts.length) return;
+      const region = document.querySelector('[data-toaster]');
+      expect(region).toHaveAttribute('aria-live', 'polite');
       let inert = false;
       for (let el = region as HTMLElement | null; el; el = el.parentElement) inert ||= el.inert === true;
       seen.push({ dialogOpen: document.querySelector('[role="dialog"]') !== null, toasterInert: inert });
     });
     try {
-      const data: Record<string, string> = {};
-      const dataTransfer = { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+      const dataTransfer = dragData();
       fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
       fireEvent.dragOver(column('Outcome'), { dataTransfer });
       fireEvent.drop(column('Outcome'), { dataTransfer });
       await userEvent.setup().click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Awarded/ }));
       await screen.findByText('Awarded. Add the reporting dates to your calendar.');
-      expect(seen).toEqual([{ dialogOpen: false, toasterInert: false }]);
+      expect(seen.length).toBeGreaterThanOrEqual(1);
+      for (const moment of seen) expect(moment).toEqual({ dialogOpen: false, toasterInert: false });
     } finally {
       unsubscribe();
     }

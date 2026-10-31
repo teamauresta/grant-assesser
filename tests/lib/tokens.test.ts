@@ -265,3 +265,26 @@ it('the window shadow is a token in both themes, used by the shadow-window utili
   expect(block('[data-theme="dark"]')).toMatch(/--window-shadow:\s*[^;]+;/);
   expect(utility('shadow-window')).toMatch(/box-shadow:\s*var\(--window-shadow\);/);
 });
+
+// Rows and bars inside a rounded-lg frame round to --radius-inner, the frame's radius less its 1px
+// border, one value instead of a literal 7px in each component (design doc section 11, Task 9).
+it('--radius-inner is the frame radius less its border, and no component hard-codes it', () => {
+  expect(block('@theme inline')).toMatch(/--radius-inner:\s*calc\(var\(--radius-lg\) - 1px\);/);
+  const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : /\.tsx?$/.test(e.name) ? [join(dir, e.name)] : []));
+  const hits = ['app', 'components'].flatMap(files).filter((f) => /rounded-[a-z]*-?\[7px\]/.test(readFileSync(f, 'utf8')));
+  expect(hits).toEqual([]);
+});
+
+// The menu popover keeps the window's drop but not its 1px --border line, which under the popover's
+// own bottom border drew a 2px edge (design doc section 11, Task 9).
+it('the popover shadow is a token in both themes, the window drop without its line', () => {
+  for (const sel of [':root', '[data-theme="dark"]']) {
+    const value = block(sel).match(/--popover-shadow:\s*([^;]+);/)?.[1];
+    expect(value).toBeDefined();
+    expect(value).not.toMatch(/var\(--border\)/);
+    // The same drop as the window's, its second shadow.
+    expect(block(sel).match(/--window-shadow:\s*([^;]+);/)?.[1]).toContain(value);
+  }
+  expect(utility('shadow-popover')).toMatch(/box-shadow:\s*var\(--popover-shadow\);/);
+});

@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/field';
 import { focusRing } from '@/components/ui/focus-ring';
+import { LIST_FRAME } from '@/components/ui/list';
 import { Menu } from '@/components/ui/menu';
 import { GoalEditor } from './goal-editor';
 
@@ -149,7 +150,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
         )}
       </div>
       {group.goals.length ? (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+        <ul className={LIST_FRAME}>
           {group.goals.map((g) => <GoalRow key={g.id} goal={g} now={now} onEdit={() => onEdit(g)} onRemove={() => onRemove(g)} onCompletesApplication={celebrate} />)}
         </ul>
       ) : (
@@ -189,7 +190,7 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
       id={`goal-${goal.id}`}
       tabIndex={-1}
       className={cn(
-        'flex scroll-mt-24 flex-col gap-3 p-4 transition-colors duration-200 first:rounded-t-[7px] last:rounded-b-[7px] focus:outline-none',
+        'flex scroll-mt-24 flex-col gap-3 p-4 transition-colors duration-200 focus:outline-none',
         'data-[highlight=true]:bg-neutral-bg data-[highlight=true]:ring-2 data-[highlight=true]:ring-inset data-[highlight=true]:ring-accent',
       )}
     >

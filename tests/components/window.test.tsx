@@ -123,7 +123,9 @@ describe('Window', () => {
   it('does not clip its content', () => {
     render(<Window title="Pipeline"><p>Body</p></Window>);
     expect(screen.getByRole('region', { name: 'Pipeline' }).className).not.toMatch(/overflow-/);
-    expect(screen.getByRole('heading', { name: 'Pipeline' }).parentElement).toHaveClass('rounded-t-[7px]');
+    // rounded-t-inner is --radius-inner, the frame's rounded-lg less its 1px border (it was a literal
+    // 7px; single-sourced in design doc section 11, Task 9).
+    expect(screen.getByRole('heading', { name: 'Pipeline' }).parentElement).toHaveClass('rounded-t-inner');
   });
 
   // Enlarged text (WCAG 1.4.4): a long title wraps rather than being cut off.

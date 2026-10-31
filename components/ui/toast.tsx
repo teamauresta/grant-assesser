@@ -16,6 +16,8 @@ export function Toaster() {
   const toasts = useToasts((s) => s.toasts);
   return (
     <div
+      // data-toaster: the hook tests use to find this region (the page has other status regions).
+      data-toaster
       role="status"
       aria-live="polite"
       className="fixed inset-x-4 bottom-[calc(var(--bottom-bar-h)+0.875rem)] z-50 flex flex-col gap-2 md:bottom-6 md:left-auto md:right-6 md:w-96"

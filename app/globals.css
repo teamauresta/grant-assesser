@@ -88,6 +88,9 @@
   /* The window frame's soft shadow (components/ui/window.tsx, the shadow-window utility): a 1px
      --border line under its bottom edge and a short drop. The only shadow on cards (design doc section 4). */
   --window-shadow: 0 1px 0 var(--border), 0 8px 24px -16px rgb(0 0 0 / 0.35);
+  /* The menu popover's lift (components/ui/menu.tsx, the shadow-popover utility): the window's drop
+     without its 1px line, which under the popover's own bottom border drew a 2px edge. */
+  --popover-shadow: 0 8px 24px -16px rgb(0 0 0 / 0.35);
 }
 
 [data-theme="dark"] {
@@ -128,6 +131,7 @@
 
   /* On the dark page a 35% black drop barely shows, so it is deeper. */
   --window-shadow: 0 1px 0 var(--border), 0 10px 28px -14px rgb(0 0 0 / 0.7);
+  --popover-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.7);
 
   /* The forest-green panel sits close to the dark page (about 1.2:1), so it gets a visible decorative edge. */
   --panel-border: #2c4a3d;
@@ -172,6 +176,11 @@
 
   /* One family, Rubik (app/layout.tsx); numbers use the num utility's tabular digits. Unsetting
      the mono family below removes its utility class (tests/lib/tokens.test.ts). */
+  /* The radius inside a rounded-lg frame's 1px border: the window's title bar and the first and last
+     rows of a framed list (LIST_FRAME in components/ui/list.ts) round to it, so their fills meet the
+     frame's corners without the frame clipping (overflow-hidden would clip focus outlines). */
+  --radius-inner: calc(var(--radius-lg) - 1px);
+
   --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --font-mono: initial;
 
@@ -338,6 +347,11 @@
 /* The window frame's shadow, per theme (--window-shadow). */
 @utility shadow-window {
   box-shadow: var(--window-shadow);
+}
+
+/* The menu popover's shadow, per theme (--popover-shadow): the window's drop without its line. */
+@utility shadow-popover {
+  box-shadow: var(--popover-shadow);
 }
 
 /* A quiet eucalyptus shadow: the primary call to action in the hero. */

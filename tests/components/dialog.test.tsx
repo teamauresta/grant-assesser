@@ -59,7 +59,11 @@ describe('Dialog', () => {
     const close = within(dialog).getByRole('button', { name: 'Close' });
     const bar = within(dialog).getByRole('heading', { name: 'Add goal' }).parentElement!;
     expect(close.parentElement).toBe(bar);
-    expect(close).toHaveClass('size-11');
+    expect(close).toHaveClass('size-11', '-my-2', '-mr-2');
+    // It fills the bar's corner, so its focus outline is drawn inside it rather than 3px over the
+    // frame's top edge (design doc section 11, Task 9).
+    expect(close).toHaveClass('focus-visible:outline-2', 'focus-visible:-outline-offset-2', 'focus-visible:outline-accent');
+    expect(close).not.toHaveClass('focus-visible:outline-offset-2');
     // Only the close button's own icon is hidden: no minimise and maximise glyphs.
     expect(bar.querySelectorAll('svg')).toHaveLength(1);
     await user.click(close);

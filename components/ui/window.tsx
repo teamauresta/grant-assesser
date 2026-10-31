@@ -3,7 +3,7 @@ import { Minus, Square, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 /** The title bar's classes, for other window-like frames (dialogs) to reuse. */
-export const WINDOW_BAR = 'flex items-center gap-3 rounded-t-[7px] border-b border-border bg-neutral-bg px-3 py-2';
+export const WINDOW_BAR = 'flex items-center gap-3 rounded-t-inner border-b border-border bg-neutral-bg px-3 py-2';
 
 /** The frame's classes, without its border colour (borderClassName), for skeletons drawn like a window. */
 export const WINDOW_FRAME = 'rounded-lg border bg-surface shadow-window';

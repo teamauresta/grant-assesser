@@ -20,7 +20,10 @@ describe('Menu', () => {
     expect(trigger).toHaveAttribute('class', buttonClasses());
     await user.click(trigger);
     const popover = screen.getByRole('menu').parentElement!;
-    expect(popover).toHaveClass('bg-surface', 'border', 'border-border', 'rounded-lg', 'shadow-window');
+    // shadow-popover, not shadow-window: the window shadow's 1px line doubled the popover's bottom
+    // border (design doc section 11, Task 9).
+    expect(popover).toHaveClass('bg-surface', 'border', 'border-border', 'rounded-lg', 'shadow-popover');
+    expect(popover).not.toHaveClass('shadow-window');
     expect(popover).not.toHaveClass('bg-bg');
     expect(popover.className).not.toMatch(/\b(bg|border)-(primary|accent|brand|spark|ok|warn|danger|hl)/);
   });

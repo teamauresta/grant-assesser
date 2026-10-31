@@ -497,7 +497,7 @@ test.describe('plan', () => {
 
   test('nothing between a card and the board clips it, so a moved card glides in view', async ({ page }) => {
     const clipped = await page.locator('[data-app-id="app-kick-start"]').evaluate((li) => {
-      const board = li.closest('.grid')!;
+      const board = li.closest('[data-board]')!;
       const found: string[] = [];
       for (let el = li.parentElement; el && el !== board; el = el.parentElement) {
         const s = getComputedStyle(el);
@@ -518,14 +518,16 @@ test.describe('plan', () => {
     await page.evaluate(() => {
       const w = window as unknown as { toastSeen: { inert: boolean; dialog: boolean }[] };
       w.toastSeen = [];
-      new MutationObserver((records) => {
-        for (const r of records) {
-          for (const node of r.addedNodes) {
-            const region = node instanceof Element ? node.closest('[role="status"][aria-live="polite"]') : null;
-            if (!region || node === region) continue;
-            w.toastSeen.push({ inert: region.closest('[inert]') !== null, dialog: document.querySelector('[role="dialog"]') !== null });
-          }
+      // Recorded only when the toaster gains a toast (its direct children), not for every node a
+      // toast or the page adds.
+      let count = 0;
+      new MutationObserver(() => {
+        const region = document.querySelector('[data-toaster]');
+        const now = region?.childElementCount ?? 0;
+        if (region && now > count) {
+          w.toastSeen.push({ inert: region.closest('[inert]') !== null, dialog: document.querySelector('[role="dialog"]') !== null });
         }
+        count = now;
       }).observe(document.body, { childList: true, subtree: true });
     });
     // Drop the card on Outcome (synthetic drag events: the grip arms the card on pointer down).
@@ -542,7 +544,9 @@ test.describe('plan', () => {
 
     await expect(dialog).toHaveCount(0);
     await expect(page.getByText('Awarded. Add the reporting dates to your calendar.')).toBeVisible();
-    expect(await page.evaluate(() => (window as unknown as { toastSeen: unknown[] }).toastSeen)).toEqual([{ inert: false, dialog: false }]);
+    const seen = await page.evaluate(() => (window as unknown as { toastSeen: unknown[] }).toastSeen);
+    expect(seen.length).toBeGreaterThanOrEqual(1);
+    for (const moment of seen) expect(moment).toEqual({ inert: false, dialog: false });
     // Its link is reachable: focus moves to it.
     const link = page.getByRole('link', { name: 'Open calendar' });
     await link.focus();

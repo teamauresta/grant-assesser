@@ -25,6 +25,27 @@ const OUTCOMES = [
   { stage: 'withdrawn', icon: Undo2, description: 'You decided not to go ahead.' },
 ] as const;
 
+/**
+ * A column window's border while a card is dragged: the accent under the pointer, dashed
+ * --border-strong on the other columns it can drop on, and the window's own --border otherwise.
+ */
+function columnBorder(over: boolean, target: boolean): string {
+  if (over) return 'border-accent';
+  return target ? 'border-dashed border-border-strong' : 'border-border';
+}
+
+/** A column's title: its stage and how many applications it holds (a number, and words for screen readers). */
+function ColumnTitle({ label, count }: { label: string; count: number }) {
+  return (
+    <>
+      {label}{' '}
+      <span className="num font-normal text-muted-fg">
+        {count}{' '}<span className="sr-only">{count === 1 ? 'application' : 'applications'}</span>
+      </span>
+    </>
+  );
+}
+
 /** Pipeline board: four columns, drag and drop on desktop, and a Move to… menu on every card. */
 export function PipelineBoard({ now }: { now: Date }) {
   const pipeline = useWorkspace((s) => s.ws.pipeline);
@@ -125,7 +146,8 @@ export function PipelineBoard({ now }: { now: Date }) {
       </div>
 
       <LayoutGroup>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* data-board: the hook tests/e2e/billabong.spec.ts walks up to when checking that nothing clips a card. */}
+        <div data-board className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {BOARD_COLUMNS.map((column) => {
             const apps = pipeline.filter((a) => column.stages.includes(a.stage));
             const headingId = `column-${column.id}`;
@@ -136,14 +158,7 @@ export function PipelineBoard({ now }: { now: Date }) {
               <Window
                 key={column.id}
                 titleId={headingId}
-                title={(
-                  <>
-                    {column.label}{' '}
-                    <span className="num font-normal text-muted-fg">
-                      {apps.length}{' '}<span className="sr-only">{apps.length === 1 ? 'application' : 'applications'}</span>
-                    </span>
-                  </>
-                )}
+                title={<ColumnTitle label={column.label} count={apps.length} />}
                 titleSize="md"
                 headingRef={(el) => { headingRefs.current[column.id] = el; }}
                 headingProps={{ tabIndex: -1 }}
@@ -155,7 +170,7 @@ export function PipelineBoard({ now }: { now: Date }) {
                 }}
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverColumn((c) => (c === column.id ? undefined : c)); }}
                 onDrop={(e) => onDrop(e, column)}
-                borderClassName={overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border'}
+                borderClassName={columnBorder(overColumn === column.id, dropTarget)}
                 className="flex min-w-0 flex-col transition-[border-color] duration-150"
                 padding="sm"
                 bodyClassName="flex flex-1 flex-col gap-3"

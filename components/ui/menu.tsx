@@ -108,8 +108,9 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
       {open && (
         <div
           className={cn(
-            // A --surface popover lifted by the window's shadow (Billabong design doc section 11, Task 8).
-            'absolute top-full z-50 mt-1 flex w-max min-w-56 max-w-[min(20rem,calc(100vw-2rem))] flex-col rounded-lg border border-border bg-surface p-1 shadow-window',
+            // A --surface popover lifted by the window's drop (Billabong design doc section 11, Tasks 8
+            // and 9): shadow-popover, without the window shadow's 1px line, which doubled its bottom border.
+            'absolute top-full z-50 mt-1 flex w-max min-w-56 max-w-[min(20rem,calc(100vw-2rem))] flex-col rounded-lg border border-border bg-surface p-1 shadow-popover',
             align === 'end' ? 'right-0' : 'left-0',
           )}
         >

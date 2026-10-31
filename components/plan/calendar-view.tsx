@@ -11,6 +11,7 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { LIST_FRAME } from '@/components/ui/list';
 import { goalHref } from '@/lib/plan/routes';
 
 const PLAN_ICS_FILENAME = 'grant-navigator-plan.ics';
@@ -246,7 +247,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
                   ? <><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</>
                   : <time dateTime={key} className="num">{key === today ? 'Today' : formatDate(key)}</time>}
               </h3>
-              <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+              <ul className={LIST_FRAME}>
                 {list.map((i) => <AgendaRow key={i.id} item={i} />)}
               </ul>
             </li>
@@ -260,7 +261,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
 function AgendaRow({ item }: { item: PlanItem }) {
   const overdue = item.kind === 'goal' && item.overdue;
   return (
-    <li className="relative flex gap-2 px-3 py-2.5 first:rounded-t-[7px] last:rounded-b-[7px] hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+    <li className="relative flex gap-2 px-3 py-2.5 hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
       <ItemIcon item={item} className={cn('mt-[3px]', overdue ? 'text-danger' : 'text-muted-fg')} />
       <div className="flex min-w-0 flex-col">
         <Link href={itemHref(item)} className="break-words text-sm font-medium after:absolute after:inset-0 focus-visible:outline-none">

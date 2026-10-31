@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button, type ButtonVariant } from './button';
-import { focusRing } from './focus-ring';
+import { focusRingInset } from './focus-ring';
 import { WINDOW_BAR, WINDOW_FRAME } from './window';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -110,12 +110,13 @@ function DialogPanel({ onClose, title, description, initialFocusRef, footer, chi
       >
         <div className={WINDOW_BAR}>
           <h2 id={`${id}-title`} className="min-w-0 flex-1 break-words text-base font-semibold">{title}</h2>
-          {/* 44px target in a bar sized for text: the negative margins keep the bar compact. */}
+          {/* 44px target in a bar sized for text: the negative margins keep the bar compact. The button
+              then fills the bar's corner, so its focus outline is drawn inside it, not over the frame. */}
           <button
             type="button"
             onClick={() => onCloseRef.current()}
             aria-label="Close"
-            className={cn('-my-2 -mr-2 inline-flex size-11 shrink-0 items-center justify-center self-start rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+            className={cn('-my-2 -mr-2 inline-flex size-11 shrink-0 items-center justify-center self-start rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRingInset)}
           >
             <X aria-hidden="true" size={20} strokeWidth={1.5} />
           </button>
@@ -126,7 +127,7 @@ function DialogPanel({ onClose, title, description, initialFocusRef, footer, chi
             {children}
           </div>
         )}
-        {footer && <div className="flex flex-wrap justify-end gap-2 rounded-b-[7px] border-t border-border px-5 py-4">{footer}</div>}
+        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-4">{footer}</div>}
       </div>
     </div>
   );
