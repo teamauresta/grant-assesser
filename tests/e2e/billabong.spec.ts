@@ -376,8 +376,9 @@ test.describe('marker highlight', () => {
   });
 
   /**
-   * Paints a highlight inside muted text and returns its colours. TODO(Task 11): use the hero's
-   * Highlight once the home page renders one, instead of this copy of the component's classes.
+   * Paints a highlight inside muted text and returns its colours: a case no page renders on purpose
+   * (muted text never gets a band), so it is built from a copy of the component's classes. The hero's
+   * real Highlight is checked below (`heroBand`).
    */
   const paint = (page: Page) =>
     page.evaluate(() => {
@@ -392,7 +393,33 @@ test.describe('marker highlight', () => {
       return { background: s.backgroundColor, color: s.color };
     });
 
+  /** The hero headline's one band (Billabong plan, Task 11): its colours as the browser paints them. */
+  const heroBand = (page: Page) =>
+    page.locator('#hero-heading .highlight').evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { background: s.backgroundColor, color: s.color, text: el.textContent };
+    });
+
+  /** The channels and alpha of a computed rgba() or color(srgb …) background. */
+  const channels = (background: string) => {
+    const m = background.match(/^(?:rgba\((\d+), (\d+), (\d+), ([\d.]+)\)|color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\))$/);
+    expect(m, background).not.toBeNull();
+    return m![1] ? m!.slice(1, 5).map(Number) : m!.slice(5, 9).map((v, i) => Number(v) * (i < 3 ? 255 : 1));
+  };
+
   for (const theme of ['light', 'dark'] as const) {
+    test(`the hero's highlight is amber at 35% behind --fg text (${theme})`, async ({ page }) => {
+      await seedStorage(page, { theme });
+      await page.goto('./');
+      const band = await heroBand(page);
+      expect(band.text).toBe('qualifies for');
+      expect(band.color).toBe(await tokenColour(page, '--fg'));
+      const [r, g, b] = (await tokenColour(page, '--hl-amber')).match(/\d+/g)!.map(Number);
+      const [pr, pg, pb, alpha] = channels(band.background);
+      expect(alpha).toBeCloseTo(0.35, 2);
+      for (const [got, want] of [[pr, r], [pg, g], [pb, b]]) expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
+    });
+
     test(`a highlight is the tone at 35% behind --fg text, inside muted text (${theme})`, async ({ page }) => {
       await seedStorage(page, { theme });
       await page.goto('./');
@@ -426,6 +453,8 @@ test.describe('marker highlight', () => {
       return out;
     });
     expect(await paint(page)).toEqual(system);
+    const band = await heroBand(page);
+    expect({ color: band.color, background: band.background }).toEqual(system);
   });
 });
 

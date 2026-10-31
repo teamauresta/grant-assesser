@@ -11,11 +11,12 @@ export type Cheer = { message: string; action?: ToastAction; burst?: BurstKind }
 export type Origin = { x: number; y: number };
 
 /**
- * Confetti colours: the Eucalyptus brand colours of both themes (eucalyptus, sage, ochre, then the
- * lighter night versions). Hex values are fine here: canvas-confetti needs literal colours and this
- * is not component styling. Keep in step with app/globals.css.
+ * Confetti colours: amber, sage and sky, the highlight tones (--hl-amber, --hl-sage, --hl-sky) of both
+ * themes, each once; they are the same in light and dark (Billabong design doc, section 8). Hex values
+ * are fine here: canvas-confetti needs literal colours and this is not component styling. Keep in step
+ * with app/globals.css (tests/lib/tokens.test.ts checks it).
  */
-export const BRAND_COLOURS = ['#1f5c4a', '#3f6e5a', '#a4531b', '#86c9a9', '#9fd3b8', '#e3a266'];
+export const CONFETTI_COLOURS = ['#f2a93b', '#9cc5a1', '#7fb3d5'];
 
 const BURSTS: Record<BurstKind, Options[]> = {
   results: [{ particleCount: 90, spread: 70, startVelocity: 38 }],
@@ -57,7 +58,7 @@ export async function burst(kind: BurstKind, origin?: Origin): Promise<void> {
     for (const options of BURSTS[kind]) {
       // `...options` comes last so the award bursts keep their own side origins.
       void confetti({
-        colors: BRAND_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
+        colors: CONFETTI_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
         ...(origin && kind !== 'awarded' ? { origin } : { origin: { y: 0.6 } }),
         ...options,
       });

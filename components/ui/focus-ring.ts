@@ -11,9 +11,3 @@ export const focusRing = `${focusOutline} focus-visible:outline-accent`;
  * `outline-offset-2`, so adding it after focusRing would lose.
  */
 export const focusRingInset = 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent';
-
-/**
- * The same on the How it works panel, in --panel-fg: the light accent is only 2.07:1 on the forest
- * panel. A separate string, not an override, because cn() does not resolve Tailwind conflicts.
- */
-export const panelFocusRing = `${focusOutline} focus-visible:outline-panel-fg`;

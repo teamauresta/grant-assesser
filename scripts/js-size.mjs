@@ -2,7 +2,8 @@
 // Gzipped size of the JavaScript the home page references up front (out/index.html), against a
 // budget. Chunks loaded later with import() are not referenced there, so they do not count. Also
 // prints the same figure for a few other pages, for information only, and fails if code that must
-// load with import() (the aurora shader) has slipped into the home page's first-load chunks.
+// load with import() (confetti, the PDF renderer, the sorting story's checks) has slipped into the
+// home page's first-load chunks.
 import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
@@ -40,16 +41,22 @@ export function verdict(sizes) {
   };
 }
 
-/** Text that only lazily loaded chunks may contain: the aurora's GLSL (lib/aurora-shader.ts). */
-export const LAZY_ONLY = ['gl_FragColor'];
+/**
+ * Text that only lazily loaded chunks may contain (CLAUDE.md, Bundle): canvas-confetti's own flag
+ * (lib/celebrate.ts imports the library with import()), the PDF renderer's name, which @react-pdf
+ * writes into every document (lib/pdf/), and the export name Turbopack registers for the sorting
+ * story's checks (lib/showcase-story.ts). Each was in no first-load chunk on 31 Oct 2026.
+ */
+export const LAZY_ONLY = ['__confetti_initialized', 'react-pdf', 'DEMO_PROFILE'];
 
 /**
  * First-load chunks that contain lazy-only code, with the marker found in each.
  * @param {{ path: string, source: string }[]} chunks
+ * @param {readonly string[]} [markers] The text to look for; LAZY_ONLY unless a test passes its own.
  * @returns {{ path: string, marker: string }[]}
  */
-export function lazyLeaks(chunks) {
-  return chunks.flatMap(({ path, source }) => LAZY_ONLY.filter((marker) => source.includes(marker)).map((marker) => ({ path, marker })));
+export function lazyLeaks(chunks, markers = LAZY_ONLY) {
+  return chunks.flatMap(({ path, source }) => markers.filter((marker) => source.includes(marker)).map((marker) => ({ path, marker })));
 }
 
 /** Other pages whose first-load JS is printed for information. Only the home page has a budget. */

@@ -332,10 +332,13 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
                       className="max-w-full"
                       style={{ '--sr': `${s.rotate}deg` } as CSSProperties}
                     >
+                      {/* A small card (Billabong design doc, section 8): --surface in a --border outline,
+                          rounded like a card rather than a pill. The same size as the old pill, so the
+                          reserved heights and the pinned layouts still fit. */}
                       <Link
                         href={`/programs/${chip.slug}/`}
                         title={chip.name}
-                        className={cn('block truncate rounded-full border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong pin-short:py-0.5', focusRing)}
+                        className={cn('block truncate rounded-md border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong pin-short:py-0.5', focusRing)}
                       >
                         {chip.name}
                       </Link>

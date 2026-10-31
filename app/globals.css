@@ -25,10 +25,9 @@
  * --hl-* are marker highlights, painted at 35% over the page by the highlight utility
  * (HIGHLIGHT_ALPHA in lib/highlight.ts), behind --fg text only: never muted text.
  * Status colours are for StatusPill only; the accent is never used for status.
- * The Eucalyptus brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo, the
- * hero phrase and contour lines, the progress ring, persona tones and celebrations. Never for status
- * or body text.
- * The panel (--panel-*) is deep forest green in both themes.
+ * The Eucalyptus brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo,
+ * the progress ring and persona tones. Never for status or body text. Confetti uses the highlight
+ * tones (CONFETTI_COLOURS in lib/celebrate.ts).
  */
 :root {
   color-scheme: light;
@@ -61,8 +60,8 @@
   --hl-sage: #9cc5a1;
   --hl-sky: #7fb3d5;
 
-  /* Eucalyptus brand colours: brand moments only (logo, hero phrase and contour lines, progress ring,
-   * persona tones, celebrations). Never for status or body text. */
+  /* Eucalyptus brand colours: brand moments only (logo, progress ring, persona tones). Never for
+   * status or body text. */
   --brand: #1f5c4a;
   --brand-2: #3f6e5a;
   --spark: #a4531b;
@@ -70,17 +69,6 @@
   /* The logo: the light --brand in both themes, with a sand compass. Not redefined in the dark theme. */
   --logo: #1f5c4a;
   --on-logo: #faf8f3;
-
-  /* The "How it works" panel is deep forest green in both themes. */
-  --panel-bg: #12241d;
-  --panel-fg: #f5f1e8;
-  --panel-muted-fg: #b5bdb3;
-  --panel-spark: #e0a060;
-  /* Cards on the panel: the How it works previews. */
-  --panel-surface: #1b3229;
-  /* Decorative edge (WCAG 1.4.11 does not apply), so not in the AA contrast tests. Not needed in
-   * light, where the dark panel stands out; see the dark theme. */
-  --panel-border: transparent;
 
   /* Strength of the cursor spotlight; tests/lib/tokens.test.ts keeps text AA on it in each theme. */
   --spot-mix: 6%;
@@ -132,9 +120,6 @@
   /* On the dark page a 35% black drop barely shows, so it is deeper. */
   --window-shadow: 0 1px 0 var(--border), 0 10px 28px -14px rgb(0 0 0 / 0.7);
   --popover-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.7);
-
-  /* The forest-green panel sits close to the dark page (about 1.2:1), so it gets a visible decorative edge. */
-  --panel-border: #2c4a3d;
 }
 
 @theme inline {
@@ -167,12 +152,6 @@
   --color-brand: var(--brand);
   --color-brand-2: var(--brand-2);
   --color-spark: var(--spark);
-  --color-panel-bg: var(--panel-bg);
-  --color-panel-fg: var(--panel-fg);
-  --color-panel-muted-fg: var(--panel-muted-fg);
-  --color-panel-spark: var(--panel-spark);
-  --color-panel-surface: var(--panel-surface);
-  --color-panel-border: var(--panel-border);
 
   /* One family, Rubik (app/layout.tsx); numbers use the num utility's tabular digits. Unsetting
      the mono family below removes its utility class (tests/lib/tokens.test.ts). */
@@ -253,13 +232,6 @@
   body {
     @apply bg-bg text-fg font-sans antialiased;
     line-height: 1.6;
-  }
-
-  /* The home hero's aurora is 100vw wide to bleed to the viewport's edges, and 100vw includes a
-     classic scrollbar: clip the few pixels it overhangs rather than scroll sideways. Only on pages
-     that have it, so nothing else loses its horizontal overflow. */
-  body:has([data-hero-aurora]) {
-    overflow-x: clip;
   }
 
   h1,
@@ -352,11 +324,6 @@
 /* The menu popover's shadow, per theme (--popover-shadow): the window's drop without its line. */
 @utility shadow-popover {
   box-shadow: var(--popover-shadow);
-}
-
-/* A quiet eucalyptus shadow: the primary call to action in the hero. */
-@utility glow-brand {
-  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--brand) 55%, transparent);
 }
 
 /*

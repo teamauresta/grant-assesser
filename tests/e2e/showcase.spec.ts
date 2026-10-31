@@ -1,29 +1,18 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
 import { SORT_END } from '@/lib/showcase';
-import { frames, populatedWorkspace, scrollSort, seedStorage } from './helpers';
+import { populatedWorkspace, scrollSort, seedStorage } from './helpers';
 
 /**
- * The Showcase home page in a real browser: the contour lines' pause button, the sorting story, the
- * How it works previews, the persona cards' borders (and the button ledge, the one uneven border
- * allowed) and the absence of gradient text.
+ * The Showcase home page in a real browser: the hero, the sorting story, the How it works previews,
+ * the persona cards' borders (and the button ledge, the one uneven border allowed) and the absence
+ * of gradient text. The contour lines and their pause button were removed with the WebGL hero
+ * (Billabong design doc sections 5 and 8; section 11, Task 11), and their tests with them.
  *
  * Covered elsewhere, so not repeated here: the story's maths (tests/lib/showcase.test.ts), the
  * stage and its load failure (tests/components/sort-story.test.tsx), the previews' timings
  * (tests/components/previews.test.tsx), and axe on the home page (a11y.spec.ts).
  */
-
-const pauseButton = (page: Page) => page.getByRole('button', { name: 'Pause background animation' });
-const auroraCanvas = (page: Page) => page.locator('[data-hero-aurora] canvas');
-/** The canvas writes its frame count every 30 frames; the tests only need it as a number. */
-const frameCount = (page: Page) => auroraCanvas(page).evaluate((el) => Number((el as HTMLElement).dataset.frame ?? NaN));
-/**
- * How long a still counter must stay still. Each test that uses it first shows a moving counter
- * advancing within the same window, so a still one is a real stop, not a slow frame rate.
- */
-const STILL_WINDOW = 1_500;
-const advancesWithin = (page: Page, from: number, timeout: number) =>
-  expect.poll(() => frameCount(page), { timeout, intervals: [100] }).toBeGreaterThan(from);
 
 const stage = (page: Page) => page.locator('[data-stage]');
 const chips = (page: Page) => stage(page).locator('[data-chip]');
@@ -74,55 +63,28 @@ test('hero headline: the second line rises 80ms after the first', async ({ page 
   expect(delays).toEqual(['0s', '0.08s']);
 });
 
-test.describe('aurora', () => {
-  test('plays, pauses, and remembers the pause', async ({ page }) => {
-    await page.goto('./');
-    await expect(auroraCanvas(page)).toHaveCount(1);
-    // Headless Chromium can take a moment before its first 30 frames: poll rather than sample.
-    await expect.poll(() => frameCount(page), { timeout: 10_000 }).toBeGreaterThan(0);
-    // Drawing, so WebGL works here and the still contour rings are not standing in for the canvas.
-    await expect(page.locator('[data-aurora-fallback]')).toHaveCount(0);
-    // Running, the counter moves within the window the paused checks below use.
-    await advancesWithin(page, await frameCount(page), STILL_WINDOW);
-
-    await pauseButton(page).click();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'true');
-    // A tick already queued when the button was pressed may still run once.
-    await frames(page);
-    const paused = await frameCount(page);
-    await page.waitForTimeout(STILL_WINDOW);
-    expect(await frameCount(page)).toBe(paused);
-
-    await page.reload();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'true');
-    await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-    await page.waitForTimeout(STILL_WINDOW);
-    await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-
-    await pauseButton(page).click();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'false');
-    await advancesWithin(page, 0, STILL_WINDOW);
-  });
-
-  test.describe('under reduced motion', () => {
-    test.use({ reducedMotion: 'reduce' });
-
-    test('draws one still frame and offers no pause button', async ({ page }) => {
-      await page.goto('./');
-      // Wait until the client has decided: the canvas has drawn its frame, or the fallback shows.
-      await expect(page.locator('[data-hero-aurora] canvas[data-frame], [data-aurora-fallback]')).toHaveCount(1);
-      await page.waitForTimeout(STILL_WINDOW);
-      await expect(pauseButton(page)).toHaveCount(0);
-      if (!(await auroraCanvas(page).count())) return;
-      await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-
-      // The control: with motion allowed again, the same canvas moves within the same window and
-      // the button comes back, so the still counter above was not a slow one.
-      await page.emulateMedia({ reducedMotion: 'no-preference' });
-      await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'false');
-      await advancesWithin(page, 0, STILL_WINDOW);
-    });
-  });
+// The Billabong hero (design doc section 8): text left and the diorama right from md, stacked on
+// phones with the diorama below the calls to action and above the numbers; no sideways scroll now
+// that nothing bleeds to the viewport's edges.
+test('hero: the diorama sits beside the text on wide screens and below the calls to action on phones', async ({ page }, info) => {
+  await page.goto('./');
+  const hero = page.getByRole('region', { name: /^Find the funding/ });
+  const art = hero.locator('[style*="aspect-ratio"]');
+  await expect(art).toHaveCount(1);
+  const box = async (l: Locator) => (await l.boundingBox())!;
+  const [a, h1, cta, stats] = await Promise.all([art, hero.getByRole('heading', { level: 1 }), hero.getByRole('link', { name: 'Start free assessment' }), hero.locator('dl')].map(box));
+  expect(a.width).toBeGreaterThan(200);
+  if (info.project.name === 'desktop') {
+    expect(a.x).toBeGreaterThanOrEqual(h1.x + h1.width - 1);
+    expect(a.y).toBeLessThan(cta.y + cta.height);
+  } else {
+    expect(a.y).toBeGreaterThanOrEqual(cta.y + cta.height);
+    expect(a.y + a.height).toBeLessThanOrEqual(stats.y);
+  }
+  expect(await noSideScroll(page)).toBe(true);
+  // Removed with the contour hero: no canvas, no pause button.
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /background animation/ })).toHaveCount(0);
 });
 
 test.describe('sorting story', () => {
@@ -290,6 +252,21 @@ test('persona cards have no coloured strip: every border side is the same colour
     expect(hovered.colours[0]).not.toBe(resting.colours[0]);
     expectEven(hovered);
   }
+});
+
+// The waving platypus on the first persona card (design doc section 8) overhangs its badge row rather
+// than growing it, so the three labels stay on one line on wide screens.
+test('persona cards: the platypus does not push the first label down', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'The cards stand side by side from md up');
+  await page.goto('./');
+  const cards = page.getByRole('region', { name: 'Where is your company today?' }).locator('[data-spotlight]');
+  await expect(cards).toHaveCount(3);
+  const tops = await cards.evaluateAll((els) => els.map((el) => el.children[1].getBoundingClientRect().top));
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
+  const art = cards.first().locator('[style*="aspect-ratio"]');
+  await expect(art).toHaveCount(1);
+  const [artBox, card] = [await art.boundingBox(), await cards.first().boundingBox()];
+  expect(artBox!.y).toBeGreaterThanOrEqual(card!.y);
 });
 
 // The button ledge (design doc section 5) is the only uneven border allowed, and only on buttons.

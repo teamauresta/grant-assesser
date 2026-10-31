@@ -8,7 +8,7 @@ const { confetti, create } = vi.hoisted(() => {
 });
 vi.mock('canvas-confetti', () => ({ default: Object.assign(vi.fn(), { create }) }));
 
-import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, markAssessmentFinished, resetCelebrations, resultsCelebration, resultsCheer, stageCheer } from '@/lib/celebrate';
+import { CONFETTI_COLOURS, cheer, consumeAssessmentFinish, consumeAssessmentFinished, markAssessmentFinished, resetCelebrations, resultsCelebration, resultsCheer, stageCheer } from '@/lib/celebrate';
 import { useToasts } from '@/lib/toast';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
@@ -32,10 +32,13 @@ describe('cheer', () => {
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 
-  it('fires two side bursts for an award, in the brand colours', async () => {
+  // Amber, sage and sky (Billabong design doc section 8): every burst in CONFETTI_COLOURS, which
+  // tests/lib/tokens.test.ts keeps equal to the highlight tones. (It was six brand colours.)
+  it('fires two side bursts for an award, in amber, sage and sky', async () => {
     await cheer('a1:awarded', { message: 'Awarded.', burst: 'awarded' });
     expect(confetti).toHaveBeenCalledTimes(2);
-    expect(confetti.mock.calls[0][0].colors).toHaveLength(6);
+    for (const [options] of confetti.mock.calls) expect(options.colors).toEqual(CONFETTI_COLOURS);
+    expect(CONFETTI_COLOURS).toEqual(['#f2a93b', '#9cc5a1', '#7fb3d5']);
     expect(confetti.mock.calls[0][0].disableForReducedMotion).toBe(true);
   });
 

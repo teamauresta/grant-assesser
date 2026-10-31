@@ -49,15 +49,28 @@ describe('other pages (information only, no budget)', () => {
 });
 
 describe('lazyLeaks', () => {
-  it('guards the aurora shader, which must load with import() only', () => {
-    expect(LAZY_ONLY).toContain('gl_FragColor');
+  // The aurora shader's marker (gl_FragColor) went with the contour hero (Billabong design doc
+  // sections 5 and 8; section 11, Task 11). The check now guards the remaining code that must load
+  // with import() only (CLAUDE.md, Bundle): canvas-confetti, the PDF renderer and the sorting
+  // story's checks.
+  it('guards confetti, the PDF renderer and the sorting story checks, and no longer the shader', () => {
+    expect(LAZY_ONLY).toEqual(['__confetti_initialized', 'react-pdf', 'DEMO_PROFILE']);
+    expect(LAZY_ONLY).not.toContain('gl_FragColor');
   });
-  it('names each first-load chunk that contains lazy-only code, and nothing when clean', () => {
+  it('names each first-load chunk that contains a lazy-only marker, and nothing when clean', () => {
+    const FIXTURE = 'lazy-only-fixture-marker';
     const chunks = [
       { path: 'a.js', source: 'console.log(1)' },
-      { path: 'b.js', source: 'const s = "void main(){gl_FragColor=vec4(1.0);}"' },
+      { path: 'b.js', source: `const s = "${FIXTURE}"` },
     ];
-    expect(lazyLeaks(chunks)).toEqual([{ path: 'b.js', marker: 'gl_FragColor' }]);
-    expect(lazyLeaks(chunks.slice(0, 1))).toEqual([]);
+    expect(lazyLeaks(chunks, [FIXTURE])).toEqual([{ path: 'b.js', marker: FIXTURE }]);
+    expect(lazyLeaks(chunks.slice(0, 1), [FIXTURE])).toEqual([]);
+  });
+  it('checks LAZY_ONLY by default, every marker in every chunk', () => {
+    const chunks = [
+      { path: 'a.js', source: 'console.log(1)' },
+      { path: 'b.js', source: 'x.__confetti_initialized=!0;e.s(["DEMO_PROFILE",0,n])' },
+    ];
+    expect(lazyLeaks(chunks)).toEqual([{ path: 'b.js', marker: '__confetti_initialized' }, { path: 'b.js', marker: 'DEMO_PROFILE' }]);
   });
 });

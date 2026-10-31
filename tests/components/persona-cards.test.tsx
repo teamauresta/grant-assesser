@@ -32,6 +32,17 @@ describe('PersonaCards', () => {
     for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(ONE_SIDED);
   });
 
+  // Billabong design doc section 8: the platypus waves from the first card. Decorative (the card's
+  // label says what it is), so it is inside the hidden badge row and the link's name is unchanged.
+  it('shows the waving platypus on the first card only, hidden from assistive technology', () => {
+    render(<PersonaCards />);
+    const links = screen.getAllByRole('link');
+    const art = links.map((l) => l.querySelectorAll('[style*="aspect-ratio"]'));
+    expect(art.map((a) => a.length)).toEqual([1, 0, 0]);
+    expect(art[0][0].closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(links[0]).toHaveAccessibleName(new RegExp(`^${PERSONAS_INFO[PERSONAS[0]].label}`));
+  });
+
   it('gives each card the cursor spotlight', () => {
     render(<PersonaCards />);
     for (const link of screen.getAllByRole('link')) {

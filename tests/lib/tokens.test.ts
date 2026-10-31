@@ -2,8 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { contrast, luminance, mixHex } from '@/lib/contrast';
-import { AURORA_ALPHA } from '@/lib/aurora';
-import { BRAND_COLOURS } from '@/lib/celebrate';
+import { CONFETTI_COLOURS } from '@/lib/celebrate';
 import { HIGHLIGHT_ALPHA } from '@/lib/highlight';
 
 const css = readFileSync('app/globals.css', 'utf8');
@@ -122,11 +121,6 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it.each(brand)('%s stays visible (3:1) on its own persona badge tint', (name) => {
     expect(contrast(t[name], mixHex(t['--surface'], t[name], 0.14))).toBeGreaterThanOrEqual(3);
   });
-  // The hero paints --brand contour lines over --bg, at most AURORA_ALPHA strong. Text that lands on
-  // the strongest line must stay AA; the headline phrase is --accent.
-  it.each(['--fg', '--muted-fg', '--accent'])('%s meets AA on the strongest contour line', (name) => {
-    expect(contrast(t[name], mixHex(t['--bg'], t['--brand'], AURORA_ALPHA[theme]))).toBeGreaterThanOrEqual(4.5);
-  });
   // The cursor spotlight (useSpotlight) paints --fg at --spot-mix (per theme) over the card. Persona cards are
   // --surface; the type links sit on --bg. Text on either must stay AA at the highlight's centre.
   it.each(['--fg', '--muted-fg', '--accent'])('%s meets AA on the strongest spotlight', (name) => {
@@ -134,18 +128,9 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
     expect(contrast(t[name], mixHex(t['--surface'], t['--fg'], spots[theme]))).toBeGreaterThanOrEqual(4.5);
     expect(contrast(t[name], mixHex(t['--bg'], t['--fg'], spots[theme]))).toBeGreaterThanOrEqual(4.5);
   });
-  it.each(['--panel-fg', '--panel-muted-fg', '--panel-spark'])('%s meets AA on --panel-bg', (name) => {
-    expect(contrast(t[name], t['--panel-bg'])).toBeGreaterThanOrEqual(4.5);
-  });
-  // The How it works previews are cards on the panel: their labels sit on --panel-surface.
-  it.each(['--panel-fg', '--panel-muted-fg'])('%s meets AA on --panel-surface', (name) => {
-    expect(contrast(t[name], t['--panel-surface'])).toBeGreaterThanOrEqual(4.5);
-  });
-  // Links on the panel use panelFocusRing (components/ui/focus-ring.ts): the light accent is too
-  // close to the forest green.
-  it('the panel focus ring (--panel-fg) stays visible on the panel (3:1)', () => {
-    expect(contrast(t['--panel-fg'], t['--panel-bg'])).toBeGreaterThanOrEqual(3);
-  });
+  // The How it works previews (Billabong, design doc section 8) are --bg insets in the step windows:
+  // their labels are --fg and --muted-fg on --bg (above), and their accent bar and ticks are
+  // graphics on --bg and --surface (3:1, implied by the accent's AA checks above).
   // The logo's compass is a non-text graphic (3:1). The logo uses --logo, the light --brand, in both
   // themes, so the mark looks the same everywhere.
   it('--on-logo stays visible on --logo (3:1)', () => {
@@ -153,12 +138,11 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   });
 });
 
-// The panel's edge is decorative (WCAG 1.4.11 does not apply: the panel is not a control and its
-// content stands on its own), so it is not in the AA lists above. It is invisible in light, where
-// the dark panel already stands out, and a visible line in dark, where the panel sits on a dark page.
-it('the panel border is defined in both themes', () => {
-  expect(css).toMatch(/:root \{[^}]*--panel-border:\s*transparent;/);
-  expect(tokens('[data-theme="dark"]')['--panel-border']).toMatch(/^#[0-9a-f]{6}$/i);
+// The contour hero and the forest How it works panel are gone (Billabong design doc sections 5 and 8;
+// section 11, Task 11), and with them the contour-line and --panel-* checks; nothing may bring the
+// tokens or the hero's eucalyptus glow back.
+it('no contour, panel or glow token remains', () => {
+  expect(css).not.toMatch(/--panel-|--color-panel-|data-hero-aurora|@utility glow-brand/);
 });
 
 it('the logo is the light --brand and only defined in :root', () => {
@@ -167,10 +151,15 @@ it('the logo is the light --brand and only defined in :root', () => {
   expect(block('[data-theme="dark"]')).not.toMatch(/--(on-)?logo\s*:/);
 });
 
-// canvas-confetti needs literal colours, so lib/celebrate.ts repeats the brand colours; keep them in step.
-it('the confetti colours are the brand colours of both themes', () => {
-  const brand = (t: Record<string, string>) => ['--brand', '--brand-2', '--spark'].map((n) => t[n].toLowerCase());
-  expect(BRAND_COLOURS.map((c) => c.toLowerCase())).toEqual([...brand(light), ...brand(tokens('[data-theme="dark"]'))]);
+// Billabong confetti is amber, sage and sky (design doc section 8; Billabong plan, Task 11 step 7):
+// the highlight tones of both themes, light first, each colour once (the tones are the same in both
+// themes today, so three colours). canvas-confetti needs literal colours, so lib/celebrate.ts repeats
+// them; keep them in step. (It was the brand colours, eucalyptus, sage and ochre: requirement change.)
+it('the confetti colours are the highlight tones of both themes, each once', () => {
+  const tones = (t: Record<string, string>) => ['--hl-amber', '--hl-sage', '--hl-sky'].map((n) => t[n].toLowerCase());
+  const both = [...new Set([...tones(light), ...tones(dark)])];
+  expect(both.length).toBeGreaterThanOrEqual(3);
+  expect(CONFETTI_COLOURS.map((c) => c.toLowerCase())).toEqual(both);
 });
 
 it('no Liftoff token remains', () => {

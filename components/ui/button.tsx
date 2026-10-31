@@ -39,7 +39,7 @@ const ICON_SIZES: Record<ButtonSize, string> = { lg: 'size-12', md: 'size-11', s
 /**
  * Classes for anything that should look like a button, e.g. a `next/link` call to action.
  *
- * `className` is for layout only: margin, flex, self, width, shrink (and the hero's `glow-brand`).
+ * `className` is for layout only: margin, flex, self, width, shrink.
  * Never colour, size, padding, text size, border or cursor: cn() does not resolve Tailwind conflicts,
  * so such a class fights the button's own and the CSS order decides. Use a variant or size instead.
  * tests/components/button.test.tsx scans the call sites.

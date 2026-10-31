@@ -24,8 +24,7 @@ async function settle(page: Page) {
     window.scrollTo(0, 0);
     await frames();
   });
-  // Finite animations only: the aurora is drawn on requestAnimationFrame, not a CSS animation, so
-  // it never appears here and never holds this up.
+  // Finite animations only (an infinite one, such as a spinner, would never finish).
   await page.evaluate(() => Promise.all(document.getAnimations()
     .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
     .map((a) => a.finished.catch(() => undefined))));
@@ -36,6 +35,11 @@ async function capture(page: Page, name: string, project: string) {
   await settle(page);
   await page.screenshot({ path: join(OUT, `${name}-${project}.png`), fullPage: true });
 }
+
+/** Waits for every finite animation on the page to end. */
+const finishAnimations = (page: Page) => page.evaluate(() => Promise.all(document.getAnimations()
+  .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+  .map((a) => a.finished.catch(() => undefined))));
 
 /** A viewport (not full-page) shot of one part of the home page. */
 const homePart = (page: Page, part: string, theme: string, project: string) =>
@@ -53,32 +57,35 @@ for (const theme of ['light', 'dark'] as const) {
     await capture(page, `home-${theme}`, project);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
 
+    // The story as a visitor sees it, a screen at a time: the hero (with the diorama), the persona
+    // cards, the sort, and How it works after the previews have played.
+    // Turning motion back on restarts the headline's rise (motion-safe:), so let it finish first.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await frames(page);
+    await finishAnimations(page);
+    await homePart(page, 'hero', theme, project);
+    await page.getByRole('region', { name: 'Where is your company today?' }).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await frames(page);
+    await homePart(page, 'personas', theme, project);
+
     const stage = page.locator('[data-stage]');
     if (project !== 'desktop') {
       // The phone settle part-way: it starts when the stage comes into view and runs for 1.2s.
       await stage.evaluate((el) => el.scrollIntoView({ block: 'start' }));
       await page.waitForTimeout(500);
       await homePart(page, 'sort-mid', theme, project);
-      return;
+      await page.waitForTimeout(1_000);
+      await homePart(page, 'sort-end', theme, project);
+    } else {
+      // The sort at the start, part-way and the end of its pinned range.
+      for (const [part, k] of [['sort-start', 0], ['sort-mid', 0.4], ['sort-end', 1]] as const) {
+        await scrollSort(page, k);
+        await homePart(page, part, theme, project);
+      }
     }
-
-    // The story as a visitor sees it, a screen at a time: the hero with the aurora drawing, the
-    // sort at the start, part-way and the end of its pinned range, and How it works after the
-    // previews have played.
-    await page.evaluate(() => window.scrollTo(0, 0));
-    const canvas = page.locator('[data-hero-aurora] canvas');
-    const drawn = Number(await canvas.getAttribute('data-frame'));
-    await expect.poll(async () => Number(await canvas.getAttribute('data-frame')), { timeout: 10_000 }).toBeGreaterThan(drawn);
-    await homePart(page, 'hero', theme, project);
-    for (const [part, k] of [['sort-start', 0], ['sort-mid', 0.4], ['sort-end', 1]] as const) {
-      await scrollSort(page, k);
-      await homePart(page, part, theme, project);
-    }
-    await page.getByRole('region', { name: 'How it works' }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await page.getByRole('region', { name: 'How it works' }).evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await frames(page);
-    await page.evaluate(() => Promise.all(document.getAnimations()
-      .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
-      .map((a) => a.finished.catch(() => undefined))));
+    await finishAnimations(page);
     await homePart(page, 'how', theme, project);
   });
 }

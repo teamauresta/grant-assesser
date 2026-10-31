@@ -113,6 +113,18 @@ describe('SortStory', () => {
     expect(document.querySelector('[data-stage]')!.className).not.toMatch(/(^|\s)min-h-\[59rem\]|min-\[\d+px\]:min-h/);
   });
 
+  // Billabong design doc section 8: the chips are small cards on --surface with an outline, not pills.
+  it('draws every chip as a small outlined card on --surface', async () => {
+    media({});
+    render(<SortStory />);
+    await filled();
+    for (const chip of chips()) {
+      const link = within(chip).getByRole('link');
+      expect(link).toHaveClass('rounded-md', 'border', 'border-border', 'bg-surface');
+      expect(link).not.toHaveClass('rounded-full');
+    }
+  });
+
   it('gives every chip its seeded tilt and stagger', async () => {
     media({});
     render(<SortStory />);
