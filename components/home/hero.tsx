@@ -37,11 +37,11 @@ export function Hero() {
           Grants, tax incentives, credits and accelerators across Australia, checked against official sources and matched to you in six short steps.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Link href="/assess/" className={buttonClasses({ variant: 'primary', className: 'glow-brand min-h-12 px-6 text-base' })}>
+          <Link href="/assess/" className={buttonClasses({ variant: 'primary', size: 'lg', className: 'glow-brand' })}>
             Start free assessment
             <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
           </Link>
-          <Link href="/programs/" className={buttonClasses({ className: 'min-h-12 px-6 text-base' })}>Browse programs</Link>
+          <Link href="/programs/" className={buttonClasses({ size: 'lg' })}>Browse programs</Link>
         </div>
         <HeroStats />
       </div>

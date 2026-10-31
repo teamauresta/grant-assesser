@@ -28,7 +28,7 @@ export function AddToPipeline({ program }: { program: Program }) {
     <div className="flex flex-col items-start gap-1.5">
       {ready && inPlan ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <Button variant="secondary" aria-disabled="true" className="cursor-default">
+          <Button variant="secondary" aria-disabled="true">
             <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
             In your plan
           </Button>

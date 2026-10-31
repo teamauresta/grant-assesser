@@ -109,7 +109,7 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
                 View plan
                 <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
               </Link>
-              <Button variant="secondary" aria-disabled="true" className="cursor-default">
+              <Button variant="secondary" aria-disabled="true">
                 <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
                 In your plan
               </Button>

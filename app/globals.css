@@ -254,19 +254,22 @@
 }
 
 /*
- * Chunky buttons (design doc section 4): a 3px bottom edge in a darker shade of the button (its border
- * colour). Pressing shrinks it and moves the button down, so it reads as pushed in. The only coloured
- * edge allowed (section 5), and only on buttons (tests/e2e/billabong.spec.ts). The press is behind
- * the media query, so under reduced motion nothing moves at all. The transition is in buttonClasses()
- * (components/ui/button.tsx), so it does not fight that list.
- * `:is(button, a)` applies it to buttons and links only, and lifts it above the `border` utility,
- * which Tailwind emits later and would otherwise reset the bottom to 1px.
+ * Chunky buttons (design doc section 4). The 3px ledge itself is `border-b-3` in the variant classes
+ * (components/ui/button.tsx), in the border's colour, a darker shade of the button. This utility is
+ * the press, and the marker the tests use: pressing shrinks the ledge and moves the button down, so it
+ * reads as pushed in. The only coloured edge allowed (section 5), and only on buttons
+ * (tests/e2e/billabong.spec.ts). The press is behind the media query, so under reduced motion nothing
+ * moves at all. The transition is in buttonClasses(), so the two do not overwrite each other.
+ * While pressed, ::before reaches back up to where the button's top was (2px up, plus the 1px top
+ * border), so a press held near the top edge still releases on the button and clicks.
  */
 @utility ledge {
-  &:is(button, a) {
-    border-bottom-width: 3px;
-    @media (prefers-reduced-motion: no-preference) {
-      &:active:not(:disabled, [aria-disabled="true"]) { translate: 0 2px; border-bottom-width: 1px; }
+  position: relative;
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not(:disabled, [aria-disabled="true"]) {
+      translate: 0 2px;
+      border-bottom-width: 1px;
+      &::before { content: ""; position: absolute; inset: -3px -1px -1px; }
     }
   }
 }

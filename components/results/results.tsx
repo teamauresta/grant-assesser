@@ -188,7 +188,7 @@ function StarterGoals({ persona }: { persona: Persona }) {
             <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1">
               {added ? (
                 <>
-                  <Button variant="secondary" aria-disabled="true" className="cursor-default">
+                  <Button variant="secondary" aria-disabled="true">
                     <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
                     Goal added
                   </Button>

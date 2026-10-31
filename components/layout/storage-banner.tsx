@@ -71,8 +71,8 @@ function CorruptNotice({ storageKey }: { storageKey: string }) {
         </div>
         {error && <p role="alert">{error}</p>}
       </div>
-      <Button variant="ghost" iconOnly aria-label="Dismiss" onClick={() => setDismissed(true)} className="-my-1.5 -mr-1.5 shrink-0 text-warn-fg hover:bg-bg">
-        <X aria-hidden="true" size={20} strokeWidth={1.5} />
+      <Button variant="ghost" iconOnly aria-label="Dismiss" onClick={() => setDismissed(true)} className="-my-1.5 -mr-1.5 shrink-0">
+        <X aria-hidden="true" size={20} strokeWidth={1.5} className="text-warn-fg" />
       </Button>
     </div>
   );

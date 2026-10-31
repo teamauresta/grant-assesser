@@ -56,8 +56,8 @@ export function BackupPrompt({ className }: { className?: string }) {
           </Button>
         </div>
       </div>
-      <Button variant="ghost" iconOnly aria-label="Dismiss backup reminder" onClick={dismiss} className="-my-1.5 -mr-1.5 shrink-0 text-muted-fg">
-        <X aria-hidden="true" size={20} strokeWidth={1.5} />
+      <Button variant="ghost" iconOnly aria-label="Dismiss backup reminder" onClick={dismiss} className="-my-1.5 -mr-1.5 shrink-0">
+        <X aria-hidden="true" size={20} strokeWidth={1.5} className="text-muted-fg" />
       </Button>
     </aside>
   );

@@ -88,6 +88,21 @@ test.describe('chunky buttons', () => {
     await page.mouse.up();
   });
 
+  // The press moves the button 2px down. A press held near its top edge must still click: the hit
+  // area stays where the button was (the pressed ::before in the ledge utility).
+  test('a slow press near the top edge still clicks', async ({ page }) => {
+    await page.goto('./');
+    const link = startLink(page);
+    await expect(link).toBeVisible();
+    const box = (await link.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + 1);
+    await page.mouse.down();
+    // Longer than the 150ms press transition, so the button has finished moving down.
+    await page.waitForTimeout(250);
+    await page.mouse.up();
+    await expect(page).toHaveURL(/\/assess\/$/);
+  });
+
   test.describe('under reduced motion', () => {
     test.use({ reducedMotion: 'reduce' });
 
@@ -108,14 +123,15 @@ test.describe('chunky buttons', () => {
     });
   });
 
-  // The ledge is the only coloured edge allowed, and only on buttons (design doc section 5).
+  // The ledge is the only coloured edge allowed, and only on buttons (design doc section 5). On the
+  // home page, showcase.spec.ts also checks every ledge's sides (the coloured-strip check).
   test('only buttons and links carry the ledge, on every page', async ({ page }) => {
     await seedStorage(page, { workspace: populatedWorkspace() });
     // The directory has no chunky buttons (its filters are toggle chips); every other page has some.
     const pages = ['./', 'programs/rdti/', 'assess/', 'assess/results/', 'plan/', 'report/', 'settings/'];
     for (const path of [...pages, 'programs/']) {
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const carriers = () => page.evaluate(() => [...document.querySelectorAll('.ledge')].map((el) => el.tagName.toLowerCase()));
       // Some pages draw their buttons after reading the workspace on the client.
       if (pages.includes(path)) await expect.poll(async () => (await carriers()).length, { message: path }).toBeGreaterThan(0);

@@ -3,29 +3,38 @@ import { cn } from '@/lib/cn';
 import { focusRing } from './focus-ring';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'sm' | 'md';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 // Chunky buttons (docs/plans/2026-10-31-billabong-design.md, section 4): primary, secondary and danger
-// carry the `ledge` utility (app/globals.css), a 3px bottom edge in the border's colour, a darker
-// shade of the button. Ghost buttons are flat.
+// have a 3px bottom edge (`border-b-3`) in the border's colour, a darker shade of the button, and the
+// `ledge` utility (app/globals.css), which is the press. Ghost buttons are flat.
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary border border-primary-ledge ledge font-semibold hover:brightness-105',
-  secondary: 'bg-surface text-fg border border-border-strong ledge font-medium hover:bg-neutral-bg',
+  primary: 'bg-primary text-on-primary border border-b-3 border-primary-ledge ledge font-semibold hover:brightness-105',
+  secondary: 'bg-surface text-fg border border-b-3 border-border-strong ledge font-medium hover:bg-neutral-bg',
   ghost: 'bg-transparent text-fg border border-transparent font-medium hover:bg-neutral-bg',
   // Destructive confirmations only (e.g. the Remove button inside a confirmation dialog).
-  danger: 'bg-danger text-on-danger border border-danger-ledge ledge font-medium hover:brightness-105',
+  danger: 'bg-danger text-on-danger border border-b-3 border-danger-ledge ledge font-medium hover:brightness-105',
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  // md is the default and meets the 44px touch target; sm is for dense desktop toolbars only.
+  // md is the default and meets the 44px touch target; sm is for dense desktop toolbars only; lg is
+  // for the hero's calls to action.
+  lg: 'min-h-12 px-6 text-base',
   md: 'min-h-11 px-4 text-sm',
   sm: 'min-h-9 px-3 text-sm',
 };
 
 // Square buttons that hold only an icon (they still need an accessible name).
-const ICON_SIZES: Record<ButtonSize, string> = { md: 'size-11', sm: 'size-9' };
+const ICON_SIZES: Record<ButtonSize, string> = { lg: 'size-12', md: 'size-11', sm: 'size-9' };
 
-/** Classes for anything that should look like a button, e.g. a `next/link` call to action. */
+/**
+ * Classes for anything that should look like a button, e.g. a `next/link` call to action.
+ *
+ * `className` is for layout only: margin, flex, self, width, shrink (and the hero's `glow-brand`).
+ * Never colour, size, padding, text size, border or cursor: cn() does not resolve Tailwind conflicts,
+ * so such a class fights the button's own and the CSS order decides. Use a variant or size instead.
+ * tests/components/button.test.tsx scans the call sites.
+ */
 export function buttonClasses({
   variant = 'secondary',
   size = 'md',
@@ -45,6 +54,7 @@ export function buttonClasses({
   );
 }
 
+/** A button. `className` is for layout only; see buttonClasses(). */
 export type ButtonProps = ComponentProps<'button'> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
