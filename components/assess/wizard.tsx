@@ -12,7 +12,7 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { markAssessmentFinished } from '@/lib/celebrate';
 import { hasAnswers } from '@/lib/profile';
 import { Button } from '@/components/ui/button';
-import { WINDOW_BAR, Window } from '@/components/ui/window';
+import { WINDOW_BAR, Window, WindowControls } from '@/components/ui/window';
 import { Question } from './question';
 
 /**
@@ -100,8 +100,9 @@ function WizardView({ step, today }: { step: Step; today: string }) {
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-3">
             {/* The only coloured bar on the page, a progress indicator. Hidden from assistive tech:
-                the title says the same in words. */}
-            <div data-wizard-progress aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-neutral-bg">
+                the title says the same in words. The track is --border, so its empty part still shows
+                on the --surface body (--neutral-bg nearly vanishes there). */}
+            <div data-wizard-progress aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-border">
               <div className="h-full origin-left rounded-full bg-primary transition-transform duration-200" style={{ transform: `scaleX(${step / STEP_COUNT})` }} />
             </div>
             <p className="text-muted-fg">{info.intro}</p>
@@ -176,23 +177,35 @@ function SaveNote({ available }: { available: boolean }) {
 }
 
 function WizardSkeleton() {
-  // The window's frame and bar, so the page does not jump when the answers load.
+  // The window's frame, bar and glyphs, the progress track, the intro and save-note lines, and cards
+  // like the real ones, so the page does not jump when the answers load. A status, so "Loading your
+  // answers" is announced as text (a plain div cannot take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your answers" className="max-w-2xl rounded-lg border border-border bg-surface shadow-window">
-      <div className={WINDOW_BAR}>
-        <div className="h-6 w-48 rounded bg-surface" />
-      </div>
-      <div className="flex flex-col gap-8 p-4 md:p-6">
-        <div className="flex flex-col gap-3">
-          <div className="h-2 rounded-full bg-neutral-bg" />
-          <div className="h-5 w-64 rounded bg-neutral-bg" />
-        </div>
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex flex-col gap-2">
-            <div className="h-5 w-64 rounded bg-neutral-bg" />
-            <div className="h-24 rounded-lg border border-border bg-bg" />
+    <div role="status" aria-busy="true" className="max-w-2xl rounded-lg border border-border bg-surface shadow-window">
+      <span className="sr-only">Loading your answers</span>
+      <div aria-hidden="true">
+        <div className={WINDOW_BAR}>
+          <div className="h-6 flex-1">
+            <div className="h-full w-48 rounded bg-surface" />
           </div>
-        ))}
+          <WindowControls />
+        </div>
+        <div className="flex flex-col gap-8 p-4 md:p-6">
+          <div className="flex flex-col gap-3">
+            <div className="h-2 rounded-full bg-border" />
+            <div className="h-6 w-72 max-w-full rounded bg-neutral-bg" />
+            <div className="h-5 w-56 max-w-full rounded bg-neutral-bg" />
+          </div>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="h-5 w-64 max-w-full rounded bg-neutral-bg" />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="h-11 rounded-lg border border-border-strong bg-surface" />
+                <div className="h-11 rounded-lg border border-border-strong bg-surface" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

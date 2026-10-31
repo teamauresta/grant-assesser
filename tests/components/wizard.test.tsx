@@ -9,6 +9,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }), useSea
 vi.mock('@/lib/use-now', () => ({ useNow: () => new Date('2026-10-27T00:00:00Z') }));
 
 import { Wizard } from '@/components/assess/wizard';
+import { buttonClasses } from '@/components/ui/button';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
 
@@ -41,8 +42,9 @@ describe('Wizard window', () => {
     await screen.findByRole('heading', { name: 'Step 2 of 6: Company' });
     const bar = document.querySelector('[data-wizard-progress]')!;
     expect(bar).toHaveAttribute('aria-hidden', 'true');
-    // Amber fill (--primary) on the --neutral-bg track, a third of the way at step 2.
-    expect(bar).toHaveClass('bg-neutral-bg');
+    // Amber fill (--primary) on a --border track (visible on the --surface body), a third of the way
+    // at step 2.
+    expect(bar).toHaveClass('bg-border');
     const fill = bar.firstElementChild as HTMLElement;
     expect(fill).toHaveClass('bg-primary');
     expect(fill.style.transform).toBe(`scaleX(${2 / 6})`);
@@ -72,7 +74,25 @@ describe('Wizard window', () => {
   it('makes Next the primary button and Back the secondary one', async () => {
     render(<Wizard />);
     await screen.findByRole('heading', { name: 'Step 2 of 6: Company' });
-    expect(screen.getByRole('button', { name: 'Next' })).toHaveClass('bg-primary');
-    expect(screen.getByRole('button', { name: 'Back' })).toHaveClass('bg-surface', 'border-border-strong');
+    // Each carries every class of its variant, as buttonClasses() gives them.
+    const has = (el: HTMLElement, variant: 'primary' | 'secondary') => {
+      for (const c of buttonClasses({ variant }).split(' ')) expect(el).toHaveClass(c);
+    };
+    has(screen.getByRole('button', { name: 'Next' }), 'primary');
+    has(screen.getByRole('button', { name: 'Back' }), 'secondary');
+  });
+
+  // Until the store has loaded: the window's frame, announced as loading without naming a plain div.
+  it('shows a loading window that says so in text', () => {
+    useWorkspace.setState({ ready: false });
+    try {
+      render(<Wizard />);
+      const status = screen.getByRole('status');
+      expect(status).toHaveAttribute('aria-busy', 'true');
+      expect(status).not.toHaveAttribute('aria-label');
+      expect(status).toHaveTextContent('Loading your answers');
+    } finally {
+      useWorkspace.setState({ ready: true });
+    }
   });
 });

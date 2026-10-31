@@ -11,12 +11,14 @@ const OPTIONS = [
 
 /** The card (label) around a radio's or a checkbox's input. */
 const card = (name: string) => screen.getByRole('radio', { name: new RegExp(`^${name}`) }).closest('label')!;
-const box =(name: string) => screen.getByRole('checkbox', { name: new RegExp(`^${name}`) }).closest('label')!;
+const box = (name: string) => screen.getByRole('checkbox', { name: new RegExp(`^${name}`) }).closest('label')!;
 const checkIcon = (label: HTMLElement) => label.querySelector('svg.lucide-check');
 
 // Choice cards (Billabong plan, Task 6; design doc section 11): --surface cards outlined in
 // --border-strong; the checked card has an --accent border, a 2px inset ring and a check icon, so the
-// state never rests on colour alone. 44px targets.
+// state never rests on colour alone. 44px targets. jsdom has no layout or Tailwind CSS, so these check
+// the classes; the computed border, ring and focus outline are checked in a real browser by
+// tests/e2e/billabong.spec.ts ("wizard choice cards").
 describe('ChoiceGroup cards', () => {
   it('outlines unchecked cards in --border-strong on --surface, 44px tall, with no check icon', () => {
     render(<ChoiceGroup type="radio" name="q" legend="Question" options={OPTIONS} value={undefined} onChange={vi.fn()} />);
@@ -59,5 +61,27 @@ describe('ChoiceGroup cards', () => {
     render(<ChoiceGroup type="radio" name="q" legend="Question" options={OPTIONS} value="yes" onChange={vi.fn()} />);
     const label = card('Yes');
     expect(label).toHaveClass('has-focus-visible:outline-2', 'has-focus-visible:outline-offset-2', 'has-focus-visible:outline-accent');
+  });
+
+  // A list where most options are checked (the report builder): the accent border and the icon, but
+  // no ring, so the list does not outshout the page (design doc section 11, Task 6 follow-up).
+  it('drops the ring but keeps the accent border and icon with emphasis="quiet"', () => {
+    render(<ChoiceGroup type="checkbox" name="q" legend="Question" emphasis="quiet" options={OPTIONS} value={['yes']} onChange={vi.fn()} />);
+    const checked = box('Yes');
+    expect(checked).toHaveClass('border-accent');
+    expect(checked).not.toHaveClass('ring-2');
+    expect(checked).not.toHaveClass('ring-inset');
+    expect(checkIcon(checked)).not.toBeNull();
+    expect(box('No')).toHaveClass('border-border-strong');
+  });
+
+  // The description is inside the label, so a name taken from the whole label would read it, and
+  // aria-describedby would read it again. The name is the label text alone.
+  it('names each input by its label text and describes it by its description, once each', () => {
+    render(<ChoiceGroup type="radio" name="q" legend="Question" options={OPTIONS} value={undefined} onChange={vi.fn()} />);
+    const no = screen.getByRole('radio', { name: 'No' });
+    expect(no).toHaveAccessibleName('No');
+    expect(no).toHaveAccessibleDescription('Not yet');
+    expect(screen.getByRole('radio', { name: 'Yes' })).toHaveAccessibleDescription('');
   });
 });

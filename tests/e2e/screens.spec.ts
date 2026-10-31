@@ -112,6 +112,16 @@ for (const theme of ['light', 'dark'] as const) {
   });
 }
 
+// The report builder: most section cards start checked, drawn quiet (accent border and icon, no ring).
+for (const theme of ['light', 'dark'] as const) {
+  test(`report (${theme})`, async ({ page }, info) => {
+    await seedStorage(page, { workspace: populatedWorkspace(), theme });
+    await page.goto('report/');
+    await expect(page.getByRole('button', { name: 'Download PDF' })).toBeEnabled();
+    await capture(page, `report-${theme}`, info.project.name);
+  });
+}
+
 test('results', async ({ page }, info) => {
   await seedStorage(page, { workspace: populatedWorkspace() });
   await page.goto('assess/results/');

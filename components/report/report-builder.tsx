@@ -130,6 +130,8 @@ function BuilderView({ now }: { now: Date }) {
             type="checkbox"
             name="sections"
             legend="Sections"
+            // Most sections are checked by default: no ring, so the list stays quieter than the preview.
+            emphasis="quiet"
             value={selected}
             // Unavailable sections keep their choice, ready for when there is an assessment.
             onChange={(next) => setSections((prev) => Object.fromEntries(REPORT_SECTIONS.map((s) => [s, available(s) ? next.includes(s) : prev[s]])) as ReportSections)}
