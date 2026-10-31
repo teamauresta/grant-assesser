@@ -112,9 +112,11 @@ function BuilderView({ now }: { now: Date }) {
             one would hide its last checkboxes, and keyboard focus on them, until the end of the page. */}
         <Window title="Options" titleSize="md" bodyClassName="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            {/* The stamp beside the download (docs/art/billabong-prompts.md), decorative and no taller
-                than the button, so the options start where they did. The button still fills the rest of
-                the row. */}
+            {/* The stamp beside the download (docs/art/billabong-prompts.md), decorative. 64px on a
+                phone, where the Options window is the full width: at 48px the real stamp's "APPROVED"
+                did not read (design doc section 11, Art landed). 48px from md, where the window is
+                280px wide and a 64px stamp wraps "Download PDF" onto two lines. The button still fills
+                the rest of the row. */}
             <div className="flex items-center gap-3">
               <Button
                 ref={downloadRef}
@@ -132,7 +134,7 @@ function BuilderView({ now }: { now: Date }) {
                   : <Download aria-hidden="true" size={16} strokeWidth={1.5} />}
                 {busy ? 'Making PDF…' : 'Download PDF'}
               </Button>
-              <Art name="prop-stamp" sizes="48px" className="w-12 shrink-0" />
+              <Art name="prop-stamp" sizes="(min-width: 48rem) 48px, 64px" className="w-16 shrink-0 md:w-12" />
             </div>
             {!canDownload && <p className="text-sm text-muted-fg">Choose at least one section.</p>}
             <p aria-live="polite" className={cn('text-sm text-muted-fg', !saved && 'sr-only')}>

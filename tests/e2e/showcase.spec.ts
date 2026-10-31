@@ -89,6 +89,35 @@ test('hero: the diorama sits beside the text on wide screens and below everythin
   await expect(page.getByRole('button', { name: /background animation/ })).toHaveCount(0);
 });
 
+// The real dioramas (design doc section 11, Art landed): each theme downloads only its own picture,
+// once, and from md the theme script preloads it (the pair is lazy, which would hold the fetch until
+// layout); on a phone, where the diorama comes last, nothing is preloaded.
+for (const theme of ['light', 'dark'] as const) {
+  test(`hero (${theme}): only the ${theme === 'light' ? 'day' : 'dusk'} picture is fetched, preloaded from md`, async ({ page }, info) => {
+    const art: string[] = [];
+    page.on('request', (r) => {
+      const name = r.url().split('/').pop() ?? '';
+      if (name.startsWith('hero-diorama-')) art.push(name);
+    });
+    await seedStorage(page, { theme });
+    await page.goto('./');
+    const img = page.locator('[data-art="hero-diorama"] img:visible');
+    await expect(img).toHaveCount(1);
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    const own = theme === 'light' ? 'hero-diorama-day-' : 'hero-diorama-dusk-';
+    expect(art.length).toBe(1);
+    expect(art[0].startsWith(own)).toBe(true);
+    const preload = page.locator('link[rel="preload"][as="image"]');
+    await expect(preload).toHaveCount(1);
+    expect(await preload.getAttribute('imagesrcset')).toContain(own);
+    expect(await preload.getAttribute('media')).toBe('(min-width: 48rem)');
+    // Who fetched it: the preload link from md, the lazy <img> itself on a phone (the link's media fails).
+    const entries = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => `${(e as PerformanceResourceTiming).initiatorType} ${e.name.split('/').pop()}`));
+    const by = info.project.name === 'desktop' ? 'link' : 'img';
+    expect(entries.filter((e) => e.includes('hero-diorama-'))).toEqual([expect.stringMatching(new RegExp(`^${by} ${own}`))]);
+  });
+}
+
 test.describe('sorting story', () => {
   test('desktop: scrolling through the pinned section sorts every chip', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'The pinned scroll is for wide screens');

@@ -1,20 +1,32 @@
 #!/usr/bin/env node
 // Processes the artwork (Billabong design doc section 6; art/README.md). Reads each original named
 // in the manifest (lib/art.ts) from art/originals/<file>.png, writes public/art/<file>-<width>.avif
-// and .webp at each width in ART_WIDTHS not larger than the original (alpha kept), then writes
-// lib/art-ready.json from what is in public/art, so the Art component renders an image for each
-// processed asset and a placeholder for the rest. Missing originals are listed, never errors.
+// and .webp at each width in ART_WIDTHS (the logo emblem: LOGO_WIDTHS) not larger than the original
+// (alpha kept), then writes lib/art-ready.json from what is in public/art, so the Art component
+// renders an image for each processed asset and a placeholder for the rest. From the logo emblem it
+// also writes the browser icons, app/icon.png and app/apple-icon.png. Missing originals are listed,
+// never errors.
 // Fails (after processing the rest, and still writing lib/art-ready.json) if an original is too
 // small, the wrong shape or unreadable, or if a hero diorama's 1440px AVIF is over 120KB.
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { ART, ART_FORMATS, ART_WIDTHS, artFileName, artFiles, artWidths } from '../lib/art.ts';
+import { ART, ART_FORMATS, ART_WIDTHS, artFileName, artFiles, artWidths, assetWidths } from '../lib/art.ts';
 
 /** The hero's AVIF budget at its largest width (design doc section 6: about 120KB). */
 export const HERO_AVIF_LIMIT = 120 * 1024;
 
 const HERO_FILES = [ART['hero-diorama'].file, ART['hero-diorama'].dark];
+
+/**
+ * The AVIF quality for one base file: 45 for the hero dioramas, 55 for the rest. At 55 the real
+ * dioramas were about 154KB at 1440px, over HERO_AVIF_LIMIT; at 45 they are about 114KB with no
+ * visible loss (design doc section 11, Art landed).
+ * @param {string} file
+ */
+export function avifQuality(file) {
+  return HERO_FILES.includes(file) ? 45 : 55;
+}
 
 /**
  * The AVIF and WebP names (in public/art) for one base file at each width.
@@ -51,16 +63,25 @@ export function unexpected(manifest, files) {
 }
 
 /**
- * What lib/art-ready.json holds: for each base file, the widths with both an AVIF and a WebP among
- * `files` (the names in public/art), or false when there are none.
+ * Each base file in the manifest with its asset's output widths, light then dark, in manifest order.
+ * @param {Record<string, import('../lib/art.ts').ArtAsset>} manifest
+ * @returns {[string, readonly number[]][]}
+ */
+function fileWidths(manifest) {
+  return Object.values(manifest).flatMap((a) => (a.dark ? [a.file, a.dark] : [a.file]).map((file) => /** @type {[string, readonly number[]]} */ ([file, assetWidths(a)])));
+}
+
+/**
+ * What lib/art-ready.json holds: for each base file, the widths (of its asset's) with both an AVIF
+ * and a WebP among `files` (the names in public/art), or false when there are none.
  * @param {Record<string, import('../lib/art.ts').ArtAsset>} manifest
  * @param {readonly string[]} files
  * @returns {Record<string, false | number[]>}
  */
 export function readiness(manifest, files) {
   const present = new Set(files);
-  return Object.fromEntries(artFiles(manifest).map((file) => {
-    const widths = outputsFor(file, ART_WIDTHS).filter((o) => present.has(o.avif) && present.has(o.webp)).map((o) => o.width);
+  return Object.fromEntries(fileWidths(manifest).map(([file, all]) => {
+    const widths = outputsFor(file, all).filter((o) => present.has(o.avif) && present.has(o.webp)).map((o) => o.width);
     return [file, widths.length ? widths : false];
   }));
 }
@@ -99,7 +120,7 @@ const TEMP_PREFIX = '.tmp-';
  * @returns {string[]}
  */
 export function leftovers(manifest, files) {
-  const expected = new Set(artFiles(manifest).flatMap((file) => outputsFor(file, ART_WIDTHS).flatMap((o) => [o.avif, o.webp])));
+  const expected = new Set(fileWidths(manifest).flatMap(([file, widths]) => outputsFor(file, widths).flatMap((o) => [o.avif, o.webp])));
   return files.filter((name) => (!name.startsWith('.') || name.startsWith(TEMP_PREFIX)) && !expected.has(name));
 }
 
@@ -137,7 +158,7 @@ export async function processArt({ originals, out, manifest }) {
       const temp = join(out, `${TEMP_PREFIX}${file}`);
       try {
         const { width = 0, height = 0 } = await sharp(input).metadata();
-        const widths = artWidths(width);
+        const widths = artWidths(width, assetWidths(asset));
         if (widths.length === 0) {
           tooSmall.push(source);
           continue;
@@ -150,10 +171,10 @@ export async function processArt({ originals, out, manifest }) {
         const outputs = outputsFor(file, widths);
         for (const o of outputs) {
           const resized = () => sharp(input).resize({ width: o.width });
-          await resized().avif({ quality: 55 }).toFile(join(temp, o.avif));
+          await resized().avif({ quality: avifQuality(file) }).toFile(join(temp, o.avif));
           await resized().webp({ quality: 78 }).toFile(join(temp, o.webp));
         }
-        for (const old of outputsFor(file, ART_WIDTHS)) {
+        for (const old of outputsFor(file, assetWidths(asset))) {
           for (const format of ART_FORMATS) rmSync(join(out, old[format]), { force: true });
         }
         for (const o of outputs) {
@@ -180,6 +201,32 @@ export async function processArt({ originals, out, manifest }) {
     leftovers: leftovers(manifest, outputs),
     ready: readiness(manifest, outputs),
   };
+}
+
+/** The home-screen icon's background: the light --surface (iOS fills transparency with black). */
+export const APPLE_ICON_BACKGROUND = '#fafaf7';
+
+/**
+ * Writes the browser icons from the logo emblem into `appDir` (Next's app-dir file conventions, which
+ * emit the <link> tags under the base path): icon.png, 192px with the emblem's transparency (the tab
+ * icon), and apple-icon.png, 180px with the emblem on APPLE_ICON_BACKGROUND, inset 10px (the
+ * home-screen icon, which iOS rounds and which must be opaque). Returns the names written.
+ * @param {string} emblem
+ * @param {string} appDir
+ * @returns {Promise<string[]>}
+ */
+export async function writeIcons(emblem, appDir) {
+  const { default: sharp } = await import('sharp');
+  // A palette PNG keeps the tab icon small (it is fetched on every first visit).
+  await sharp(emblem).resize(192, 192).png({ palette: true, quality: 90, compressionLevel: 9 }).toFile(join(appDir, 'icon.png'));
+  const inner = await sharp(emblem).resize(160, 160).png().toBuffer();
+  const composed = await sharp({ create: { width: 180, height: 180, channels: 3, background: APPLE_ICON_BACKGROUND } })
+    .composite([{ input: inner, left: 10, top: 10 }])
+    .png()
+    .toBuffer();
+  await sharp(composed).flatten({ background: APPLE_ICON_BACKGROUND }).png({ palette: true, quality: 90, compressionLevel: 9 })
+    .toFile(join(appDir, 'apple-icon.png'));
+  return ['icon.png', 'apple-icon.png'];
 }
 
 /** @param {number} bytes */
@@ -216,7 +263,7 @@ async function main() {
   }
   const kept = 'skipped; its earlier outputs in public/art/, if any, were kept.';
   for (const name of report.tooSmall) {
-    fail(`${name} is narrower than ${ART_WIDTHS[0]}px, ${kept} Regenerate it at the size in docs/art/billabong-prompts.md.`);
+    fail(`${name} is narrower than its smallest output width (${ART_WIDTHS[0]}px for the illustrations), ${kept} Regenerate it at the size in docs/art/billabong-prompts.md.`);
   }
   for (const name of report.wrongShape) {
     fail(`${name} is not the shape docs/art/billabong-prompts.md gives (within 1%), ${kept}`);
@@ -227,6 +274,16 @@ async function main() {
   for (const name of heroOverLimit(sizes)) {
     const { bytes } = sizes.find((s) => s.name === name) ?? { bytes: 0 };
     fail(`${name} is ${kb(bytes)}, over the hero's ${kb(HERO_AVIF_LIMIT)} AVIF budget. Simplify the image or lower its AVIF quality.`);
+  }
+
+  const emblem = join(originals, `${ART['logo-emblem'].file}.png`);
+  if (report.written.some((w) => w.name.startsWith(`${ART['logo-emblem'].file}-`))) {
+    try {
+      const icons = await writeIcons(emblem, join(root, 'app'));
+      console.log(`\nWrote the browser icons from the logo emblem: ${icons.map((n) => `app/${n}`).join(', ')}.`);
+    } catch (err) {
+      fail(`Could not write the browser icons from the logo emblem: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // Always written, even after a failure above, so it matches public/art.

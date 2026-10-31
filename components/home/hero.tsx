@@ -4,6 +4,7 @@ import { PROGRAMS } from '@/content/programs';
 import { latestVerified } from '@/lib/programs/stats';
 import { formatDate } from '@/lib/dates';
 import { cn } from '@/lib/cn';
+import { HERO_SIZES } from '@/lib/hero-preload';
 import { Art } from '@/components/ui/art';
 import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
@@ -62,13 +63,13 @@ export function Hero() {
       </div>
       {/* The diorama, last: below everything on phones (design doc section 8), and from md placed in
           the right column beside the text and the numbers. Priority, so it is fetched early (a
-          light/dark pair stays lazy, so each theme fetches only its own picture). 100vw less the
-          gutters on phones, about 45% of the window beside the text, and at most 33rem inside the
-          1120px column. */}
+          light/dark pair stays lazy, so each theme fetches only its own picture; from md the theme
+          script preloads the active one, lib/hero-preload.ts). HERO_SIZES: 100vw less the gutters
+          on phones, about 45% of the window beside the text, at most 33rem in the 1120px column. */}
       <Art
         name="hero-diorama"
         priority
-        sizes="(min-width: 70rem) 33rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
+        sizes={HERO_SIZES}
         className="w-full max-w-[36rem] justify-self-center md:col-start-2 md:row-span-2 md:row-start-1"
       />
     </section>

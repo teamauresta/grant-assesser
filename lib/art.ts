@@ -1,8 +1,8 @@
 /**
  * The artwork manifest (Billabong design doc section 6): every image in docs/art/billabong-prompts.md
  * that ships, with its base file name, intrinsic size, default alt text (null when decorative) and,
- * for the hero, its dark-theme partner. The character sheet (platypus-reference.png) is a generation
- * aid and is not listed.
+ * for the hero, its dark-theme partner; plus the logo emblem, cropped from the owner's lockup, at its
+ * own small widths. The character sheet (platypus-reference.png) is a generation aid and is not listed.
  *
  * scripts/process-art.mjs imports this file (`pnpm art` runs it with tsx). Keep it import-free and to
  * erasable TypeScript syntax only (annotations, `type`, `as const`; no enums, namespaces or parameter
@@ -21,7 +21,8 @@ export type ArtName =
   | 'prop-stamp'
   | 'step-answer'
   | 'step-sort'
-  | 'step-plan';
+  | 'step-plan'
+  | 'logo-emblem';
 
 export type ArtAsset = {
   /** Base name of the original (art/originals/<file>.png) and of its outputs (public/art/<file>-<width>.<format>). */
@@ -33,9 +34,17 @@ export type ArtAsset = {
   height: number;
   /** Default alt text, or null when the image is decorative. */
   alt: string | null;
+  /** Output widths, when not ART_WIDTHS (the logo, shown at 32px). */
+  widths?: readonly number[];
 };
 
 export type ArtFormat = 'avif' | 'webp';
+
+/** Output widths. An original gets each one not larger than itself (1x and 2x for the sizes used). */
+export const ART_WIDTHS = [480, 960, 1440] as const;
+
+/** The logo emblem's widths: 1x, 2x and 4x of its 32px in the top bar (a 3x screen takes 128). */
+export const LOGO_WIDTHS = [32, 64, 128] as const;
 
 export const ART: Record<ArtName, ArtAsset> = {
   'hero-diorama': {
@@ -55,21 +64,30 @@ export const ART: Record<ArtName, ArtAsset> = {
   'step-answer': { file: 'step-answer', width: 1024, height: 1024, alt: null },
   'step-sort': { file: 'step-sort', width: 1024, height: 1024, alt: null },
   'step-plan': { file: 'step-plan', width: 1024, height: 1024, alt: null },
+  // Decorative: the live "Grant Navigator" text sits beside it (LogoMark).
+  'logo-emblem': { file: 'logo-emblem', width: 668, height: 668, alt: null, widths: LOGO_WIDTHS },
 };
-
-/** Output widths. An original gets each one not larger than itself (1x and 2x for the sizes used). */
-export const ART_WIDTHS = [480, 960, 1440] as const;
 
 export const ART_FORMATS: readonly ArtFormat[] = ['avif', 'webp'];
 
-/** The widths written for an original `width` pixels wide. */
-export function artWidths(width: number): number[] {
-  return ART_WIDTHS.filter((w) => w <= width);
+/** An asset's output widths: its own, or ART_WIDTHS. */
+export function assetWidths(asset: ArtAsset): readonly number[] {
+  return asset.widths ?? ART_WIDTHS;
+}
+
+/** The widths written for an original `width` pixels wide, from `widths` (ART_WIDTHS by default). */
+export function artWidths(width: number, widths: readonly number[] = ART_WIDTHS): number[] {
+  return widths.filter((w) => w <= width);
 }
 
 /** A processed file's name in public/art. */
 export function artFileName(file: string, width: number, format: ArtFormat): string {
   return `${file}-${width}.${format}`;
+}
+
+/** A `srcset` of one base file's processed widths in one format, under `base` (which ends in a slash). */
+export function artSrcSet(base: string, file: string, widths: readonly number[], format: ArtFormat): string {
+  return widths.map((w) => `${base}${artFileName(file, w, format)} ${w}w`).join(', ');
 }
 
 /** Every base file name in the manifest, each asset's light file then its dark partner, in manifest order. */

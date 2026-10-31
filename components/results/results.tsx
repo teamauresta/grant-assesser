@@ -201,7 +201,7 @@ function StarterGoals({ persona, celebrate }: { persona: Persona; celebrate: boo
           <Card key={g.title} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-3">
               {celebrate
-                ? <Art name="platypus-celebrate" alt="" sizes="56px" className="w-14 shrink-0 self-start" />
+                ? <Art name="platypus-celebrate" alt="" sizes="(min-width: 40rem) 72px, 56px" className="w-14 shrink-0 self-start sm:w-18" />
                 : <Target aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />}
               <div className="flex flex-col gap-0.5">
                 <p className="font-medium">{g.title}</p>

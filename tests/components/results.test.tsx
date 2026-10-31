@@ -93,6 +93,8 @@ describe('Results page', () => {
     expect(art[0]).toHaveAttribute('aria-hidden', 'true');
     // Square at the top of the row: a stretched box would grow as tall as the text on a phone.
     expect(art[0]).toHaveClass('w-14', 'self-start');
+    // 72px from 640px wide, where the card has the room (design doc section 11, Art landed).
+    expect(art[0]).toHaveClass('sm:w-18');
     expect(goals.querySelector('svg.lucide-target')).toBeNull();
     // The only art on the page besides the funding summary's compass.
     expect([...document.querySelectorAll('[data-art]')].map((a) => a.getAttribute('data-art')).sort()).toEqual(['platypus-celebrate', 'prop-compass']);

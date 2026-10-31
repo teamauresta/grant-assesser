@@ -233,3 +233,68 @@ for (const theme of ['light', 'dark'] as const) {
     await banners.screenshot({ path: join(OUT, `banners-${theme}-${project}.png`) });
   });
 }
+
+// Every art slot with the real pictures (design doc section 11, Art landed): with an empty workspace,
+// the program page's Eligibility window and the empty states, each slot's window or card close up;
+// with a populated one, the results (celebrate, compass) and report (stamp) slots in the viewport.
+// The hero, personas, How it works and 404 slots are in the shots above.
+/** A close-up of the window or card around the first visible slot showing `art`. */
+async function closeUp(page: Page, art: string, file: string) {
+  const slot = page.locator(`[data-art="${art}"]:visible`).first();
+  await expect(slot).toBeVisible();
+  await slot.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await frames(page);
+  const frame = slot.locator('xpath=ancestor::*[self::section or self::article][1]');
+  await ((await frame.count()) ? frame : slot).screenshot({ path: join(OUT, file) });
+}
+
+for (const theme of ['light', 'dark'] as const) {
+  test(`art slots (${theme})`, async ({ page }, info) => {
+    const project = info.project.name;
+    const shot = (name: string) => `art-${name}-${theme}-${project}.png`;
+    await seedStorage(page, { theme });
+
+    await page.goto('programs/rdti/');
+    await settle(page);
+    await closeUp(page, 'platypus-reading', shot('eligibility-reading'));
+
+    await page.goto('programs/');
+    await page.getByLabel('Search programs').fill('zzzz no such program');
+    await expect(page.getByText('No programs match.')).toBeVisible();
+    await settle(page);
+    await closeUp(page, 'platypus-search', shot('directory-empty'));
+
+    await page.goto('plan/');
+    await settle(page);
+    await capture(page, `art-plan-empty-${theme}`, project);
+    await closeUp(page, 'prop-filing-cabinet', shot('plan-pipeline-empty'));
+    await page.getByRole('tab', { name: /^Goals/ }).click();
+    await settle(page);
+    await closeUp(page, 'platypus-search', shot('plan-goals-empty'));
+
+    await page.goto('./');
+    await settle(page);
+    await page.locator('header:visible').first().screenshot({ path: join(OUT, shot('top-bar')) });
+  });
+
+  test(`art slots, populated (${theme})`, async ({ page }, info) => {
+    const project = info.project.name;
+    const shot = (name: string) => `art-${name}-${theme}-${project}.png`;
+    await seedStorage(page, { workspace: populatedWorkspace(), theme });
+    await page.goto('assess/results/');
+    await expect(page.getByRole('region', { name: /^Act now/ })).toBeVisible();
+    await settle(page);
+    // The compass shows from 640px only (on a phone the figures keep the width).
+    for (const [name, art] of [['results-celebrate', 'platypus-celebrate'], ['results-compass', 'prop-compass']] as const) {
+      const slot = page.locator(`[data-art="${art}"]:visible`).first();
+      if (!(await slot.count())) continue;
+      await slot.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await frames(page);
+      await page.screenshot({ path: join(OUT, shot(name)) });
+    }
+    await page.goto('report/');
+    await expect(page.getByRole('button', { name: 'Download PDF' })).toBeEnabled();
+    await settle(page);
+    await page.screenshot({ path: join(OUT, shot('report-stamp')) });
+  });
+}

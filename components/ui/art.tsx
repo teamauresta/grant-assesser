@@ -1,5 +1,5 @@
 import { ImageIcon } from 'lucide-react';
-import { ART, artFileName, type ArtFormat, type ArtName } from '@/lib/art';
+import { ART, artFileName, artSrcSet, type ArtFormat, type ArtName } from '@/lib/art';
 import artReady from '@/lib/art-ready.json';
 import { cn } from '@/lib/cn';
 
@@ -14,6 +14,8 @@ export type ArtProps = {
    * pair stays lazy, so each theme fetches only the picture it shows). Otherwise lazy.
    */
   priority?: boolean;
+  /** Eager loading without raising the fetch priority: the logo, tiny and in the top bar on every page. */
+  eager?: boolean;
   /**
    * Classes for the box. Give it a width (`w-40`, `w-full`) or put it in a parent that sizes it: the
    * box sets only its aspect ratio, so in a flex column with `items-center` it would shrink to nothing.
@@ -39,7 +41,7 @@ function readyWidths(file: string): number[] {
  * the URLs carry the base path themselves. The box carries `data-art` with the asset's name, so tests
  * find a slot by what it shows.
  */
-export function Art({ name, sizes, alt, priority = false, className }: ArtProps) {
+export function Art({ name, sizes, alt, priority = false, eager = false, className }: ArtProps) {
   const asset = ART[name];
   const text = alt ?? asset.alt ?? '';
   const decorative = text === '';
@@ -51,8 +53,7 @@ export function Art({ name, sizes, alt, priority = false, className }: ArtProps)
   // every visitor download both the day and the dusk picture.
   const pair = asset.dark !== undefined && darkWidths.length > 0;
 
-  const srcSet = (file: string, widths: number[], format: ArtFormat) =>
-    widths.map((w) => `${base}${artFileName(file, w, format)} ${w}w`).join(', ');
+  const srcSet = (file: string, widths: number[], format: ArtFormat) => artSrcSet(base, file, widths, format);
 
   // `display` is the swap: `block` or `hidden`, each with its dark-variant opposite (cn() merges nothing).
   const picture = (file: string, widths: number[], display = 'block') => (
@@ -64,7 +65,7 @@ export function Art({ name, sizes, alt, priority = false, className }: ArtProps)
         alt={text}
         width={asset.width}
         height={asset.height}
-        loading={priority && !pair ? 'eager' : 'lazy'}
+        loading={eager || (priority && !pair) ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}
         decoding="async"
         className="h-full w-full object-contain"

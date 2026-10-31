@@ -131,11 +131,6 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   // The How it works previews (Billabong, design doc section 8) are --bg insets in the step windows:
   // their labels are --fg and --muted-fg on --bg (above), and their accent bar and ticks are
   // graphics on --bg and --surface (3:1, implied by the accent's AA checks above).
-  // The logo's compass is a non-text graphic (3:1). The logo uses --logo, the light --brand, in both
-  // themes, so the mark looks the same everywhere.
-  it('--on-logo stays visible on --logo (3:1)', () => {
-    expect(contrast(t['--on-logo'], t['--logo'])).toBeGreaterThanOrEqual(3);
-  });
 });
 
 // The contour hero and the forest How it works panel are gone (Billabong design doc sections 5 and 8;
@@ -145,10 +140,10 @@ it('no contour, panel or glow token remains', () => {
   expect(css).not.toMatch(/--panel-|--color-panel-|data-hero-aurora|@utility glow-brand/);
 });
 
-it('the logo is the light --brand and only defined in :root', () => {
-  expect(light['--logo']).toBe(light['--brand']);
-  // The raw block text, not the hex-only map, so a non-hex override such as var(--brand) is caught too.
-  expect(block('[data-theme="dark"]')).not.toMatch(/--(on-)?logo\s*:/);
+// The SVG compass logo and its --logo and --on-logo tokens (and their 3:1 and light-only checks) are
+// gone: the logo is the owner's platypus emblem, a picture (design doc section 11, Art landed).
+it('no logo token remains', () => {
+  expect(css).not.toMatch(/--(on-)?logo\s*:|var\(--(on-)?logo\)/);
 });
 
 // Billabong confetti is amber, sage and sky (design doc section 8; Billabong plan, Task 11 step 7):

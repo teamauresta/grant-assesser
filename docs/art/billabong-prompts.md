@@ -1,6 +1,6 @@
 # Billabong artwork: prompts for gpt-image-2.5
 
-Grant Navigator's artwork for the Billabong look (posthog.com's style, with original art). There are 13 images: one character reference, a hero diorama in two lighting versions, four platypus poses, three props and three small "How it works" spots.
+Grant Navigator's artwork for the Billabong look (posthog.com's style, with original art). There are 13 images: one character reference, a hero diorama in two lighting versions, four platypus poses, three props and three small "How it works" spots. A fourteenth entry, the logo emblem, is cropped from the owner's logo rather than generated.
 
 Everything here must be original. Do not reference PostHog, its hedgehogs, its logo or its artwork in any prompt, and do not upload PostHog images as references.
 
@@ -138,6 +138,13 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **Where:** home page "How it works", the step 3 window, above its text
 
 > [Style block] A small clay wall calendar page with a simple grid of squares (no numbers or letters), three squares circled in amber, one with a little green flag pin stuck in it, and a small brass alarm clock sitting in front of it. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
+
+## 14. Logo emblem (not generated from a prompt)
+
+- **File:** `logo-emblem.png`
+- **Size:** 668×668 (square), transparent
+- **Where:** the top bar and the mobile header (`LogoMark`, 32px, beside the live "Grant Navigator" text), and the browser tab and home-screen icons (`app/icon.png`, `app/apple-icon.png`, written by `pnpm art`)
+- **Source:** the round emblem (the platypus in glasses and amber neckerchief with a compass, in a gold ring on a eucalyptus disc) cropped from the owner's lockup `Platypus Compass Grant Navigator Logo-1.png` (2048×768, transparent): a square around the emblem's alpha bounds (x 83–690, y 60–687, alpha above 16, everything right of x 690 cleared, so none of the wordmark comes along) with 20px of transparent padding on each side. The lockup's baked "Grant Navigator" wordmark is dark green and nearly invisible on the dark theme, so the site uses the emblem only and keeps the name as live text.
 
 ---
 

@@ -79,6 +79,15 @@ describe('Art image', () => {
     expect(eager).toHaveAttribute('fetchpriority', 'high');
   });
 
+  // The logo (LogoMark): in the top bar on every page and tiny, so it loads at once without taking
+  // fetch priority from the hero.
+  it('loads eagerly without raising the fetch priority with eager', () => {
+    ready['logo-emblem'] = [32, 64, 128];
+    const img = render(<Art name="logo-emblem" sizes="32px" eager />).container.querySelector('img')!;
+    expect(img).toHaveAttribute('loading', 'eager');
+    expect(img).not.toHaveAttribute('fetchpriority');
+  });
+
   it('hides a decorative image from assistive tech: alt="" from the caller or a null manifest alt', () => {
     ready['platypus-search'] = [480];
     ready['step-plan'] = [480];

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
@@ -14,14 +15,15 @@ import { BAR_BAND, INSET_BAR } from './inset-bar';
  * Desktop navigation (md and up): an inset, rounded bar that sticks to the top, below the notch's
  * safe area. Logo and nav links on the left; the persona chip and "Start assessment" on the right.
  * The call to action is hidden on /assess/ (the wizard and its results), where it would lead nowhere.
+ * `logo` is the server-rendered `LogoMark` (see BrandLink).
  */
-export function TopNav({ className }: { className?: string }) {
+export function TopNav({ logo, className }: { logo: ReactNode; className?: string }) {
   const pathname = usePathname();
   const onAssess = isActivePath(pathname, '/assess/');
   return (
     <header className={cn('sticky top-0 h-(--bar-h) pt-[calc(0.5rem+env(safe-area-inset-top))] pb-2 print:static', BAR_BAND, className)}>
       <div className={cn('mx-2 flex h-14 items-center gap-4 px-3 lg:gap-6', INSET_BAR)}>
-        <BrandLink className="shrink-0" />
+        <BrandLink logo={logo} className="shrink-0" />
         <nav aria-label="Primary" className="min-w-0 flex-1">
           <ul className="flex items-center gap-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

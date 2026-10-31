@@ -57,7 +57,7 @@ export function EligibilityList({ gates, profile, framed = true }: EligibilityLi
           {/* The platypus reading a long form (docs/art/billabong-prompts.md), decorative: the line
               beside it says what to do. */}
           <div className="flex items-center gap-3">
-            <Art name="platypus-reading" alt="" sizes="56px" className="w-14 shrink-0" />
+            <Art name="platypus-reading" alt="" sizes="(min-width: 40rem) 72px, 64px" className="w-16 shrink-0 sm:w-18" />
             <p className="text-sm text-muted-fg">Answer a few questions to see which of these you meet.</p>
           </div>
           <Link href="/assess/" className={buttonClasses({ variant: 'secondary', className: 'sm:shrink-0' })}>

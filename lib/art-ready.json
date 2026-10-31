@@ -1,14 +1,57 @@
 {
-  "hero-diorama-day": false,
-  "hero-diorama-dusk": false,
-  "platypus-wave": false,
-  "platypus-reading": false,
-  "platypus-celebrate": false,
-  "platypus-search": false,
-  "prop-filing-cabinet": false,
-  "prop-compass": false,
-  "prop-stamp": false,
-  "step-answer": false,
-  "step-sort": false,
-  "step-plan": false
+  "hero-diorama-day": [
+    480,
+    960,
+    1440
+  ],
+  "hero-diorama-dusk": [
+    480,
+    960,
+    1440
+  ],
+  "platypus-wave": [
+    480,
+    960
+  ],
+  "platypus-reading": [
+    480,
+    960
+  ],
+  "platypus-celebrate": [
+    480,
+    960
+  ],
+  "platypus-search": [
+    480,
+    960
+  ],
+  "prop-filing-cabinet": [
+    480,
+    960
+  ],
+  "prop-compass": [
+    480,
+    960
+  ],
+  "prop-stamp": [
+    480,
+    960
+  ],
+  "step-answer": [
+    480,
+    960
+  ],
+  "step-sort": [
+    480,
+    960
+  ],
+  "step-plan": [
+    480,
+    960
+  ],
+  "logo-emblem": [
+    32,
+    64,
+    128
+  ]
 }

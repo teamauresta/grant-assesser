@@ -8,13 +8,19 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
 import { TopNav } from '@/components/layout/top-nav';
 import { MobileHeader } from '@/components/layout/mobile-header';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// The logo is rendered on the server by the layout and passed in, so the top bar's client code never
+// imports the art manifest (design doc section 11, Art landed).
+const logo = <span data-testid="logo" />;
 
 // next/link drops the trailing slash under Vitest (trailingSlash is a next.config setting).
 const path = (p: string) => expect.stringMatching(new RegExp(`^${p}/?$`));
 
 const renderAt = (p: string) => {
   pathname = p;
-  return render(<TopNav />);
+  return render(<TopNav logo={logo} />);
 };
 
 afterEach(cleanup);
@@ -81,13 +87,32 @@ describe('TopNav', () => {
 describe('MobileHeader', () => {
   it('is the same inset bar with the logo and persona chip, and no Start assessment', () => {
     pathname = '/';
-    render(<MobileHeader />);
+    render(<MobileHeader logo={logo} />);
     const header = screen.getByRole('banner');
     expect(header).toHaveClass('sticky', 'top-0', 'bg-bg', 'h-(--bar-h)', 'pt-[calc(0.5rem+env(safe-area-inset-top))]', 'pb-2', 'print:static');
     expect(header.firstElementChild).toHaveClass('mx-2', 'h-14', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border');
     expect(within(header).getByRole('link', { name: 'Grant Navigator' })).toHaveAttribute('aria-current', 'page');
+    expect(within(within(header).getByRole('link', { name: 'Grant Navigator' })).getByTestId('logo')).toBeInTheDocument();
     expect(within(header).getByRole('link', { name: 'Choose persona' })).toBeInTheDocument();
     expect(within(header).queryByRole('link', { name: 'Start assessment' })).toBeNull();
+  });
+});
+
+describe('the logo in the bars', () => {
+  it('sits inside the brand link of the top bar, before the name', () => {
+    renderAt('/programs/');
+    const brand = screen.getByRole('link', { name: 'Grant Navigator' });
+    expect(brand.firstElementChild).toBe(within(brand).getByTestId('logo'));
+  });
+
+  // A client component that imported LogoMark would ship components/ui/art.tsx and the art manifest
+  // to every page (about 420 bytes gzipped on the home page).
+  it('is never imported by the client bar components', () => {
+    for (const file of ['brand-link.tsx', 'top-nav.tsx']) {
+      const src = readFileSync(join(import.meta.dirname, '..', '..', 'components', 'layout', file), 'utf8');
+      expect(src.startsWith("'use client'")).toBe(true);
+      expect(src).not.toMatch(/logo-mark|components\/ui\/art/);
+    }
   });
 });
 
