@@ -34,8 +34,11 @@ function Figure({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** The figures: large, bold and in tabular digits, so a count-up never shifts the line. */
-const FIGURE = 'num text-3xl font-bold tracking-tight md:text-4xl';
+/**
+ * The figures: large, bold and in tabular digits, so a count-up never shifts the line. They may break
+ * inside a long range rather than overflow a narrow column (enlarged text, a 320px screen).
+ */
+const FIGURE = 'num break-words text-3xl font-bold tracking-tight md:text-4xl';
 
 /** No figure yet: words, not a number, so a size down. */
 const NONE = <span className="text-2xl font-semibold">None counted yet</span>;

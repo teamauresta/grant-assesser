@@ -5,6 +5,9 @@ import { cn } from '@/lib/cn';
 /** The title bar's classes, for other window-like frames (dialogs) to reuse. */
 export const WINDOW_BAR = 'flex items-center gap-3 rounded-t-[7px] border-b border-border bg-neutral-bg px-3 py-2';
 
+/** The frame's classes, without its border colour (borderClassName), for skeletons drawn like a window. */
+export const WINDOW_FRAME = 'rounded-lg border bg-surface shadow-window';
+
 const TITLE_SIZES = { sm: 'text-sm', md: 'text-base' } as const;
 
 /** The decorative minimise, maximise and close glyphs: hidden from assistive tech, never focusable. */
@@ -93,7 +96,7 @@ export function Window({
     <Frame
       {...rest}
       aria-labelledby={landmark ? id : undefined}
-      className={cn('rounded-lg border bg-surface shadow-window', borderClassName, className)}
+      className={cn(WINDOW_FRAME, borderClassName, className)}
     >
       <div className={WINDOW_BAR}>
         <Heading

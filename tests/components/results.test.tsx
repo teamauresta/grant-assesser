@@ -1,15 +1,17 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PERSONA_NOW as now, bootstrappedVic } from '@/tests/fixtures/personas';
 
-vi.mock('@/lib/use-now', () => ({ useNow: () => new Date('2026-10-27T00:00:00Z') }));
+// One Date for every render, as the real hook keeps one until its clock ticks (results memoise on it).
+const { stableNow } = vi.hoisted(() => ({ stableNow: new Date('2026-10-27T00:00:00Z') }));
+vi.mock('@/lib/use-now', () => ({ useNow: () => stableNow }));
 
 import { Results } from '@/components/results/results';
 import { FUNDING_SUMMARY_ID } from '@/components/results/funding-summary';
 import { buttonClasses } from '@/components/ui/button';
-import { PERSONA_RESULTS } from '@/lib/personas';
+import { DEFAULT_RESULTS, PERSONA_RESULTS } from '@/lib/personas';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
 
@@ -42,6 +44,24 @@ describe('Results page', () => {
     expect(h1.querySelectorAll('.highlight')).toHaveLength(1);
   });
 
+  describe('in production, with a phrase missing from its title', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it('shows the plain heading without a band', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      useWorkspace.setState({ ws: emptyWorkspace(now) });
+      const phrase = DEFAULT_RESULTS.highlight;
+      DEFAULT_RESULTS.highlight = 'not in the title';
+      try {
+        render(<Results />);
+        const h1 = await screen.findByRole('heading', { level: 1, name: 'Your results' });
+        expect(h1.querySelectorAll('.highlight')).toHaveLength(0);
+      } finally {
+        DEFAULT_RESULTS.highlight = phrase;
+      }
+    });
+  });
+
   it('puts the funding summary in a window titled "Your funding estimate", with the summary\'s id', async () => {
     render(<Results />);
     const summary = await screen.findByRole('region', { name: 'Your funding estimate' });
@@ -71,14 +91,29 @@ describe('Results page', () => {
     has(row, 'rounded-lg border border-border bg-surface');
     expect(row).not.toHaveClass('border-dashed');
     expect(row).not.toHaveClass('text-muted-fg');
-    // The list holds separate cards, not one divided box.
+    // The list holds separate cards, not one divided box, and keeps its list role in Safari.
     expect(row.parentElement).not.toHaveClass('divide-y');
     expect(row.parentElement).not.toHaveClass('border');
+    expect(row.parentElement).toHaveAttribute('role', 'list');
+    for (const toggle of within(row).getAllByRole('button', { expanded: false })) has(toggle, 'text-fg hover:text-accent');
+    expect(within(row).getByRole('button', { name: /^Add to pipeline/ }).className).toBe(buttonClasses({ variant: 'secondary' }));
 
     const notFit = screen.getByRole('region', { name: /^Not a fit/ });
     const greyed = within(notFit).getAllByRole('listitem')[0];
-    has(greyed, 'rounded-lg border border-dashed border-border text-muted-fg');
+    // Review of Task 7 (design doc section 11): the dashes are --border-strong, since --border dashes
+    // read too weakly on the page; the toggles are muted and the Add button is a ghost.
+    has(greyed, 'rounded-lg border border-dashed border-border-strong text-muted-fg');
+    expect(greyed).not.toHaveClass('border-border');
     expect(greyed).not.toHaveClass('bg-surface');
+    // Greyed by colour, not opacity, so the status pill keeps its full strength.
+    expect(greyed.className).not.toMatch(/opacity/);
+    const toggles = within(greyed).getAllByRole('button', { expanded: false });
+    expect(toggles).toHaveLength(2);
+    for (const toggle of toggles) {
+      has(toggle, 'text-muted-fg hover:text-fg');
+      expect(toggle).not.toHaveClass('text-fg');
+    }
+    expect(within(greyed).getByRole('button', { name: /^Add to pipeline/ }).className).toBe(buttonClasses({ variant: 'ghost' }));
     const reason = within(greyed).getByText('Not a fit:').closest('p')!;
     expect(reason).toHaveClass('text-fg');
     expect(reason.textContent!.length).toBeGreaterThan('Not a fit: '.length);

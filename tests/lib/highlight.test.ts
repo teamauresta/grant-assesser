@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { splitHighlight } from '@/lib/highlight';
 import { DEFAULT_RESULTS, PERSONA_RESULTS } from '@/lib/personas';
 
@@ -8,9 +8,20 @@ describe('splitHighlight', () => {
     expect(splitHighlight('Build eligibility before the round', 'eligibility')).toEqual(['Build ', 'eligibility', ' before the round']);
   });
 
-  it('throws when the phrase is missing, so a copy edit cannot drop the band silently', () => {
+  it('throws in development and tests when the phrase is missing, so a copy edit cannot drop the band silently', () => {
     expect(() => splitHighlight('Your results', 'funding')).toThrow();
     expect(() => splitHighlight('Your results', '')).toThrow();
+  });
+
+  describe('in production', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it('degrades to the plain text, with no phrase, rather than breaking the page', () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      expect(splitHighlight('Your results', 'funding')).toEqual(['Your results', '', '']);
+      expect(splitHighlight('Your results', '')).toEqual(['Your results', '', '']);
+      expect(splitHighlight('Your results', 'results')).toEqual(['Your ', 'results', '']);
+    });
   });
 });
 

@@ -30,15 +30,18 @@ export type AssessmentRowProps = {
   onAdd: () => void;
 };
 
-/** A text-style toggle for a panel shown below the row's toolbar. */
-function PanelToggle({ open, controls, onToggle, children }: { open: boolean; controls: string; onToggle: () => void; children: ReactNode }) {
+/**
+ * A text-style toggle for a panel shown below the row's toolbar. `muted` draws it in --muted-fg (--fg on
+ * hover), for Not a fit cards.
+ */
+function PanelToggle({ open, controls, onToggle, muted = false, children }: { open: boolean; controls: string; onToggle: () => void; muted?: boolean; children: ReactNode }) {
   return (
     <button
       type="button"
       aria-expanded={open}
       aria-controls={controls}
       onClick={onToggle}
-      className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-medium text-fg hover:text-accent', focusRing)}
+      className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-medium', muted ? 'text-muted-fg hover:text-fg' : 'text-fg hover:text-accent', focusRing)}
     >
       {children}
       <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={cn('shrink-0 text-muted-fg transition-transform duration-150', open && 'rotate-180')} />
@@ -48,8 +51,8 @@ function PanelToggle({ open, controls, onToggle, children }: { open: boolean; co
 
 /**
  * One program in the results, as a card: status, benefit, score with its breakdown, checks, and Add to
- * pipeline. Not a fit cards are quiet (no fill, a dashed outline, muted text) and keep their reason in
- * --fg.
+ * pipeline. Not a fit cards are quiet (no fill, a dashed --border-strong outline, muted text and
+ * toggles, a ghost Add button) and keep their status pill at full strength and their reason in --fg.
  */
 export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowProps) {
   const { program: p, score, gates, status } = a;
@@ -62,7 +65,7 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
   const [showChecks, setShowChecks] = useState(false);
 
   return (
-    <Card as="li" tone={notFit ? 'quiet' : 'surface'} className={cn('flex flex-col gap-3', notFit && 'text-muted-fg')}>
+    <Card as="li" emphasis={notFit ? 'quiet' : 'default'} className={cn('flex flex-col gap-3', notFit && 'text-muted-fg')}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1.5">
           <h3 className={cn('text-base leading-snug', notFit && 'font-medium')}>
@@ -100,10 +103,10 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
 
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
         <div className="flex flex-wrap items-center gap-x-6">
-          <PanelToggle open={showWhy} controls={`${id}-why`} onToggle={() => setShowWhy((v) => !v)}>
+          <PanelToggle muted={notFit} open={showWhy} controls={`${id}-why`} onToggle={() => setShowWhy((v) => !v)}>
             Why?<span className="sr-only"> How the score for {p.name} is worked out</span>
           </PanelToggle>
-          <PanelToggle open={showChecks} controls={`${id}-checks`} onToggle={() => setShowChecks((v) => !v)}>
+          <PanelToggle muted={notFit} open={showChecks} controls={`${id}-checks`} onToggle={() => setShowChecks((v) => !v)}>
             {gateSummaryText(summary)}<span className="sr-only"> for {p.name}</span>
           </PanelToggle>
         </div>
@@ -120,7 +123,7 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
               </Button>
             </>
           ) : (
-            <Button variant="secondary" onClick={onAdd}>
+            <Button variant={notFit ? 'ghost' : 'secondary'} onClick={onAdd}>
               <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
               Add to pipeline
               <span className="sr-only">: {p.name}</span>

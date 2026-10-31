@@ -20,7 +20,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Highlight } from '@/components/ui/highlight';
 import { Tabs } from '@/components/ui/tabs';
-import { WINDOW_BAR, WindowControls } from '@/components/ui/window';
+import { WINDOW_BAR, WINDOW_FRAME, WindowControls } from '@/components/ui/window';
 import { Reveal } from '@/components/motion/reveal';
 import { AssessmentRow } from './assessment-row';
 import { FUNDING_SUMMARY_ID, FundingSummary } from './funding-summary';
@@ -132,7 +132,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
 /** The page's h1, with its one marker band (Billabong design doc, section 4) on the copy's phrase. */
 function ResultsHeading({ copy }: { copy: PersonaResultsCopy }) {
   const [before, phrase, after] = splitHighlight(copy.title, copy.highlight);
-  return <h1 className="text-3xl">{before}<Highlight>{phrase}</Highlight>{after}</h1>;
+  return <h1 className="text-3xl">{before}{phrase && <Highlight>{phrase}</Highlight>}{after}</h1>;
 }
 
 function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: ResultGroup[]; inPlan: Set<string | undefined>; onAdd: (slug: string) => void }) {
@@ -155,7 +155,8 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
               </div>
               {items.length ? (
                 // Each result is its own card (Billabong plan, Task 7); Not a fit cards are quiet.
-                <ul className="flex flex-col gap-3">
+                // role="list": Safari and VoiceOver drop a list's semantics when its list style is none.
+                <ul role="list" className="flex flex-col gap-3">
                   {items.map((a) => (
                     <AssessmentRow
                       key={a.program.slug}
@@ -233,7 +234,7 @@ function ResultsSkeleton() {
           <div className="h-9 w-72 max-w-full rounded bg-surface" />
           <div className="h-16 rounded bg-surface" />
         </div>
-        <div className="rounded-lg border border-border bg-surface shadow-window">
+        <div className={cn(WINDOW_FRAME, 'border-border')}>
           <div className={WINDOW_BAR}>
             <div className="h-6 flex-1">
               <div className="h-full w-48 rounded bg-surface" />

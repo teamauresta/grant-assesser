@@ -11,8 +11,9 @@ import { useHeightVar } from '@/lib/use-height-var';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { markAssessmentFinished } from '@/lib/celebrate';
 import { hasAnswers } from '@/lib/profile';
+import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
-import { WINDOW_BAR, Window, WindowControls } from '@/components/ui/window';
+import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 import { Question } from './question';
 
 /**
@@ -181,7 +182,7 @@ function WizardSkeleton() {
   // like the real ones, so the page does not jump when the answers load. A status, so "Loading your
   // answers" is announced as text (a plain div cannot take an aria-label).
   return (
-    <div role="status" aria-busy="true" className="max-w-2xl rounded-lg border border-border bg-surface shadow-window">
+    <div role="status" aria-busy="true" className={cn(WINDOW_FRAME, 'max-w-2xl border-border')}>
       <span className="sr-only">Loading your answers</span>
       <div aria-hidden="true">
         <div className={WINDOW_BAR}>
