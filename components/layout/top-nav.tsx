@@ -35,7 +35,7 @@ export function TopNav({ className }: { className?: string }) {
                       'relative inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-md px-3 text-sm transition-colors duration-150',
                       // The state indicator: a 3px underline inside the bar, resting on its bottom edge.
                       "after:absolute after:inset-x-3 after:-bottom-[5px] after:h-[3px] after:rounded-full after:content-['']",
-                      active ? 'font-semibold text-fg after:bg-accent' : 'text-muted-fg hover:bg-bg hover:text-fg',
+                      active ? 'font-semibold text-fg after:bg-accent forced-colors:after:bg-[CanvasText]' : 'text-muted-fg hover:bg-bg hover:text-fg',
                       focusRing,
                     )}
                   >

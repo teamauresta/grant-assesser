@@ -61,6 +61,15 @@ describe('TopNav', () => {
     expect(bar).toHaveClass('mx-2', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border', 'h-14');
   });
 
+  // The underline is a background, which forced colours remove; it draws in CanvasText there, as the
+  // active tab's does (components/ui/tabs.tsx).
+  it("draws the current item's underline in the accent, and in CanvasText under forced colours", () => {
+    renderAt('/plan/');
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    expect(within(nav).getByRole('link', { name: 'My Plan' })).toHaveClass('after:bg-accent', 'forced-colors:after:bg-[CanvasText]');
+    expect(within(nav).getByRole('link', { name: 'Programs' })).not.toHaveClass('after:bg-accent');
+  });
+
   it('keeps 44px targets on the nav items', () => {
     renderAt('/');
     for (const link of within(screen.getByRole('navigation', { name: 'Primary' })).getAllByRole('link')) {

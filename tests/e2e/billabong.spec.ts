@@ -98,8 +98,8 @@ test.describe('chunky buttons', () => {
     const box = (await link.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + 1);
     await page.mouse.down();
-    // Longer than the 150ms press transition, so the button has finished moving down.
-    await page.waitForTimeout(250);
+    // Released only once the 150ms press transition has finished and the button sits 2px down.
+    await expect.poll(async () => (await movement(link)).translate).toBe('0px 2px');
     await page.mouse.up();
     await expect(page).toHaveURL(/\/assess\/$/);
   });

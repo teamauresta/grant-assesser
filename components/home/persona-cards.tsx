@@ -38,8 +38,8 @@ export function PersonaCards() {
               style={{ '--tone': tone } as CSSProperties}
               className={cn(
                 'spotlight group flex h-full min-h-32 flex-col gap-2 rounded-lg border bg-surface p-6 [--spot-size:200px]',
-                'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent motion-safe:hover:-translate-y-0.5',
-                'hover:shadow-[0_10px_30px_-14px_var(--tone)]',
+                // The interactive card's neutral lift (Card interactive); the persona tone stays on the icon.
+                'transition-[border-color,translate,box-shadow] duration-150 hover:border-accent hover:shadow-[0_8px_24px_-12px_var(--scrim)] motion-safe:hover:-translate-y-0.5',
                 selected ? 'border-accent' : 'border-border',
                 focusRing,
               )}

@@ -27,9 +27,19 @@ describe('PersonaCards', () => {
     for (const c of ['border', 'border-border', 'border-border-strong', 'border-accent', 'border-surface', 'border-transparent', 'hover:border-accent']) expect(c).not.toMatch(ONE_SIDED);
   });
 
-  it('has no one-sided border (no coloured edge): only the icon badge and the hover glow carry the tone', () => {
+  it('has no one-sided border (no coloured edge): only the icon badge carries the tone', () => {
     render(<PersonaCards />);
     for (const link of screen.getAllByRole('link')) expect(link.className).not.toMatch(ONE_SIDED);
+  });
+
+  // CLAUDE.md: the only hover shadow is the interactive card's neutral lift (Card interactive), so the
+  // persona cards use the same --scrim shadow, not one tinted by the persona's tone.
+  it("lifts on hover with the interactive card's neutral shadow, never a tinted one", () => {
+    render(<PersonaCards />);
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).toHaveClass('hover:shadow-[0_8px_24px_-12px_var(--scrim)]', 'motion-safe:hover:-translate-y-0.5');
+      expect(link.className).not.toContain('var(--tone)');
+    }
   });
 
   // Billabong design doc section 8: the platypus waves from the first card. Decorative (the card's

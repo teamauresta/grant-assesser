@@ -25,7 +25,7 @@
  * --hl-* are marker highlights, painted at 35% over the page by the highlight utility
  * (HIGHLIGHT_ALPHA in lib/highlight.ts), behind --fg text only: never muted text.
  * Status colours are for StatusPill only; the accent is never used for status.
- * The Eucalyptus brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo,
+ * The brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo,
  * the progress ring and persona tones. Never for status or body text. Confetti uses the highlight
  * tones (CONFETTI_COLOURS in lib/celebrate.ts).
  */
@@ -60,7 +60,7 @@
   --hl-sage: #9cc5a1;
   --hl-sky: #7fb3d5;
 
-  /* Eucalyptus brand colours: brand moments only (logo, progress ring, persona tones). Never for
+  /* Brand colours: brand moments only (logo, progress ring, persona tones). Never for
    * status or body text. */
   --brand: #1f5c4a;
   --brand-2: #3f6e5a;
