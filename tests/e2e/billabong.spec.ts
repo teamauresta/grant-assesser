@@ -194,3 +194,22 @@ test.describe('top bar', () => {
     expect(target.y).toBeGreaterThanOrEqual(bar.y + bar.height);
   });
 });
+
+// The persona chip is drawn 36px tall to sit level with the bar's button, and a ::before stretches
+// its target to 44px (design doc section 11, Task 3). The ::before is placed against the chip's
+// padding box, inside its 1px border, so it must reach 5px past it to add 4px beyond each edge.
+test('the persona chip keeps a 44px target in the bar', async ({ page }) => {
+  await page.goto('programs/');
+  const chip = page.getByRole('banner').getByRole('link', { name: 'Choose persona' });
+  await expect(chip).toBeVisible();
+  const box = (await chip.boundingBox())!;
+  expect(box.height).toBe(36);
+  const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  for (const dy of [-21, 21]) {
+    const hit = await page.evaluate(({ x, y }) => {
+      const el = document.elementFromPoint(x, y);
+      return el?.closest('a')?.getAttribute('href') ?? el?.tagName ?? null;
+    }, { x: centre.x, y: centre.y + dy });
+    expect(hit, `${dy}px from the centre`).toMatch(/\/settings\/$/);
+  }
+});
