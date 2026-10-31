@@ -71,8 +71,10 @@ describe('FundingSummary', () => {
     expect(high).toHaveTextContent(/^\$43\.5K$/);
   });
 
+  // The region was named by a hidden "Funding summary" heading; it is now a window titled "Your
+  // funding estimate" (Billabong design doc, section 4: the results summary is a window; plan Task 7).
   it('puts an id on the section, for aiming the results burst', () => {
     render(<FundingSummary estimate={estimate([30_000, 45_000], 0)} counted={counted} />);
-    expect(document.getElementById(FUNDING_SUMMARY_ID)).toBe(screen.getByRole('region', { name: 'Funding summary' }));
+    expect(document.getElementById(FUNDING_SUMMARY_ID)).toBe(screen.getByRole('region', { name: 'Your funding estimate' }));
   });
 });

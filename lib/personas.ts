@@ -33,6 +33,8 @@ export const PERSONA_DEFAULTS: Record<Persona, Required<Pick<Profile, 'vcBacked'
 export type PersonaResultsCopy = {
   /** Heading and lead paragraph above the results. */
   title: string;
+  /** The words of the title that get the page's one marker band (Billabong design doc, section 4). */
+  highlight: string;
   intro: string;
   /** The track the results open on. */
   defaultTrack: Track;
@@ -45,16 +47,19 @@ export type PersonaResultsCopy = {
 export const PERSONA_RESULTS: Record<Persona, PersonaResultsCopy> = {
   bootstrapped: {
     title: 'Start with what pays back quickly',
+    highlight: 'pays back quickly',
     intro: 'A paid pilot with a customer is still your best funding. Around it, take the free credits and services that save cash now, and keep matched grants for when you can spare the match. Programs that need VC funding stay listed, greyed out, so you can see what a raise would unlock.',
     defaultTrack: 'quick-wins',
   },
   'pre-raise': {
     title: 'Build eligibility before the round',
+    highlight: 'eligibility',
     intro: 'Claim what you qualify for now, such as the R&D Tax Incentive, and prepare the evidence investors and assessors both look for. Some programs open up once you close a VC-led round; they are marked as fixable rather than ruled out.',
     defaultTrack: 'funding',
   },
   'vc-backed': {
     title: 'Use what your investors unlock',
+    highlight: 'investors unlock',
     intro: 'Your VC backing opens the larger credit tiers, often through your investor\'s partner ID or referral code, and makes bigger matched grants realistic. Start with the funding that moves the most money, then claim the VC-gated credits.',
     defaultTrack: 'funding',
   },
@@ -63,6 +68,7 @@ export const PERSONA_RESULTS: Record<Persona, PersonaResultsCopy> = {
 /** Results lead when no persona has been chosen. */
 export const DEFAULT_RESULTS: PersonaResultsCopy = {
   title: 'Your results',
+  highlight: 'results',
   intro: 'Ranked with balanced weights because no persona is set. Choose one in the assessment to rank programs for your situation.',
   defaultTrack: 'funding',
 };

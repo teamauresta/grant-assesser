@@ -122,9 +122,16 @@ for (const theme of ['light', 'dark'] as const) {
   });
 }
 
-test('results', async ({ page }, info) => {
-  await seedStorage(page, { workspace: populatedWorkspace() });
-  await page.goto('assess/results/');
-  await expect(page.getByRole('region', { name: /^Act now/ })).toBeVisible();
-  await capture(page, 'results', info.project.name);
-});
+// Results (design doc section 11, Task 7): the funding window, the suggested goal and the result
+// cards, Not a fit cards quiet. Bootstrapped opens on Quick wins; then the Funding tab.
+for (const theme of ['light', 'dark'] as const) {
+  test(`results (${theme})`, async ({ page }, info) => {
+    await seedStorage(page, { workspace: populatedWorkspace(), theme });
+    await page.goto('assess/results/');
+    await expect(page.getByRole('region', { name: /^Act now/ })).toBeVisible();
+    await capture(page, `results-quick-wins-${theme}`, info.project.name);
+    await page.getByRole('tablist', { name: 'Result tracks' }).getByRole('tab', { name: /^Funding/ }).click();
+    await expect(page.getByRole('region', { name: /^Not a fit/ })).toBeVisible();
+    await capture(page, `results-funding-${theme}`, info.project.name);
+  });
+}

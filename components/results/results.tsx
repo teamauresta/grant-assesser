@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, ClipboardCheck, Pencil, Plus, Target } from 'lucide-react';
 import type { Persona, Profile } from '@/lib/schema';
+import { splitHighlight } from '@/lib/highlight';
 import { PROGRAMS } from '@/content/programs';
 import { assessAll, estimateFunding, type Track } from '@/lib/assess';
 import { GROUP_INFO, TRACK_INFO, countedPrograms, groupsForTrack, type ResultGroup } from '@/lib/assessment/results';
-import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS } from '@/lib/personas';
+import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS, type PersonaResultsCopy } from '@/lib/personas';
 import { DISCLAIMER } from '@/lib/copy';
 import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, originOf, resultsCelebration } from '@/lib/celebrate';
 import { useNow } from '@/lib/use-now';
@@ -17,7 +18,9 @@ import { Button, buttonClasses } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
+import { Highlight } from '@/components/ui/highlight';
 import { Tabs } from '@/components/ui/tabs';
+import { WINDOW_BAR, WindowControls } from '@/components/ui/window';
 import { Reveal } from '@/components/motion/reveal';
 import { AssessmentRow } from './assessment-row';
 import { FUNDING_SUMMARY_ID, FundingSummary } from './funding-summary';
@@ -40,7 +43,7 @@ export function Results() {
   if (!profile) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl">Your results</h1>
+        <ResultsHeading copy={DEFAULT_RESULTS} />
         <EmptyState
           icon={ClipboardCheck}
           title="Take the assessment first"
@@ -85,7 +88,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex max-w-3xl flex-col gap-3">
-        <h1 className="text-3xl">{copy.title}</h1>
+        <ResultsHeading copy={copy} />
         <p className="text-muted-fg">{copy.intro}</p>
         <Link href="/assess/" className={cn('inline-flex min-h-11 items-center gap-1.5 self-start rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
           <Pencil aria-hidden="true" size={16} strokeWidth={1.5} />
@@ -126,6 +129,12 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   );
 }
 
+/** The page's h1, with its one marker band (Billabong design doc, section 4) on the copy's phrase. */
+function ResultsHeading({ copy }: { copy: PersonaResultsCopy }) {
+  const [before, phrase, after] = splitHighlight(copy.title, copy.highlight);
+  return <h1 className="text-3xl">{before}<Highlight>{phrase}</Highlight>{after}</h1>;
+}
+
 function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: ResultGroup[]; inPlan: Set<string | undefined>; onAdd: (slug: string) => void }) {
   return (
     <div className="flex flex-col gap-8">
@@ -145,7 +154,8 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
                 <p className="text-sm text-muted-fg">{GROUP_INFO[group].description}</p>
               </div>
               {items.length ? (
-                <ul className={cn('divide-y divide-border rounded-lg border border-border', group === 'not-a-fit' ? 'border-dashed' : 'bg-surface')}>
+                // Each result is its own card (Billabong plan, Task 7); Not a fit cards are quiet.
+                <ul className="flex flex-col gap-3">
                   {items.map((a) => (
                     <AssessmentRow
                       key={a.program.slug}
@@ -198,7 +208,7 @@ function StarterGoals({ persona }: { persona: Persona }) {
                   </Link>
                 </>
               ) : (
-                <Button variant="secondary" onClick={() => addGoal({ title: g.title, source: 'persona' })}>
+                <Button variant="primary" onClick={() => addGoal({ title: g.title, source: 'persona' })}>
                   <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
                   Add goal
                 </Button>
@@ -212,15 +222,29 @@ function StarterGoals({ persona }: { persona: Persona }) {
 }
 
 function ResultsSkeleton() {
+  // The heading and intro, the funding window's frame with its bar and glyphs, the tabs and result
+  // cards, so the page does not jump when the workspace loads. A status, so "Loading your results" is
+  // announced as text (a plain div cannot take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your results" className="flex flex-col gap-8">
-      <div className="flex max-w-3xl flex-col gap-3">
-        <div className="h-9 w-72 rounded bg-surface" />
-        <div className="h-16 rounded bg-surface" />
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading your results</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        <div className="flex max-w-3xl flex-col gap-3">
+          <div className="h-9 w-72 max-w-full rounded bg-surface" />
+          <div className="h-16 rounded bg-surface" />
+        </div>
+        <div className="rounded-lg border border-border bg-surface shadow-window">
+          <div className={WINDOW_BAR}>
+            <div className="h-6 flex-1">
+              <div className="h-full w-48 rounded bg-surface" />
+            </div>
+            <WindowControls />
+          </div>
+          <div className="h-36" />
+        </div>
+        <div className="h-11 w-64 max-w-full rounded bg-surface" />
+        {[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-lg border border-border bg-surface" />)}
       </div>
-      <div className="h-36 rounded-lg border border-border bg-surface" />
-      <div className="h-11 w-64 rounded bg-surface" />
-      {[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-lg border border-border bg-surface" />)}
     </div>
   );
 }

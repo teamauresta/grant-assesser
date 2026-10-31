@@ -9,6 +9,7 @@ import { firstIssue, gateSummaryText, summariseGates } from '@/lib/assessment/re
 import { formatBenefit } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { focusRing } from '@/components/ui/focus-ring';
 import { StatusPill } from '@/components/ui/status-pill';
 import { GateRow } from '@/components/programs/eligibility-list';
@@ -45,7 +46,11 @@ function PanelToggle({ open, controls, onToggle, children }: { open: boolean; co
   );
 }
 
-/** One program in the results: status, benefit, score with its breakdown, checks, and Add to pipeline. */
+/**
+ * One program in the results, as a card: status, benefit, score with its breakdown, checks, and Add to
+ * pipeline. Not a fit cards are quiet (no fill, a dashed outline, muted text) and keep their reason in
+ * --fg.
+ */
 export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowProps) {
   const { program: p, score, gates, status } = a;
   const notFit = a.group === 'not-a-fit';
@@ -57,7 +62,7 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
   const [showChecks, setShowChecks] = useState(false);
 
   return (
-    <li className={cn('flex flex-col gap-3 p-4', notFit && 'text-muted-fg')}>
+    <Card as="li" tone={notFit ? 'quiet' : 'surface'} className={cn('flex flex-col gap-3', notFit && 'text-muted-fg')}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1.5">
           <h3 className={cn('text-base leading-snug', notFit && 'font-medium')}>
@@ -136,7 +141,7 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
           <p className="text-sm text-muted-fg">Read the official guidelines before applying.</p>
         ))}
       </div>
-    </li>
+    </Card>
   );
 }
 

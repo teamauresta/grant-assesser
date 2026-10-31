@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type { FundingEstimate } from '@/lib/assess';
 import { formatMoney, moneyCounter } from '@/lib/format';
 import { CountUp } from '@/components/motion/count-up';
+import { Window } from '@/components/ui/window';
 
 export type FundingSummaryProps = {
   estimate: FundingEstimate;
@@ -13,7 +14,7 @@ export type FundingSummaryProps = {
 
 type Currency = 'AUD' | 'USD';
 
-/** The section's id, so Results can aim its burst at the summary. */
+/** The window's id, so Results can aim its burst at the summary. */
 export const FUNDING_SUMMARY_ID = 'funding-summary';
 
 function range(low: number, high: number, currency: Currency): string {
@@ -33,31 +34,40 @@ function Figure({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** The headline figures: potential cash and tax offsets (never "secured"), with credits kept separate. */
+/** The figures: large, bold and in tabular digits, so a count-up never shifts the line. */
+const FIGURE = 'num text-3xl font-bold tracking-tight md:text-4xl';
+
+/** No figure yet: words, not a number, so a size down. */
+const NONE = <span className="text-2xl font-semibold">None counted yet</span>;
+
+/**
+ * The headline figures: potential cash and tax offsets (never "secured"), with credits kept separate.
+ * A window titled "Your funding estimate" (Billabong design doc, section 4: the results summary), its
+ * title at 'md' like the program page's sections.
+ */
 export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
   const { aud: funding, creditsUsd } = estimate;
   return (
-    <section id={FUNDING_SUMMARY_ID} aria-labelledby="funding-summary-heading" className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 md:p-6">
-      <h2 id="funding-summary-heading" className="sr-only">Funding summary</h2>
+    <Window id={FUNDING_SUMMARY_ID} title="Your funding estimate" titleSize="md" bodyClassName="flex flex-col gap-4">
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Potential funding (not secured)</dt>
-          <dd className="num text-2xl font-semibold tracking-tight">
+          <dd className={FIGURE}>
             {funding.high > 0 ? (
               <Figure label={range(funding.low, funding.high, 'AUD')}>
                 {funding.low === funding.high
                   ? <CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} />
                   : <><CountUp value={funding.low} format={moneyCounter(funding.low, 'AUD')} />–<CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} /></>}
               </Figure>
-            ) : 'None counted yet'}
+            ) : NONE}
           </dd>
         </div>
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Credits</dt>
-          <dd className="num text-2xl font-semibold tracking-tight">
+          <dd className={FIGURE}>
             {creditsUsd.high > 0 ? (
               <Figure label={`Up to ${formatMoney(creditsUsd.high, 'USD')}`}>Up to <CountUp value={creditsUsd.high} format={moneyCounter(creditsUsd.high, 'USD')} /></Figure>
-            ) : 'None counted yet'}
+            ) : NONE}
           </dd>
         </div>
       </dl>
@@ -70,6 +80,6 @@ export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
         </p>
         <p>Consortium awards and equity are not counted.</p>
       </div>
-    </section>
+    </Window>
   );
 }
