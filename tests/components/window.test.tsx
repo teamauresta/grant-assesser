@@ -159,6 +159,16 @@ describe('Window', () => {
     expect(screen.getByRole('region', { name: 'Also by title' })).toBeInTheDocument();
   });
 
+  it('draws the title at 14px by default and 16px with titleSize="md"', () => {
+    render(<><Window title="Small"><p>1</p></Window><Window title="Section" titleSize="md"><p>2</p></Window></>);
+    const small = screen.getByRole('heading', { name: 'Small' });
+    expect(small).toHaveClass('text-sm');
+    expect(small).not.toHaveClass('text-base');
+    const section = screen.getByRole('heading', { name: 'Section' });
+    expect(section).toHaveClass('text-base');
+    expect(section).not.toHaveClass('text-sm');
+  });
+
   // A step in a sequence (How it works) is not a landmark: a plain div, its heading kept.
   it('renders a div with no region landmark when landmark={false}', () => {
     render(<Window title="Step one" landmark={false}><p>Body</p></Window>);

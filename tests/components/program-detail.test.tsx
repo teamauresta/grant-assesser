@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { ProgramDetail } from '@/components/programs/program-detail';
+import { PersonaNotes } from '@/components/programs/persona-notes';
 import { getProgram } from '@/content/programs';
 import { makeProgram } from '../helpers/program';
 
@@ -17,9 +18,8 @@ describe('ProgramDetail sections', () => {
       const region = screen.getByRole('region', { name });
       const heading = within(region).getByRole('heading', { level: 2, name });
       expect(region).toHaveAttribute('aria-labelledby', heading.id);
-      // The window frame: title bar on --neutral-bg over a --surface body.
-      expect(region).toHaveClass('bg-surface');
-      expect(heading.parentElement).toHaveClass('bg-neutral-bg');
+      // Section titles at 16px, so they scan as headings (Window's titleSize="md").
+      expect(heading).toHaveClass('text-base');
     }
   });
 
@@ -33,6 +33,7 @@ describe('ProgramDetail sections', () => {
     render(<ProgramDetail program={program} />);
     const steps = within(screen.getByRole('region', { name: 'How to apply' })).getAllByRole('listitem');
     expect(steps.map((li) => li.textContent)).toEqual(program.content.howToApply);
+    // Deliberately rough: any class containing text-sm or text-xs on the step or an ancestor fails it.
     for (const li of steps) expect(li.closest('[class*="text-sm"], [class*="text-xs"]')).toBeNull();
   });
 
@@ -45,7 +46,37 @@ describe('ProgramDetail sections', () => {
 
   it('offers Add to pipeline as the primary button', () => {
     render(<ProgramDetail program={program} />);
-    const add = screen.getByRole('button', { name: /^Add to pipeline/ });
-    expect(add).toHaveClass('bg-primary', 'text-on-primary');
+    // The primary variant: the amber fill and the ledge marker (tests/components/button.test.tsx
+    // covers the variant's classes).
+    expect(screen.getByRole('button', { name: /^Add to pipeline/ })).toHaveClass('bg-primary', 'ledge');
+  });
+
+  // Inside a window the lists have no frame of their own: the body is the frame (design doc
+  // section 11, Task 5 review).
+  it('frames the eligibility and stacking lists only by their window', () => {
+    render(<ProgramDetail program={program} />);
+    for (const name of ['Eligibility', 'Stacking']) {
+      const list = within(screen.getByRole('region', { name })).getByRole('list');
+      expect(list).toHaveClass('divide-y');
+      expect(list).not.toHaveClass('border');
+      expect(list).not.toHaveClass('rounded-lg');
+    }
+  });
+
+  it('lists the advice for every situation in its own window', () => {
+    render(<ProgramDetail program={program} />);
+    const region = screen.getByRole('region', { name: 'Advice by situation' });
+    expect(within(region).getByRole('heading', { level: 2, name: 'Advice by situation' })).toHaveClass('text-base');
+    expect(within(region).getByText('Bootstrapped')).toBeInTheDocument();
+  });
+});
+
+// With a persona chosen, the advice stays one inline callout, not a section window.
+describe('PersonaNotes for one persona', () => {
+  it('is a single callout for that persona', () => {
+    const { personas } = getProgram('csiro-kick-start')!;
+    render(<PersonaNotes personas={personas} persona="bootstrapped" />);
+    expect(screen.getByRole('complementary', { name: /^Advice for Bootstrapped/ })).toHaveTextContent(personas.bootstrapped!);
+    expect(screen.queryByRole('region')).toBeNull();
   });
 });

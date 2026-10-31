@@ -22,7 +22,7 @@ const linkClasses = cn('rounded-sm text-accent underline underline-offset-4 hove
  */
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <Window title={title} titleId={id} bodyClassName="flex flex-col gap-3">
+    <Window title={title} titleId={id} titleSize="md" bodyClassName="flex flex-col gap-3">
       {children}
     </Window>
   );
@@ -132,11 +132,12 @@ export function ProgramDetail({ program: p }: { program: Program }) {
       {p.stacking.length > 0 && (
         <Section id="stacking" title="Stacking">
           <p className="text-sm text-muted-fg">How this program combines with others.</p>
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          {/* No frame of its own: the window's body is the frame. */}
+          <ul className="divide-y divide-border">
             {p.stacking.map((s) => {
               const other = getProgram(s.with);
               return (
-                <li key={s.with} className="flex flex-col gap-1 px-4 py-3">
+                <li key={s.with} className="flex flex-col gap-1 py-3">
                   {other ? (
                     <Link href={`/programs/${other.slug}/`} className={cn(linkClasses, 'self-start font-medium')}>{other.name}</Link>
                   ) : (

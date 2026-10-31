@@ -19,5 +19,6 @@ export function ProgramPersonaNotes({ personas }: { personas: Program['personas'
 /** Eligibility checks evaluated against the stored answers, or an invitation to take the assessment. */
 export function ProgramEligibility({ gates }: { gates: GateRef[] }) {
   const profile = useStoredProfile();
-  return <EligibilityList gates={gates} profile={profile} />;
+  // Inside the Eligibility window, whose body is the frame.
+  return <EligibilityList gates={gates} profile={profile} framed={false} />;
 }

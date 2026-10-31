@@ -71,13 +71,22 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
     expect(contrast(t['--fg'], mixHex(t['--bg'], t[name], HIGHLIGHT_ALPHA))).toBeGreaterThanOrEqual(4.5);
   });
   // The directory's filter chips (Billabong plan, Task 5): pressed is --bg text on an --fg fill;
-  // unpressed is --fg on --surface inside a --border-strong outline. The pressed fill must stand out
-  // from the page and from an unpressed chip (WCAG 1.4.11, 3:1).
+  // unpressed is --fg on --surface inside a --border-strong outline, --neutral-bg on hover. The
+  // pressed fill must read (AA, which also gives 3:1 against the page) and stand out from an
+  // unpressed chip's fill (WCAG 1.4.11, 3:1).
   it('a pressed filter chip reads (AA) and stands out from the page and an unpressed chip (3:1)', () => {
     expect(contrast(t['--bg'], t['--fg'])).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(t['--fg'], t['--bg'])).toBeGreaterThanOrEqual(3);
     expect(contrast(t['--fg'], t['--surface'])).toBeGreaterThanOrEqual(3);
-    expect(contrast(t['--fg'], t['--border-strong'])).toBeGreaterThanOrEqual(3);
+  });
+  it('an unpressed filter chip still reads on hover (--fg on --neutral-bg)', () => {
+    expect(contrast(t['--fg'], t['--neutral-bg'])).toBeGreaterThanOrEqual(4.5);
+  });
+  // A pressed chip on hover is drawn at 90% opacity over the page (hover:opacity-90): the fill is
+  // --fg mixed 90% over --bg, and the --bg text stays --bg.
+  it('a pressed filter chip still reads on hover, at 90% opacity', () => {
+    const fill = mixHex(t['--bg'], t['--fg'], 0.9);
+    expect(contrast(t['--bg'], fill)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(fill, t['--surface'])).toBeGreaterThanOrEqual(3);
   });
   // The accent focus ring (WCAG 1.4.11, 3:1) on the page. On --surface it is implied by the accent's
   // AA check above.

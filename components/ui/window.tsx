@@ -5,6 +5,8 @@ import { cn } from '@/lib/cn';
 /** The title bar's classes, for other window-like frames (dialogs) to reuse. */
 export const WINDOW_BAR = 'flex items-center gap-3 rounded-t-[7px] border-b border-border bg-neutral-bg px-3 py-2';
 
+const TITLE_SIZES = { sm: 'text-sm', md: 'text-base' } as const;
+
 /** The decorative minimise, maximise and close glyphs: hidden from assistive tech, never focusable. */
 export function WindowControls() {
   return (
@@ -28,6 +30,11 @@ export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'c
   title: ReactNode;
   /** The title's heading level (h2 by default). */
   as?: 'h1' | 'h2' | 'h3' | 'h4';
+  /**
+   * The title's size: 'sm' (14px, default) for compact panels, 'md' (16px) where windows are the
+   * sections of a page and their titles must scan as headings (the program page).
+   */
+  titleSize?: 'sm' | 'md';
   /** The heading's id, when something else (a dialog) points at it. Generated otherwise. */
   titleId?: string;
   /** The heading element, for callers that move focus to it. */
@@ -63,6 +70,7 @@ export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'c
 export function Window({
   title,
   as: Heading = 'h2',
+  titleSize = 'sm',
   titleId,
   headingRef,
   headingProps,
@@ -85,7 +93,7 @@ export function Window({
       className={cn('rounded-lg border bg-surface shadow-window', borderClassName, className)}
     >
       <div className={WINDOW_BAR}>
-        <Heading {...headingProps} ref={headingRef} id={id} className="min-w-0 flex-1 break-words text-sm font-semibold">
+        <Heading {...headingProps} ref={headingRef} id={id} className={cn('min-w-0 flex-1 break-words font-semibold', TITLE_SIZES[titleSize])}>
           {title}
         </Heading>
         {actions}

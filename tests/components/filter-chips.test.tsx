@@ -35,6 +35,8 @@ describe('FilterChips', () => {
     renderChips(['grant']);
     const chip = screen.getByRole('button', { name: 'Grant' });
     expect(chip).toHaveClass('rounded-full', 'border-fg', 'bg-fg', 'text-bg');
+    // Hover feedback that keeps the fill (tests/lib/tokens.test.ts checks it at 90%).
+    expect(chip).toHaveClass('hover:opacity-90');
     expect(chip).not.toHaveClass('bg-surface');
     const icon = chip.querySelector('svg');
     expect(icon).not.toBeNull();

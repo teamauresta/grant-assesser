@@ -1,10 +1,12 @@
 import { UserRound } from 'lucide-react';
 import { PERSONAS, type Persona, type Program } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
+import { Window } from '@/components/ui/window';
 
 /**
  * Persona-specific advice. With a persona (from the stored profile, wired in Task 13) it is one callout
- * for that persona; without one, every recorded note is listed so nothing in the data is hidden.
+ * for that persona; without one, every recorded note is listed (a window, like the page's other
+ * sections) so nothing in the data is hidden.
  */
 export function PersonaNotes({ personas, persona }: { personas: Program['personas']; persona?: Persona }) {
   const note = persona ? personas[persona] : undefined;
@@ -24,11 +26,8 @@ export function PersonaNotes({ personas, persona }: { personas: Program['persona
   const entries = PERSONAS.filter((p) => personas[p]).map((p) => [p, personas[p]!] as const);
   if (!entries.length) return null;
   return (
-    <aside aria-labelledby="persona-notes-heading" className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
-      <h2 id="persona-notes-heading" className="flex items-center gap-2 text-base">
-        <UserRound aria-hidden="true" size={20} strokeWidth={1.5} className="text-accent" />
-        Advice by situation
-      </h2>
+    // A section of the program page, framed like the others (Billabong design doc, section 4).
+    <Window title="Advice by situation" titleSize="md" bodyClassName="flex flex-col gap-2">
       <dl className="flex flex-col gap-2">
         {entries.map(([p, text]) => (
           <div key={p} className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
@@ -37,6 +36,6 @@ export function PersonaNotes({ personas, persona }: { personas: Program['persona
           </div>
         ))}
       </dl>
-    </aside>
+    </Window>
   );
 }

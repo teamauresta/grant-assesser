@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Directory } from '@/components/programs/directory';
 import { PROGRAMS } from '@/content/programs';
@@ -33,6 +33,11 @@ describe('Directory with no results', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Search programs' }), 'zzzz-no-match');
     expect(screen.getByText('No programs match.')).toBeInTheDocument();
     expect(screen.getByText(/Even the platypus couldn't find one\./)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Clear filters' }).length).toBeGreaterThan(0);
+    // The empty state's own button (the results bar has another), and it brings the programs back.
+    const empty = screen.getByText('No programs match.').parentElement!;
+    await user.click(within(empty).getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByRole('searchbox', { name: 'Search programs' })).toHaveValue('');
+    expect(screen.queryByText('No programs match.')).toBeNull();
+    expect(screen.getByText(/^Showing [1-9]\d* of \d+ programs$/, { ignore: '[role="status"]' })).toBeInTheDocument();
   });
 });

@@ -55,11 +55,12 @@ export function FilterChips<V extends string>({ label, options, isPressed, onTog
                   onClick={() => onToggle(value)}
                   className={cn(
                     'inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-medium',
-                    'transition-colors duration-150',
+                    'transition-[color,background-color,border-color,opacity] duration-150',
                     // Pressed is filled with --fg: the clearest state in both themes (an amber fill is
-                    // 1.7:1 on the light page). tests/lib/tokens.test.ts checks the pairs.
+                    // 1.7:1 on the light page); on hover it fades a little. tests/lib/tokens.test.ts
+                    // checks the pairs, hovers included.
                     pressed
-                      ? 'border-fg bg-fg text-bg'
+                      ? 'border-fg bg-fg text-bg hover:opacity-90'
                       : 'border-border-strong bg-surface text-fg hover:bg-neutral-bg',
                     focusRing,
                   )}
