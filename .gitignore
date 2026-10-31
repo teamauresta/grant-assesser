@@ -9,3 +9,5 @@ next-env.d.ts
 # Art originals are large and never deployed; only the processed files in public/art are committed (art/README.md).
 art/originals/*
 !art/originals/.gitkeep
+# pnpm art's temporary output folders; an interrupted run can leave one (scripts/process-art.mjs deletes them).
+public/art/.tmp-*

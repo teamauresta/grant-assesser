@@ -87,29 +87,38 @@ export function shapeMatches(width, height, asset) {
   return height > 0 && Math.abs(width / height - want) / want <= 0.01;
 }
 
+/** The prefix of a file's temporary output folder in public/art (gitignored). */
+const TEMP_PREFIX = '.tmp-';
+
 /**
  * Entries in public/art that no manifest file produces at any width (a renamed or removed asset, a
- * stray file), ignoring dotfiles. They would be deployed for nothing.
+ * stray file), ignoring dotfiles other than a temporary folder left by an interrupted run. They
+ * would be deployed for nothing.
  * @param {Record<string, import('../lib/art.ts').ArtAsset>} manifest
  * @param {readonly string[]} files
  * @returns {string[]}
  */
 export function leftovers(manifest, files) {
   const expected = new Set(artFiles(manifest).flatMap((file) => outputsFor(file, ART_WIDTHS).flatMap((o) => [o.avif, o.webp])));
-  return files.filter((name) => !name.startsWith('.') && !expected.has(name));
+  return files.filter((name) => (!name.startsWith('.') || name.startsWith(TEMP_PREFIX)) && !expected.has(name));
 }
 
 /** @param {string} dir */
 const list = (dir) => (existsSync(dir) ? readdirSync(dir) : []);
 
 /**
- * Processes every original present in `originals` into `out` and reports what it did. Each file's
- * outputs are written to a temporary folder first and replace all its earlier outputs only when every
+ * Processes every original present in `originals` into `out` and reports what it did. Stale
+ * temporary folders from an interrupted run are deleted first. Each file's outputs are written to a
+ * temporary folder first and replace all its earlier outputs only when every
  * one succeeded, so a skipped (too small, wrong shape) or failed original keeps what was there. One
  * bad original never stops the others.
  * @param {{ originals: string, out: string, manifest: Record<string, import('../lib/art.ts').ArtAsset> }} options
  */
 export async function processArt({ originals, out, manifest }) {
+  // An interrupted run (Ctrl-C) skips the finally below and leaves its temporary folder behind.
+  for (const name of list(out)) {
+    if (name.startsWith(TEMP_PREFIX)) rmSync(join(out, name), { recursive: true, force: true });
+  }
   const sources = list(originals);
   const { default: sharp } = await import('sharp');
   /** @type {{ name: string, width: number, bytes: number }[]} */
@@ -125,7 +134,7 @@ export async function processArt({ originals, out, manifest }) {
       const source = `${file}.png`;
       if (!sources.includes(source)) continue;
       const input = join(originals, source);
-      const temp = join(out, `.tmp-${file}`);
+      const temp = join(out, `${TEMP_PREFIX}${file}`);
       try {
         const { width = 0, height = 0 } = await sharp(input).metadata();
         const widths = artWidths(width);

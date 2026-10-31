@@ -15,7 +15,7 @@ To replace an image, overwrite its PNG and run `pnpm art` again. Its new copies 
 
 - the originals still missing (they stay placeholders; that is not an error);
 - any PNG whose name the manifest doesn't know, such as `platypus-reference.png` (the character sheet, a generation aid only) or a misspelt name, which it ignores;
-- any file in `public/art/` that no manifest entry makes (a renamed or removed asset). Delete those; `pnpm test` fails while any are there.
+- any file in `public/art/` that no manifest entry makes (a renamed or removed asset), or a `.tmp-<file>/` folder an interrupted run left behind. Delete those; `pnpm test` fails while any are there. `pnpm art` itself deletes stale `.tmp-*` folders before it starts, and they are gitignored.
 
 It processes every other original even when one goes wrong, always rewrites `lib/art-ready.json`, and then exits with an error if any original:
 

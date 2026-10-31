@@ -130,6 +130,12 @@ describe('leftovers', () => {
     expect(leftovers(ART, files)).toEqual(['old-mascot-480.avif', 'platypus-search-1200.webp', 'platypus-search.png']);
   });
 
+  // An interrupted run (Ctrl-C) leaves its temporary folder behind (Task 10 review): it is a dotfile
+  // but still a leftover, so the committed-files check below and `pnpm art` both report it.
+  it('flags a stale .tmp-<file> folder, though it is a dotfile', () => {
+    expect(leftovers(ART, ['.tmp-platypus-search', '.DS_Store', 'platypus-search-480.avif'])).toEqual(['.tmp-platypus-search']);
+  });
+
   it('finds none among the committed files in public/art', () => {
     const dir = join(ROOT, 'public', 'art');
     expect(leftovers(ART, existsSync(dir) ? readdirSync(dir) : [])).toEqual([]);
@@ -244,6 +250,38 @@ describe('processArt', () => {
     expect(report.ready['platypus-search']).toEqual([480]);
     // No temporary files are left behind.
     expect(readdirSync(out).sort()).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp', 'platypus-wave-480.avif', 'platypus-wave-480.webp']);
+  });
+
+  // A failure while encoding, after the file's temporary folder exists (Task 10 review): the PNG's
+  // header reads, so the size and shape checks pass, but its pixel data is cut off.
+  it('reports a failure during encoding, keeping earlier outputs and removing its temporary folder', async () => {
+    const originals = temp();
+    const out = temp();
+    writeFileSync(join(out, 'platypus-search-480.avif'), 'old');
+    writeFileSync(join(out, 'platypus-search-480.webp'), 'old');
+    const full = join(temp(), 'full.png');
+    await sharp({ create: { width: 600, height: 600, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 }, noise: { type: 'gaussian', mean: 128, sigma: 40 } } }).png().toFile(full);
+    const bytes = readFileSync(full);
+    writeFileSync(join(originals, 'platypus-search.png'), bytes.subarray(0, Math.floor(bytes.length / 2)));
+    expect((await sharp(join(originals, 'platypus-search.png')).metadata()).width).toBe(600);
+    const report = await processArt({ originals, out, manifest: ART });
+    expect(report.failed).toHaveLength(1);
+    expect(report.failed[0]).toMatch(/^platypus-search\.png: \S/);
+    expect(report.written).toEqual([]);
+    expect(readdirSync(out).sort()).toEqual(['platypus-search-480.avif', 'platypus-search-480.webp']);
+    expect(readFileSync(join(out, 'platypus-search-480.avif'), 'utf8')).toBe('old');
+    expect(report.leftovers).toEqual([]);
+  });
+
+  it('deletes stale temporary folders from an interrupted run before it starts', async () => {
+    const out = temp();
+    mkdirSync(join(out, '.tmp-platypus-search'));
+    writeFileSync(join(out, '.tmp-platypus-search', 'platypus-search-480.avif'), 'half');
+    mkdirSync(join(out, '.tmp-gone'));
+    writeFileSync(join(out, '.keep'), '');
+    const report = await processArt({ originals: join(temp(), 'absent'), out, manifest: ART });
+    expect(readdirSync(out)).toEqual(['.keep']);
+    expect(report.leftovers).toEqual([]);
   });
 
   it('replaces every earlier output of a reprocessed file, so no stale width stays', async () => {
