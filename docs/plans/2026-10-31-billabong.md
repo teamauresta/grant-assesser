@@ -371,6 +371,7 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 - The toaster (`components/ui/toast.tsx`) is still `bg-bg` with `shadow-lg`: restyle it as a small window-style card (`bg-surface`, `border-border`, `shadow-popover`), keeping its live region and focus behaviour (Task 9 report).
 - CLAUDE.md Motion: list the report's PDF spinner (user-started progress indicator) as an exception to the 5-second rule (Task 9 review).
 - `scripts/process-art.mjs`: an interrupted run (Ctrl-C) leaves `public/art/.tmp-<file>/`; delete stale `.tmp-*` at the start of `processArt`, gitignore `public/art/.tmp-*`, and make `leftovers` flag them; add a test for a failure during encoding (after the temp folder exists) (Task 10 review).
+- When real hero art lands: measure LCP on the home page (desktop); if slow, let the pre-paint theme script add one `<link rel="preload" as="image" imagesrcset imagesizes>` for the active theme's picture (Task 11 review).
 
 **Files:** `CLAUDE.md`, `README.md`, `docs/plans/2026-10-31-billabong-design.md`.
 
