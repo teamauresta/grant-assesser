@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BUDGET_BYTES, INFO_PAGES, LAZY_ONLY, firstLoadScripts, infoLine, lazyLeaks, verdict } from '@/scripts/js-size.mjs';
+import { BUDGET_BYTES, INFO_PAGES, LAZY_ONLY, chunkFiles, firstLoadScripts, infoLine, lazyLeaks, missingMarkers, verdict } from '@/scripts/js-size.mjs';
 
 describe('firstLoadScripts', () => {
   it('lists each script under the base path once', () => {
@@ -72,5 +72,34 @@ describe('lazyLeaks', () => {
       { path: 'b.js', source: 'x.__confetti_initialized=!0;e.s(["DEMO_PROFILE",0,n])' },
     ];
     expect(lazyLeaks(chunks)).toEqual([{ path: 'b.js', marker: '__confetti_initialized' }, { path: 'b.js', marker: 'DEMO_PROFILE' }]);
+  });
+});
+
+// A canary for LAZY_ONLY: a marker that is in no chunk at all (a library renamed its flag, an export
+// was renamed) would let the leak check pass on nothing, so `pnpm size` fails and asks for a new one.
+describe('missingMarkers', () => {
+  const FIXTURE = 'lazy-only-fixture-marker';
+  const chunks = [
+    { path: 'a.js', source: 'console.log(1)' },
+    { path: 'lazy/b.js', source: `const s = "${FIXTURE}"` },
+  ];
+  it('names each marker found in no chunk, with a message saying what to do', () => {
+    expect(missingMarkers(chunks, [FIXTURE, 'gone-marker'])).toEqual([
+      { marker: 'gone-marker', message: 'Marker "gone-marker" not found in any chunk; LAZY_ONLY needs a new marker.' },
+    ]);
+  });
+  it('is empty when every marker is in some chunk, first-load or lazy', () => {
+    expect(missingMarkers(chunks, [FIXTURE])).toEqual([]);
+    expect(missingMarkers([], [])).toEqual([]);
+  });
+  it('treats no chunks at all as every marker missing', () => {
+    expect(missingMarkers([], [FIXTURE]).map((m) => m.marker)).toEqual([FIXTURE]);
+  });
+});
+
+describe('chunkFiles', () => {
+  it('lists every .js file under a folder, nested folders included, as paths relative to it', () => {
+    const list = (dir: string) => (dir === '/o' ? ['a.js', 'b.css', 'sub', 'sub/c.js', 'sub/d.json', 'e.js.map'] : []);
+    expect(chunkFiles('/o', list)).toEqual(['a.js', 'sub/c.js']);
   });
 });

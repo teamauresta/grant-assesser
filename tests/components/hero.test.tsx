@@ -54,19 +54,23 @@ describe('Hero', () => {
     expect(screen.getByRole('link', { name: 'Browse programs' })).toHaveClass('bg-surface', 'min-h-12');
   });
 
-  // The diorama (design doc sections 6 and 8): fetched with priority, beside the text from md and
-  // below the calls to action on phones, before the numbers.
-  it('shows the hero diorama after the calls to action and before the numbers', () => {
+  // The diorama (design doc section 8: "the day or dusk diorama to the right (below on phones)"):
+  // fetched with priority, last in the DOM, so on phones it comes after the text, the calls to action
+  // and the numbers; from md it is placed in the right column beside both, and the numbers in the
+  // left column's second row.
+  it('shows the hero diorama last on phones and beside the text and numbers from md', () => {
     const { container } = render(<Hero />);
     const section = screen.getByRole('region', { name: 'Find the funding your startup qualifies for' });
-    const art = section.querySelector<HTMLElement>('[style*="aspect-ratio"]')!;
-    expect(art).not.toBeNull();
-    expect(art).toHaveClass('w-full', 'md:col-start-2', 'md:row-span-2');
+    const art = section.querySelector<HTMLElement>('[data-art]')!;
+    expect(art).toHaveAttribute('data-art', 'hero-diorama');
+    expect(art).toHaveClass('w-full', 'md:col-start-2', 'md:row-span-2', 'md:row-start-1');
     const order = [...section.children];
     const cta = screen.getByRole('link', { name: 'Start free assessment' });
-    const stats = container.querySelector('dl')!;
-    expect(order.indexOf(art)).toBeGreaterThan(order.findIndex((c) => c.contains(cta)));
-    expect(order.indexOf(art)).toBeLessThan(order.findIndex((c) => c.contains(stats)));
+    const stats = order.find((c) => c.contains(container.querySelector('dl')))!;
+    expect(stats).toHaveClass('md:col-start-1', 'md:row-start-2');
+    expect(order.findIndex((c) => c.contains(cta))).toBeLessThan(order.indexOf(stats));
+    expect(order.indexOf(stats)).toBeLessThan(order.indexOf(art));
+    expect(order.at(-1)).toBe(art);
   });
 
   it('never puts "now"-based numbers in the server HTML', () => {

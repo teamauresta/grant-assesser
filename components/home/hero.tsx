@@ -13,9 +13,9 @@ import { HeroStats } from './hero-stats';
 /**
  * The home page's opening section (Billabong design doc, section 8): the promise with one marker
  * highlight, the two calls to action and live numbers on the left, the billabong diorama on the
- * right. On phones it stacks: the text and calls to action, then the diorama, then the numbers.
- * One grid, so the diorama sits between the calls to action and the numbers on phones and spans
- * both rows beside them from md up.
+ * right. On phones it stacks in DOM order: the text and calls to action, the numbers, then the
+ * diorama. From md the grid places the text and the numbers in the left column and the diorama
+ * across both rows on the right.
  */
 export function Hero() {
   const verified = latestVerified(PROGRAMS);
@@ -55,18 +55,22 @@ export function Hero() {
           <Link href="/programs/" className={buttonClasses({ size: 'lg' })}>Browse programs</Link>
         </div>
       </div>
-      {/* The diorama: priority, so it is fetched early (a light/dark pair stays lazy, so each theme
-          fetches only its own picture). 100vw less the gutters on phones, about 45% of the window
-          beside the text, and at most 33rem inside the 1120px column. */}
+      {/* Placed in the left column's second row from md, under the text; on phones it follows the
+          calls to action. */}
+      <div className="md:col-start-1 md:row-start-2">
+        <HeroStats />
+      </div>
+      {/* The diorama, last: below everything on phones (design doc section 8), and from md placed in
+          the right column beside the text and the numbers. Priority, so it is fetched early (a
+          light/dark pair stays lazy, so each theme fetches only its own picture). 100vw less the
+          gutters on phones, about 45% of the window beside the text, and at most 33rem inside the
+          1120px column. */}
       <Art
         name="hero-diorama"
         priority
         sizes="(min-width: 70rem) 33rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
         className="w-full max-w-[36rem] justify-self-center md:col-start-2 md:row-span-2 md:row-start-1"
       />
-      <div className="md:col-start-1">
-        <HeroStats />
-      </div>
     </section>
   );
 }

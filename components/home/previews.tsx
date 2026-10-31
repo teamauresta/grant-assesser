@@ -112,10 +112,10 @@ export function PlanPreview() {
 
 /** The Answer preview's rows: the length of each question's line, and whether it is ticked. */
 const QUESTIONS = [
-  { width: '70%', answered: true },
-  { width: '55%', answered: true },
-  { width: '80%', answered: true },
-  { width: '60%', answered: false },
+  { id: 'q1', width: '70%', answered: true },
+  { id: 'q2', width: '55%', answered: true },
+  { id: 'q3', width: '80%', answered: true },
+  { id: 'q4', width: '60%', answered: false },
 ] as const;
 
 /**
@@ -126,8 +126,8 @@ export function AnswerPreview() {
   return (
     <Frame icon={ClipboardCheck} title="Assessment">
       <div className="flex flex-col gap-1.5">
-        {QUESTIONS.map(({ width, answered }, i) => (
-          <span key={width} className="flex items-center gap-2">
+        {QUESTIONS.map(({ id, width, answered }, i) => (
+          <span key={id} className="flex items-center gap-2">
             {answered ? (
               <span data-anim="pop" className="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-accent text-surface" style={at(250 + i * 150)}>
                 <Check size={16} strokeWidth={1.5} />

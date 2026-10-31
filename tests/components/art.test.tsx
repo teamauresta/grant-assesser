@@ -35,6 +35,8 @@ describe('Art placeholder', () => {
     ready['hero-diorama-dusk'] = [480, 960, 1440];
     const present = box(render(<Art name="hero-diorama" sizes="50vw" className="w-full max-w-xl" />).container);
     for (const el of [missing, present]) {
+      // data-art names the asset, so tests and pages can find a slot by what it shows.
+      expect(el).toHaveAttribute('data-art', 'hero-diorama');
       expect(el.style.aspectRatio).toBe('1536 / 1024');
       expect(el).toHaveClass('w-full', 'max-w-xl');
     }

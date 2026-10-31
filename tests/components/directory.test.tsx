@@ -34,7 +34,8 @@ describe('Directory with no results', () => {
     expect(screen.getByText('No programs match.')).toBeInTheDocument();
     expect(screen.getByText(/Even the platypus couldn't find one\./)).toBeInTheDocument();
     // The searching platypus (Task 10), decorative: the copy already says it.
-    const art = screen.getByText('No programs match.').parentElement!.querySelector<HTMLElement>('[style*="aspect-ratio"]')!;
+    const art = screen.getByText('No programs match.').parentElement!.querySelector<HTMLElement>('[data-art]')!;
+    expect(art).toHaveAttribute('data-art', 'platypus-search');
     expect(art.style.aspectRatio).toBe('1024 / 1024');
     expect(art).toHaveAttribute('aria-hidden', 'true');
     // The empty state's own button (the results bar has another), and it brings the programs back.

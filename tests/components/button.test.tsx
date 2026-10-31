@@ -151,7 +151,7 @@ describe('button call sites', () => {
     const found = callSiteClasses(sample);
     expect(found).toEqual(['self-start text-sm', 'min-h-12 shrink-0']);
     expect(found.every((c) => FORBIDDEN.test(c))).toBe(true);
-    expect(FORBIDDEN.test('-my-1.5 -mr-1.5 shrink-0 max-md:flex-1 sm:self-center glow-brand')).toBe(false);
+    expect(FORBIDDEN.test('-my-1.5 -mr-1.5 shrink-0 max-md:flex-1 sm:self-center')).toBe(false);
   });
 
   it('pass layout classes only (margin, flex, self, width, shrink), never colour, size, padding, text or border', () => {

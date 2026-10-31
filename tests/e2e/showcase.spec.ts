@@ -63,23 +63,25 @@ test('hero headline: the second line rises 80ms after the first', async ({ page 
   expect(delays).toEqual(['0s', '0.08s']);
 });
 
-// The Billabong hero (design doc section 8): text left and the diorama right from md, stacked on
-// phones with the diorama below the calls to action and above the numbers; no sideways scroll now
-// that nothing bleeds to the viewport's edges.
-test('hero: the diorama sits beside the text on wide screens and below the calls to action on phones', async ({ page }, info) => {
+// The Billabong hero (design doc section 8: the diorama "to the right (below on phones)"): text and
+// numbers left and the diorama right from md; on phones the diorama comes last, below the calls to
+// action and the numbers. No sideways scroll now that nothing bleeds to the viewport's edges.
+test('hero: the diorama sits beside the text on wide screens and below everything on phones', async ({ page }, info) => {
   await page.goto('./');
   const hero = page.getByRole('region', { name: /^Find the funding/ });
-  const art = hero.locator('[style*="aspect-ratio"]');
+  const art = hero.locator('[data-art]');
   await expect(art).toHaveCount(1);
+  await expect(art).toHaveAttribute('data-art', 'hero-diorama');
   const box = async (l: Locator) => (await l.boundingBox())!;
   const [a, h1, cta, stats] = await Promise.all([art, hero.getByRole('heading', { level: 1 }), hero.getByRole('link', { name: 'Start free assessment' }), hero.locator('dl')].map(box));
   expect(a.width).toBeGreaterThan(200);
   if (info.project.name === 'desktop') {
     expect(a.x).toBeGreaterThanOrEqual(h1.x + h1.width - 1);
+    expect(a.x).toBeGreaterThanOrEqual(stats.x + stats.width - 1);
     expect(a.y).toBeLessThan(cta.y + cta.height);
   } else {
-    expect(a.y).toBeGreaterThanOrEqual(cta.y + cta.height);
-    expect(a.y + a.height).toBeLessThanOrEqual(stats.y);
+    expect(stats.y).toBeGreaterThanOrEqual(cta.y + cta.height);
+    expect(a.y).toBeGreaterThanOrEqual(stats.y + stats.height);
   }
   expect(await noSideScroll(page)).toBe(true);
   // Removed with the contour hero: no canvas, no pause button.
@@ -255,18 +257,21 @@ test('persona cards have no coloured strip: every border side is the same colour
 });
 
 // The waving platypus on the first persona card (design doc section 8) overhangs its badge row rather
-// than growing it, so the three labels stay on one line on wide screens.
-test('persona cards: the platypus does not push the first label down', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'The cards stand side by side from md up');
+// than growing it: it stays inside its card and clear of the label under it, and on wide screens the
+// three labels stay on one line.
+test('persona cards: the platypus clears the first label and does not push it down', async ({ page }, info) => {
   await page.goto('./');
   const cards = page.getByRole('region', { name: 'Where is your company today?' }).locator('[data-spotlight]');
   await expect(cards).toHaveCount(3);
+  // Each card's second child is its label row (the first is the hidden badge row).
   const tops = await cards.evaluateAll((els) => els.map((el) => el.children[1].getBoundingClientRect().top));
-  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
-  const art = cards.first().locator('[style*="aspect-ratio"]');
+  if (info.project.name === 'desktop') expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
+  const art = cards.first().locator('[data-art]');
   await expect(art).toHaveCount(1);
-  const [artBox, card] = [await art.boundingBox(), await cards.first().boundingBox()];
-  expect(artBox!.y).toBeGreaterThanOrEqual(card!.y);
+  await expect(art).toHaveAttribute('data-art', 'platypus-wave');
+  const [artBox, card] = [(await art.boundingBox())!, (await cards.first().boundingBox())!];
+  expect(artBox.y).toBeGreaterThanOrEqual(card.y);
+  expect(artBox.y + artBox.height).toBeLessThanOrEqual(tops[0] + 1);
 });
 
 // The button ledge (design doc section 5) is the only uneven border allowed, and only on buttons.

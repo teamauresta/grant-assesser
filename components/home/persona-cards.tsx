@@ -47,13 +47,14 @@ export function PersonaCards() {
               {/* Decorative: the link's name must still start with the persona label. The platypus on
                   the first card sits at the end of the badge row, 24px taller than the badge and
                   centred on it, its overhang taken by negative margins (into the card's padding
-                  above, the row's margin and gap below), so every card's label stays on one line. */}
-              <span aria-hidden="true" className="mb-1 flex items-center justify-between gap-4">
+                  above, the row's margin and gap below), so every card's label stays on one line. A div,
+                  since the art's box is a div (no block inside a span). */}
+              <div aria-hidden="true" className="mb-1 flex items-center justify-between gap-4">
                 <span className="flex size-10 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--tone)_14%,transparent)] text-[var(--tone)]">
                   <Icon size={20} strokeWidth={1.5} />
                 </span>
                 {i === 0 && <Art name="platypus-wave" alt="" sizes="64px" className="-my-3 w-16 shrink-0" />}
-              </span>
+              </div>
               <span className="flex items-center justify-between gap-2 text-xl font-semibold tracking-tight">
                 {label}
                 <ArrowRight

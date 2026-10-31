@@ -37,9 +37,13 @@ describe('PersonaCards', () => {
   it('shows the waving platypus on the first card only, hidden from assistive technology', () => {
     render(<PersonaCards />);
     const links = screen.getAllByRole('link');
-    const art = links.map((l) => l.querySelectorAll('[style*="aspect-ratio"]'));
+    const art = links.map((l) => l.querySelectorAll('[data-art]'));
     expect(art.map((a) => a.length)).toEqual([1, 0, 0]);
+    expect(art[0][0]).toHaveAttribute('data-art', 'platypus-wave');
     expect(art[0][0].closest('[aria-hidden="true"]')).not.toBeNull();
+    // The art's box is a div, so the row holding it is a div too (no block inside a span).
+    expect(art[0][0].parentElement!.tagName).toBe('DIV');
+    expect(art[0][0].parentElement).toBe(links[0].firstElementChild);
     expect(links[0]).toHaveAccessibleName(new RegExp(`^${PERSONAS_INFO[PERSONAS[0]].label}`));
   });
 

@@ -36,7 +36,8 @@ function readyWidths(file: string): number[] {
  * pictures and the dark variant swaps them in CSS: the theme is set before paint, so there is no
  * flash and no client code. Decorative images (alt "") are hidden from assistive tech. A plain
  * `<picture>`, not next/image: the static export serves files as they are (`images.unoptimized`), and
- * the URLs carry the base path themselves.
+ * the URLs carry the base path themselves. The box carries `data-art` with the asset's name, so tests
+ * find a slot by what it shows.
  */
 export function Art({ name, sizes, alt, priority = false, className }: ArtProps) {
   const asset = ART[name];
@@ -81,6 +82,7 @@ export function Art({ name, sizes, alt, priority = false, className }: ArtProps)
   const lightDisplay = pair ? 'block dark:hidden' : 'block';
   return (
     <div
+      data-art={name}
       className={className}
       style={{ aspectRatio: `${asset.width} / ${asset.height}` }}
       aria-hidden={decorative ? true : undefined}

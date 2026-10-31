@@ -3,8 +3,9 @@
 // budget. Chunks loaded later with import() are not referenced there, so they do not count. Also
 // prints the same figure for a few other pages, for information only, and fails if code that must
 // load with import() (confetti, the PDF renderer, the sorting story's checks) has slipped into the
-// home page's first-load chunks.
-import { readFileSync } from 'node:fs';
+// home page's first-load chunks, or if a lazy-only marker is in no chunk at all (a canary: the
+// marker no longer finds the code it guards).
+import { readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -59,6 +60,30 @@ export function lazyLeaks(chunks, markers = LAZY_ONLY) {
   return chunks.flatMap(({ path, source }) => markers.filter((marker) => source.includes(marker)).map((marker) => ({ path, marker })));
 }
 
+/**
+ * The canary for LAZY_ONLY: markers found in no chunk at all, first-load or lazy. Such a marker no
+ * longer finds the code it guards (a library renamed its flag, an export was renamed), so the leak
+ * check would pass on nothing.
+ * @param {{ path: string, source: string }[]} chunks Every chunk of the build.
+ * @param {readonly string[]} [markers]
+ * @returns {{ marker: string, message: string }[]}
+ */
+export function missingMarkers(chunks, markers = LAZY_ONLY) {
+  return markers
+    .filter((marker) => !chunks.some(({ source }) => source.includes(marker)))
+    .map((marker) => ({ marker, message: `Marker "${marker}" not found in any chunk; LAZY_ONLY needs a new marker.` }));
+}
+
+/**
+ * Every .js file under `dir`, nested folders included, as paths relative to it (with `/`).
+ * @param {string} dir
+ * @param {(dir: string) => string[]} [list] Lists `dir` recursively; tests pass their own.
+ * @returns {string[]}
+ */
+export function chunkFiles(dir, list = (d) => readdirSync(d, { recursive: true, encoding: 'utf8' })) {
+  return list(dir).map((p) => p.split('\\').join('/')).filter((p) => p.endsWith('.js'));
+}
+
 /** Other pages whose first-load JS is printed for information. Only the home page has a budget. */
 export const INFO_PAGES = ['programs/', 'plan/', 'report/', 'assess/results/'];
 
@@ -90,6 +115,12 @@ function main() {
     .map((path) => ({ path, source: readFileSync(join(out, path), 'utf8') }));
   for (const { path, marker } of lazyLeaks(home)) {
     console.error(`Home first-load chunk ${path} contains "${marker}", which must load with import() only.`);
+    process.exitCode = 1;
+  }
+  const chunksDir = join(out, '_next/static/chunks');
+  const all = chunkFiles(chunksDir).map((path) => ({ path, source: readFileSync(join(chunksDir, path), 'utf8') }));
+  for (const { message } of missingMarkers(all)) {
+    console.error(message);
     process.exitCode = 1;
   }
   for (const page of INFO_PAGES) console.log(infoLine(page, sizes(page)));

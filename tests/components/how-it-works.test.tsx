@@ -49,11 +49,10 @@ describe('HowItWorks', () => {
 
   it('gives each step its spot illustration, decorative, in order', () => {
     render(<HowItWorks />);
-    for (const item of items()) {
-      const art = item.querySelector('[style*="aspect-ratio"]');
-      expect(art).not.toBeNull();
-      expect(art).toHaveAttribute('aria-hidden', 'true');
-    }
+    const art = items().map((item) => item.querySelectorAll('[data-art]'));
+    expect(art.map((a) => a.length)).toEqual([1, 1, 1]);
+    expect(art.map((a) => a[0].getAttribute('data-art'))).toEqual(['step-answer', 'step-sort', 'step-plan']);
+    for (const a of art) expect(a[0]).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('shows a decorative preview of the product in each step', () => {
