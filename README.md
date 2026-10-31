@@ -2,6 +2,8 @@
 
 A free tool that helps Australian AI startups find the grants, tax incentives, credits and accelerators they can use, and plan the work to apply for them.
 
+The design is Billabong, in the style of posthog.com with our own art: a grey-beige page, chunky amber buttons, window-framed panels, marker highlights, the Rubik font and a platypus mascot (`docs/plans/2026-10-31-billabong-design.md`).
+
 ## What it does
 
 - **Personas.** Start as Bootstrapped, Pre-raise or VC-backed. The persona sets sensible defaults and tailors the advice on each program.
@@ -9,7 +11,7 @@ A free tool that helps Australian AI startups find the grants, tax incentives, c
 - **Assessment.** A short wizard checks your answers against each program's eligibility rules. Each program lands in one of four groups: Act now, Prepare, Watch or Not a fit. Each group comes with reasons and fixes, and you get an estimate of the funding you could reach.
 - **Plan and calendar.** Track applications on a pipeline board, work through goals generated from each program, and add deadlines to Google Calendar or Outlook, or download them as `.ics` files.
 - **PDF report.** Build a report of your results and plan, preview it and download it as a PDF.
-- **Motion and celebrations.** On the home page, slowly drifting contour lines behind the hero, like a survey map, that bend around your cursor (with a pause button, remembered in your browser), every program sorting itself into the four groups for an example founder as you scroll (or once, as it comes into view on phones), and small previews of each step in How it works. Elsewhere, gentle transitions, a plan progress ring and a short burst of confetti when you finish the assessment, submit or win an application, or finish an application's goals. All motion stops when your device is set to reduce motion, and confetti can be turned off in **Settings**.
+- **Motion and celebrations.** On the home page, every program sorting itself into the four groups for an example founder as you scroll (or once, as it comes into view on phones), and small previews of each step in How it works. Elsewhere, gentle transitions, chunky buttons that press in, a plan progress ring and a short burst of amber, sage and sky confetti when you finish the assessment, submit or win an application, or finish an application's goals. All motion stops when your device is set to reduce motion, and confetti can be turned off in **Settings**.
 
 Program status (open, closing soon, closed) is worked out in your browser from today's date, so it never goes stale between deploys.
 
@@ -40,10 +42,17 @@ Then open http://localhost:3000/grant-assesser/ (the app is served under the `/g
 | `pnpm lint` | ESLint |
 | `pnpm build` | Static export into `out/` |
 | `pnpm serve` | Serves `out/` the way GitHub Pages does, at http://localhost:4173/grant-assesser/ |
-| `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget (279,493 of 297,083 bytes on 29 Oct 2026), checks the contour shader stays out of the first load, and prints the figure for programs, plan, report and results. Run after `pnpm build` |
+| `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget (279,401 of 297,083 bytes on 31 Oct 2026), checks that confetti, the PDF renderer and the sorting story's checks stay out of the first load, and prints the figure for programs, plan, report and results. Run after `pnpm build` |
+| `pnpm art` | Turns the art originals in `art/originals/` into AVIF and WebP in `public/art/` and updates `lib/art-ready.json` (see `art/README.md`) |
 | `pnpm freshness` | Prints a Markdown report of stale program data, closes within 30 days, past closes that need a decision, and broken or blocked source links |
 
-Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright install chromium`. `SCREENS=1 pnpm e2e tests/e2e/screens.spec.ts` saves review screenshots of the home (light and dark, plus the sorting story part-way through on desktop), plan and results pages to `test-results/screens/`.
+`pnpm build` needs network access: `next/font` downloads Rubik from Google Fonts at build time and self-hosts it (the site makes no request to Google).
+
+Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright install chromium`. `SCREENS=1 pnpm e2e tests/e2e/screens.spec.ts` saves review screenshots (light and dark) of the home page (including the sorting story part-way through on desktop), the wizard, results, plan (with its menus, dialogs and calendar), report, settings and 404 pages to `test-results/screens/`.
+
+## Artwork
+
+The illustrations (the billabong dioramas, the platypus and the props) are generated from the prompts in `docs/art/billabong-prompts.md`, saved in `art/originals/` (not committed) and processed with `pnpm art`. Until an image is added the app shows a neutral placeholder of the same size, so nothing is needed to build or deploy. `art/README.md` has the steps.
 
 ## Updating a program
 
@@ -87,10 +96,12 @@ components/          UI by feature: ui, layout, home, programs, assess, results,
 content/programs/    One verified record per program, plus index.ts that validates and exports them
 content/verification Fact-check evidence behind the launch data
 lib/                 Logic: schema, gates, status, scoring, assessment, plan, calendar, store, pdf, dates
-scripts/             serve-out.mjs (local static server), check-freshness.ts (weekly data check), js-size.mjs (JS budget)
+scripts/             serve-out.mjs (local static server), check-freshness.ts (weekly data check), js-size.mjs (JS budget), process-art.mjs (pnpm art)
 tests/               Vitest unit, component and content tests; Playwright e2e and axe tests in tests/e2e
-docs/plans/          Design document and implementation plan
-public/              Static files copied into out/ (fonts, .nojekyll)
+docs/plans/          Design documents and implementation plans (Billabong: 2026-10-31-billabong*)
+docs/art/            Image prompts for the artwork
+art/                 Art originals (gitignored) and how to add them
+public/              Static files copied into out/ (processed art, PDF fonts, .nojekyll)
 legacy/              The previous single-file React app, kept for reference
 ```
 
@@ -100,7 +111,7 @@ The original single-file app (`index.html`, `base.jsx` and its `404.html`) is in
 
 ## Tech stack
 
-Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Lucide icons, `@react-pdf/renderer`, `motion`, WebGL (the hero contour lines, no library), `canvas-confetti`, Vitest and Playwright with axe.
+Next.js 16 (static export), React 19, TypeScript, Tailwind CSS 4, Zod 4, Zustand 5, Rubik (via `next/font`), Lucide icons, `@react-pdf/renderer`, `motion`, `canvas-confetti`, `sharp` (the art pipeline), Vitest and Playwright with axe.
 
 ## License
 
