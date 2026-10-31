@@ -25,8 +25,11 @@ export function BottomNav({ className }: { className?: string }) {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-xs transition-colors duration-150',
-                  active ? 'font-semibold text-accent' : 'text-muted-fg hover:text-fg',
+                  'relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-xs transition-colors duration-150',
+                  // The state indicator, as the top bar's: a 3px underline at the item's foot, a
+                  // pseudo-element, so the bar keeps its height (the sage icon takes no accent).
+                  "after:absolute after:inset-x-5 after:bottom-1 after:h-[3px] after:rounded-full after:content-['']",
+                  active ? 'font-semibold text-accent after:bg-accent forced-colors:after:bg-[CanvasText]' : 'text-muted-fg hover:text-fg',
                   focusRing,
                   'focus-visible:-outline-offset-2',
                 )}

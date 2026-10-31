@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ART, ART_WIDTHS, ICON_NAMES, ICON_ORIGINAL_SIZE, ICON_WIDTHS, LOGO_WIDTHS, artFileName, artFiles, artWidths, assetWidths, iconFile, readyWidths, type ArtName } from '@/lib/art';
-import { APPLE_ICON_BACKGROUND, HERO_AVIF_LIMIT, avifQuality, heroOverLimit, leftovers, missing, outputsFor, processArt, readiness, shapeMatches, unexpected, writeIcons } from '@/scripts/process-art.mjs';
+import { APPLE_ICON_BACKGROUND, HERO_AVIF_LIMIT, avifQuality, heroOverLimit, leftovers, missing, missingMessage, outputsFor, processArt, readiness, shapeMatches, unexpected, writeIcons } from '@/scripts/process-art.mjs';
 import committedReady from '@/lib/art-ready.json';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -120,6 +120,23 @@ describe('missing and unexpected', () => {
     expect(left).toHaveLength(11 + 26);
     expect(left).not.toContain('hero-diorama-day.png');
     expect(left).toContain('hero-diorama-dusk.png');
+  });
+
+  // An illustration without an original shows Art's placeholder; an icon has none (SageIcon always
+  // draws its picture), and its committed outputs stay as they are, so the two are reported apart.
+  it('words the missing illustrations as placeholders and the missing icons as kept outputs', () => {
+    expect(missingMessage([])).toEqual([]);
+    expect(missingMessage(['platypus-search.png', 'icon-grid.png', 'icon-lock.png'])).toEqual([
+      '',
+      'Missing originals (1), shown as placeholders until added:',
+      '  platypus-search.png',
+      '',
+      'Icon originals not prepared (2): the owner\'s icon files are not at the repo root (art/README.md, The icons). Their committed outputs in public/art/ are kept:',
+      '  icon-grid.png',
+      '  icon-lock.png',
+    ]);
+    expect(missingMessage(['icon-grid.png'])[1]).toMatch(/^Icon originals not prepared \(1\)/);
+    expect(missingMessage(['icon-grid.png']).join('\n')).not.toMatch(/placeholder/);
   });
 
   it('lists PNGs the manifest does not name (misspelt, or the character sheet), ignoring other files', () => {

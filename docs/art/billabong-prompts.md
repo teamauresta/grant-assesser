@@ -148,7 +148,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 
 ## 15. Icons (the owner's sage icons, not generated from a prompt)
 
-Twenty-six feature icons: a sage-green fill in a cream outline, chunky and slightly embossed. They replace the lucide line icons where an icon is decorative beside a label at 20px or more (`SageIcon`, `components/ui/sage-icon.tsx`); smaller slots, buttons, menus, pills, warnings and inline text keep lucide's line glyphs, drawn at lucide's default 2px stroke to match (design doc section 11, Icons landed).
+Twenty-six feature icons: a sage-green fill in a cream outline, chunky and slightly embossed. They replace the lucide line icons where an icon is decorative beside a label at 20px or more (`SageIcon`, `components/ui/sage-icon.tsx`); smaller slots, buttons, menus, pills, badges and inline text keep lucide's line glyphs, drawn at lucide's default 2px stroke to match (design doc section 11, Icons landed). Lucide line glyphs in warning callouts, except the backup reminder (owner's mapping).
 
 - **Size:** 512×512 (square), transparent, each written to `art/originals/` by `scripts/prepare-icons.mjs` (the first step of `pnpm art`), then output at 48, 96 and 144 pixels (`ICON_WIDTHS`).
 - **Sources** (the owner's files at the repo root, never committed): sixteen from `Sage_Icons_16_Shadow/` (1254×1254, transparent, clean edges, a soft drop shadow), trimmed to their solid pixels and centred; ten cut from the 6 × 4 sheet `Sage web app navigation icons.png` (1536×1024), whose dark glow around each icon is removed first. A square icon fills 80% of its square; a wide or tall one may grow to 90% on its long side, so they read at the same optical size.

@@ -28,7 +28,8 @@ describe('lucide line glyphs', () => {
 });
 
 // A sage icon is a picture with detail: below 20px it does not read, so smaller slots (inline in text,
-// in buttons, pills and menus) keep the line glyphs.
+// in buttons, pills and menus) keep the line glyphs. This scan sees only literal `size={N}`; a computed
+// size is caught by SageIcon's own development check (tests/components/sage-icon.test.tsx).
 describe('SageIcon call sites', () => {
   it('are 20px or larger', () => {
     const sizes = FILES.flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/<SageIcon\b[^>]*?\bsize=\{(\d+)\}/g)].map((m) => [f, Number(m[1])] as const));

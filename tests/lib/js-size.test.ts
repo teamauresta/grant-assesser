@@ -36,8 +36,10 @@ describe('verdict', () => {
 });
 
 describe('other pages (information only, no budget)', () => {
-  it('reports programs, plan, report and results', () => {
-    expect(INFO_PAGES).toEqual(['programs/', 'plan/', 'report/', 'assess/results/']);
+  // Settings and the wizard too: they share only the layout's chunks with home, so they show what the
+  // layout alone ships (the review of the sage icons found the art manifest there).
+  it('reports programs, plan, report, results, settings and the wizard', () => {
+    expect(INFO_PAGES).toEqual(['programs/', 'plan/', 'report/', 'assess/results/', 'settings/', 'assess/']);
   });
   it('prints the total for a page and never fails, however large', () => {
     expect(infoLine('plan/', [1_000, 234])).toBe('/plan/ first-load JS: 1,234 bytes gzipped (information only).');

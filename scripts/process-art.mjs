@@ -5,8 +5,8 @@
 // scripts/prepare-icons.mjs writes first: ICON_WIDTHS) not larger than the original (alpha kept),
 // then writes lib/art-ready.json from what is in public/art, so the Art component renders an image
 // for each processed asset and a placeholder for the rest. From the logo emblem it
-// also writes the browser icons, app/icon.png and app/apple-icon.png. Missing originals are listed,
-// never errors.
+// also writes the browser icons, app/icon.png and app/apple-icon.png. Missing originals are listed
+// (missingMessage), never errors.
 // Fails (after processing the rest, and still writing lib/art-ready.json) if an original is too
 // small, the wrong shape or unreadable, or if a hero diorama's 1440px AVIF is over 120KB.
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -107,6 +107,25 @@ export function heroOverLimit(sizes) {
 export function shapeMatches(width, height, asset) {
   const want = asset.width / asset.height;
   return height > 0 && Math.abs(width / height - want) / want <= 0.01;
+}
+
+/**
+ * The lines `pnpm art` prints for the originals it did not find (PNG names), each group after a
+ * blank line. A missing illustration shows Art's placeholder; a missing icon original means the
+ * owner's icon files are not at the repo root (scripts/prepare-icons.mjs writes them), and SageIcon
+ * has no placeholder: the icon's committed outputs are simply kept.
+ * @param {readonly string[]} names
+ * @returns {string[]}
+ */
+export function missingMessage(names) {
+  const icons = names.filter((name) => name.startsWith('icon-'));
+  const art = names.filter((name) => !name.startsWith('icon-'));
+  const lines = [];
+  if (art.length) lines.push('', `Missing originals (${art.length}), shown as placeholders until added:`, ...art.map((n) => `  ${n}`));
+  if (icons.length) {
+    lines.push('', `Icon originals not prepared (${icons.length}): the owner's icon files are not at the repo root (art/README.md, The icons). Their committed outputs in public/art/ are kept:`, ...icons.map((n) => `  ${n}`));
+  }
+  return lines;
 }
 
 /** The prefix of a file's temporary output folder in public/art (gitignored). */
@@ -249,10 +268,7 @@ async function main() {
   } else {
     console.log('No originals processed from art/originals/.');
   }
-  if (report.missing.length) {
-    console.log(`\nMissing originals (${report.missing.length}), shown as placeholders until added:`);
-    for (const name of report.missing) console.log(`  ${name}`);
-  }
+  for (const line of missingMessage(report.missing)) console.log(line);
   if (report.unexpected.length) {
     console.log('\nNot in the manifest, ignored (check the name against docs/art/billabong-prompts.md):');
     for (const name of report.unexpected) console.log(`  ${name}`);

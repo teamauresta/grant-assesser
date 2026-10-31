@@ -130,4 +130,18 @@ describe('BottomNav', () => {
     expect(current).toHaveClass('text-accent', 'font-semibold');
     for (const link of within(nav).getAllByRole('link')) expect(link).toHaveClass('min-h-14');
   });
+
+  // With the sage pictures in place the icon no longer takes the accent, so the current item also
+  // carries the top bar's state line: a 3px --accent underline (CanvasText in forced colours), drawn
+  // as a pseudo-element, so the bar's height is unchanged.
+  it('underlines the current item, and only it, with a 3px accent line', () => {
+    pathname = '/plan/';
+    render(<BottomNav />);
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    const current = within(nav).getByRole('link', { name: 'My Plan' });
+    expect(current).toHaveClass('relative', 'after:absolute', 'after:h-[3px]', 'after:rounded-full', 'after:bg-accent', 'forced-colors:after:bg-[CanvasText]');
+    for (const link of within(nav).getAllByRole('link').filter((l) => l !== current)) {
+      expect(link.className).not.toContain('after:bg-accent');
+    }
+  });
 });

@@ -5,11 +5,17 @@
  * owner's sage icons (ICON_NAMES), each at its own small widths. The character sheet
  * (platypus-reference.png) is a generation aid and is not listed.
  *
- * scripts/process-art.mjs imports this file (`pnpm art` runs it with tsx). Keep it import-free and to
- * erasable TypeScript syntax only (annotations, `type`, `as const`; no enums, namespaces or parameter
- * properties), so the script also runs under Node's own type stripping. Which processed files exist
- * is in lib/art-ready.json, written by `pnpm art`.
+ * scripts/process-art.mjs imports this file (`pnpm art` runs it with tsx). Keep it to erasable
+ * TypeScript syntax only (annotations, `type`, `as const`; no enums, namespaces or parameter
+ * properties), and its one import, lib/art-files.ts (the file names, which client code imports on its
+ * own), with its `.ts` extension, so the script also runs under Node's own type stripping. Which
+ * processed files exist is in lib/art-ready.json, written by `pnpm art`.
  */
+
+import { ICON_NAMES, ICON_ORIGINAL_SIZE, ICON_WIDTHS, iconFile, type ArtFormat, type IconName } from './art-files.ts';
+
+export { ICON_NAMES, ICON_ORIGINAL_SIZE, ICON_WIDTHS, artFileName, artSrcSet, iconFile } from './art-files.ts';
+export type { ArtFormat, IconName } from './art-files.ts';
 
 export type ArtName =
   | 'hero-diorama'
@@ -26,20 +32,6 @@ export type ArtName =
   | 'logo-emblem'
   | `icon-${IconName}`;
 
-/**
- * The owner's sage icons (design doc section 11, Icons landed): sixteen from Sage_Icons_16_Shadow/ and
- * ten cut from the navigation sheet by scripts/prepare-icons.mjs, which writes each to
- * art/originals/icon-<name>.png as an ICON_ORIGINAL_SIZE square. Shown by SageIcon
- * (components/ui/sage-icon.tsx), always decorative beside a visible label.
- */
-export const ICON_NAMES = [
-  'backup', 'banknote', 'cloud', 'handshake', 'landmark', 'notebook', 'plan-board', 'receipt',
-  'rocket', 'shield', 'sprout', 'target', 'ticket', 'trending-up', 'trophy', 'verified',
-  'grid', 'person', 'calendar', 'checklist', 'folder', 'download', 'report', 'link', 'lock', 'question',
-] as const;
-
-export type IconName = (typeof ICON_NAMES)[number];
-
 export type ArtAsset = {
   /** Base name of the original (art/originals/<file>.png) and of its outputs (public/art/<file>-<width>.<format>). */
   file: string;
@@ -54,27 +46,11 @@ export type ArtAsset = {
   widths?: readonly number[];
 };
 
-export type ArtFormat = 'avif' | 'webp';
-
 /** Output widths. An original gets each one not larger than itself (1x and 2x for the sizes used). */
 export const ART_WIDTHS = [480, 960, 1440] as const;
 
 /** The logo emblem's widths: 1x, 2x and 4x of its 32px in the top bar (a 3x screen takes 128). */
 export const LOGO_WIDTHS = [32, 64, 128] as const;
-
-/**
- * The icons' widths: they show at 20 to 40px (the nav at 20 and 24, the home page's cards at 36 and
- * 40), so 48 covers 1x and 2x of the nav, 96 2x of the cards, and 144 a 3x screen.
- */
-export const ICON_WIDTHS = [48, 96, 144] as const;
-
-/** The side of each prepared icon original (art/originals/icon-<name>.png), in pixels. */
-export const ICON_ORIGINAL_SIZE = 512;
-
-/** An icon's base file name (art/originals/<file>.png, public/art/<file>-<width>.<format>). */
-export function iconFile<N extends IconName>(name: N): `icon-${N}` {
-  return `icon-${name}` as `icon-${N}`;
-}
 
 const ICONS = Object.fromEntries(ICON_NAMES.map((name): [string, ArtAsset] => [iconFile(name), {
   file: iconFile(name), width: ICON_ORIGINAL_SIZE, height: ICON_ORIGINAL_SIZE, alt: null, widths: ICON_WIDTHS,
@@ -124,16 +100,6 @@ export function artWidths(width: number, widths: readonly number[] = ART_WIDTHS)
 export function readyWidths(ready: Readonly<Record<string, unknown>>, file: string): number[] {
   const widths = ready[file];
   return Array.isArray(widths) ? widths.filter((w): w is number => typeof w === 'number') : [];
-}
-
-/** A processed file's name in public/art. */
-export function artFileName(file: string, width: number, format: ArtFormat): string {
-  return `${file}-${width}.${format}`;
-}
-
-/** A `srcset` of one base file's processed widths in one format, under `base` (which ends in a slash). */
-export function artSrcSet(base: string, file: string, widths: readonly number[], format: ArtFormat): string {
-  return widths.map((w) => `${base}${artFileName(file, w, format)} ${w}w`).join(', ');
 }
 
 /** Every base file name in the manifest, each asset's light file then its dark partner, in manifest order. */

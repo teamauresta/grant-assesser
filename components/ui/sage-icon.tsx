@@ -1,4 +1,4 @@
-import { ICON_WIDTHS, artFileName, artSrcSet, iconFile, type IconName } from '@/lib/art';
+import { ICON_WIDTHS, artFileName, artSrcSet, iconFile, type IconName } from '@/lib/art-files';
 import { cn } from '@/lib/cn';
 
 export type SageIconProps = {
@@ -9,25 +9,34 @@ export type SageIconProps = {
   className?: string;
 };
 
+/** The smallest size a sage icon reads at; below it, use a lucide line glyph. */
+const MIN_SIZE = 20;
+
 /**
- * One of the owner's sage icons (lib/art.ts ICON_NAMES; design doc section 11, Icons landed): a
- * `<picture>` (AVIF, then WebP) at the icon widths, always decorative beside a visible label, so it is
- * hidden from assistive tech. Only at 20px and up, never inside a button, menu item, pill, warning
- * text or field error: those keep their lucide line glyphs.
+ * One of the owner's sage icons (ICON_NAMES in lib/art-files.ts; design doc section 11, Icons landed):
+ * a `<picture>` (AVIF, then WebP) at the icon widths, always decorative beside a visible label, so it
+ * is hidden from assistive tech. Only at 20px and up, and never inside a button, menu item, pill,
+ * badge or field error, or inline in text: those keep their lucide line glyphs. Lucide line glyphs in
+ * warning callouts, except the backup reminder (owner's mapping).
  *
- * Unlike Art it is safe in client components: it reads neither lib/art-ready.json nor the manifest
- * (every icon is committed at every width, which tests/lib/process-art.test.ts checks), so it costs
- * the client a few lines. A light and a dark theme share the picture; it does not take currentColor.
+ * Unlike Art it is safe in client components on every route: it imports only lib/art-files.ts (the
+ * file names), never the manifest (lib/art.ts) or lib/art-ready.json, since every icon is committed
+ * at every width (tests/lib/process-art.test.ts checks that). A light and a dark theme share the
+ * picture; it does not take currentColor.
  *
- * Always lazy, the nav bars' too: each page renders both the top bar and the bottom nav, one of them
- * hidden, and a lazy image that is not displayed is never fetched (an eager one would be). The ones
- * on screen load at layout, in a box already their size.
+ * Always lazy, the nav bars' too: icons further down a page wait until they are near the screen, and
+ * the bar that is hidden at this width (the top bar's icons below lg, the bottom nav from md) never
+ * fetches its pictures. The ones on screen load at layout, in a box already their size.
  */
 export function SageIcon({ name, size, className }: SageIconProps) {
   const file = iconFile(name);
   // Inlined by Next at build (next.config.ts); read at render so tests can set it.
   const base = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/art/`;
   const sizes = `${size}px`;
+  // Development and tests only: Next inlines NODE_ENV, so a production build drops this.
+  if (process.env.NODE_ENV !== 'production' && size < MIN_SIZE) {
+    console.error(`SageIcon "${name}" at ${size}px: sage icons do not read under ${MIN_SIZE}px; use a lucide line glyph.`);
+  }
   return (
     <picture data-icon={name} className={cn('block shrink-0', className)} style={{ width: size, height: size }}>
       <source type="image/avif" srcSet={artSrcSet(base, file, ICON_WIDTHS, 'avif')} sizes={sizes} />

@@ -48,15 +48,31 @@ describe('SageIcon', () => {
     expect(container.firstElementChild).toHaveClass('mt-0.5', 'block', 'shrink-0');
   });
 
-  // The nav bars and cards that show it are client components: the readiness JSON and the whole
-  // manifest must not come along.
-  it('does not import lib/art-ready.json', () => {
-    const source = readFileSync(join(import.meta.dirname, '..', '..', 'components', 'ui', 'sage-icon.tsx'), 'utf8');
-    const imports = [...source.matchAll(/^import[^;]+;/gm)].map((m) => m[0]);
+  // The scan in tests/components/icons.test.ts sees only literal sizes; a computed one is caught here,
+  // in development and tests (the check is dead code in a production build, so it ships nothing).
+  it('complains in development when drawn under 20px', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(<SageIcon name="grid" size={16} />);
+    expect(error).toHaveBeenCalledWith(expect.stringMatching(/SageIcon "grid" at 16px.*20px/));
+    error.mockClear();
+    render(<SageIcon name="grid" size={20} />);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  // The nav bars and cards that show it are client components, on every route: neither the readiness
+  // JSON nor the manifest (lib/art.ts, whose ART the bundler cannot drop) may come along, only the
+  // import-free file names in lib/art-files.ts (review of 60136e5: the manifest was in the layout chunk).
+  it('imports only lib/art-files from the art modules, and lib/art-files imports nothing', () => {
+    const read = (...p: string[]) => readFileSync(join(import.meta.dirname, '..', '..', ...p), 'utf8');
+    const imports = [...read('components', 'ui', 'sage-icon.tsx').matchAll(/^import[^;]+;/gm)].map((m) => m[0]);
     expect(imports.length).toBeGreaterThan(0);
     for (const line of imports) {
       expect(line).not.toMatch(/art-ready/);
-      expect(line).not.toMatch(/\bART\b/);
+      expect(line).not.toMatch(/['"]@\/lib\/art['"]/);
+      expect(line).not.toMatch(/['"]\.{1,2}\/[^'"]*\/art['"]/);
     }
+    expect(imports.some((line) => /['"]@\/lib\/art-files['"]/.test(line))).toBe(true);
+    expect(read('lib', 'art-files.ts')).not.toMatch(/^\s*import\b/m);
   });
 });

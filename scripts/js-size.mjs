@@ -85,7 +85,7 @@ export function chunkFiles(dir, list = (d) => readdirSync(d, { recursive: true, 
 }
 
 /** Other pages whose first-load JS is printed for information. Only the home page has a budget. */
-export const INFO_PAGES = ['programs/', 'plan/', 'report/', 'assess/results/'];
+export const INFO_PAGES = ['programs/', 'plan/', 'report/', 'assess/results/', 'settings/', 'assess/'];
 
 /**
  * The information line for one page, from its first-load scripts' gzipped sizes. Never fails.
