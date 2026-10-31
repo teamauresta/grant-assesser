@@ -19,4 +19,12 @@ describe('ProgramCard', () => {
     expect(notice.querySelector('svg')).not.toBeNull();
     expect(container.querySelector('article')).toHaveClass('text-muted-fg');
   });
+  // Cards (Billabong design doc, section 4): --surface, a 1px --border outline, an 8px radius; the
+  // title semibold and the amount in tabular digits.
+  it('is a surface card with a semibold title and the amount in tabular digits', () => {
+    const { container } = render(<ProgramCard program={program} />);
+    expect(container.querySelector('article')).toHaveClass('bg-surface', 'border', 'border-border', 'rounded-lg');
+    expect(screen.getByRole('heading', { name: 'Cloud AI tier' })).toHaveClass('font-semibold');
+    expect(screen.getByText(/^\$10K/)).toHaveClass('num');
+  });
 });

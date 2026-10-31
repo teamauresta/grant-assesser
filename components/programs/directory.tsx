@@ -166,10 +166,13 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
           </ul>
         </Reveal>
       ) : (
+        // Playful copy is for empty states (design doc section 7); the way out stays plain. The
+        // platypus illustration replaces the icon in Task 10 (Art):
+        /* Art: platypus-search */
         <EmptyState
           icon={SearchX}
           title="No programs match."
-          description="Try a different search or fewer filters."
+          description="Even the platypus couldn't find one. Try a different search or fewer filters."
           action={<Button onClick={clear}>Clear filters</Button>}
         />
       )}

@@ -70,6 +70,15 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it.each(['--hl-amber', '--hl-sage', '--hl-sky'])('--fg meets AA on %s', (name) => {
     expect(contrast(t['--fg'], mixHex(t['--bg'], t[name], HIGHLIGHT_ALPHA))).toBeGreaterThanOrEqual(4.5);
   });
+  // The directory's filter chips (Billabong plan, Task 5): pressed is --bg text on an --fg fill;
+  // unpressed is --fg on --surface inside a --border-strong outline. The pressed fill must stand out
+  // from the page and from an unpressed chip (WCAG 1.4.11, 3:1).
+  it('a pressed filter chip reads (AA) and stands out from the page and an unpressed chip (3:1)', () => {
+    expect(contrast(t['--bg'], t['--fg'])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t['--fg'], t['--bg'])).toBeGreaterThanOrEqual(3);
+    expect(contrast(t['--fg'], t['--surface'])).toBeGreaterThanOrEqual(3);
+    expect(contrast(t['--fg'], t['--border-strong'])).toBeGreaterThanOrEqual(3);
+  });
   // The accent focus ring (WCAG 1.4.11, 3:1) on the page. On --surface it is implied by the accent's
   // AA check above.
   it('the accent focus ring stays visible on --bg (3:1)', () => {

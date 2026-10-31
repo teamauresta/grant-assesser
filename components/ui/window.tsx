@@ -16,7 +16,14 @@ export function WindowControls() {
   );
 }
 
-export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'children' | 'className'> & {
+export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'children' | 'className' | 'aria-labelledby' | 'aria-label'> & {
+  /**
+   * Not accepted: the title names the region, and a caller's name would be silently replaced (or,
+   * with landmark={false}, name a plain div). Declared as never because TypeScript lets any hyphenated
+   * attribute through in JSX unless the props type names it.
+   */
+  'aria-labelledby'?: never;
+  'aria-label'?: never;
   /** The window's title: the heading that names the region. */
   title: ReactNode;
   /** The title's heading level (h2 by default). */

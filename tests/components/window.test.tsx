@@ -143,6 +143,22 @@ describe('Window', () => {
     expect(WINDOW_BAR).toMatch(/\bbg-neutral-bg\b/);
   });
 
+  // The title names the region; the frame's own props come first, so a caller's name would be
+  // silently replaced. The props are not accepted (typecheck fails on these lines without the
+  // directives), and the region stays named by its title.
+  it('accepts no aria-labelledby or aria-label of its own', () => {
+    render(
+      <>
+        {/* @ts-expect-error: the title names the window. */}
+        <Window title="Named by title" aria-label="Another name"><p>1</p></Window>
+        {/* @ts-expect-error: the title names the window. */}
+        <Window title="Also by title" aria-labelledby="elsewhere"><p>2</p></Window>
+      </>,
+    );
+    expect(screen.getByRole('region', { name: 'Named by title' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Also by title' })).toBeInTheDocument();
+  });
+
   // A step in a sequence (How it works) is not a landmark: a plain div, its heading kept.
   it('renders a div with no region landmark when landmark={false}', () => {
     render(<Window title="Step one" landmark={false}><p>Body</p></Window>);

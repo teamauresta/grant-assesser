@@ -311,8 +311,11 @@ test.describe('marker highlight', () => {
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
       if (ch === '\\') i++;
-      else if (ch === '"' || ch === "'") i = text.indexOf(ch, i + 1);
-      else if (ch === '{') {
+      else if (ch === '"' || ch === "'") {
+        i = text.indexOf(ch, i + 1);
+        // An unclosed quote: indexOf gives -1, and the loop would start again from 0, forever.
+        if (i < 0) break;
+      } else if (ch === '{') {
         // A statement at-rule (`@import …;`) can precede the prelude.
         stack.push(text.slice(start, i).split(';').pop()!.trim());
         start = i + 1;

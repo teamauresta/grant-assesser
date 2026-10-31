@@ -54,15 +54,18 @@ export function FilterChips<V extends string>({ label, options, isPressed, onTog
                   aria-pressed={pressed}
                   onClick={() => onToggle(value)}
                   className={cn(
-                    'inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm',
+                    'inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-medium',
                     'transition-colors duration-150',
+                    // Pressed is filled with --fg: the clearest state in both themes (an amber fill is
+                    // 1.7:1 on the light page). tests/lib/tokens.test.ts checks the pairs.
                     pressed
-                      ? 'border-accent bg-accent/10 font-medium text-fg'
-                      : 'border-border bg-bg text-muted-fg hover:border-border-strong hover:text-fg',
+                      ? 'border-fg bg-fg text-bg'
+                      : 'border-border-strong bg-surface text-fg hover:bg-neutral-bg',
                     focusRing,
                   )}
                 >
-                  {pressed && <Check aria-hidden="true" size={16} strokeWidth={1.5} className="-ml-1 text-accent" />}
+                  {/* The state never rests on colour alone: aria-pressed, and this check. */}
+                  {pressed && <Check aria-hidden="true" size={16} strokeWidth={1.5} className="-ml-1" />}
                   {text}
                 </button>
               </li>

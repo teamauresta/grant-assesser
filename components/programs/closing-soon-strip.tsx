@@ -32,15 +32,15 @@ export function ClosingSoonStrip({ programs, className }: { programs: Program[];
         </Link>
       </div>
       {items === null ? (
-        <div className="min-h-24 rounded-lg border border-border" aria-hidden="true" />
+        <div className="min-h-24 rounded-lg border border-border bg-surface" aria-hidden="true" />
       ) : items.length === 0 ? (
-        <p className="rounded-lg border border-border px-4 py-6 text-sm text-muted-fg">
+        <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-fg">
           Nothing closes in the next {WINDOW_DAYS} days. Rolling programs are open year-round.
         </p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {items.map(({ program, deadline, daysLeft, status }) => (
-            <li key={program.slug} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+            <li key={program.slug} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 first:rounded-t-[7px] last:rounded-b-[7px] hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
               <div className="min-w-0">
                 <Link
                   href={`/programs/${program.slug}/`}

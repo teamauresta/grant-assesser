@@ -49,7 +49,7 @@ export function EligibilityList({ gates, profile }: EligibilityListProps) {
       {!profile && (
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-fg">Answer a few questions to see which of these you meet.</p>
-          <Link href="/assess/" className={buttonClasses({ variant: 'secondary' })}>
+          <Link href="/assess/" className={buttonClasses({ variant: 'secondary', className: 'sm:shrink-0' })}>
             Take the assessment to check your eligibility
             <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
           </Link>

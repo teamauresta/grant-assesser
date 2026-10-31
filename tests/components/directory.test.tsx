@@ -24,3 +24,15 @@ describe('Directory results count', () => {
     expect(status).toHaveTextContent(`Showing 0 of ${PROGRAMS.length} programs`);
   });
 });
+
+// Empty results (Billabong design doc, section 7): a playful line, and the plain way out.
+describe('Directory with no results', () => {
+  it('says so playfully and keeps Clear filters', async () => {
+    const user = userEvent.setup();
+    render(<Directory />);
+    await user.type(screen.getByRole('searchbox', { name: 'Search programs' }), 'zzzz-no-match');
+    expect(screen.getByText('No programs match.')).toBeInTheDocument();
+    expect(screen.getByText(/Even the platypus couldn't find one\./)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Clear filters' }).length).toBeGreaterThan(0);
+  });
+});

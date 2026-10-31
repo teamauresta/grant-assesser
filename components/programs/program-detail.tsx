@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/dates';
 import { formatBenefit, LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
+import { Window } from '@/components/ui/window';
 import { focusRing } from '@/components/ui/focus-ring';
 import { AddToPipeline } from './add-to-pipeline';
 import { DeadlineCalendar } from './deadline-calendar';
@@ -15,12 +16,15 @@ import { NextDeadline, ProgramStatusPill, VerifiedNote } from './program-status'
 
 const linkClasses = cn('rounded-sm text-accent underline underline-offset-4 hover:no-underline', focusRing);
 
+/**
+ * A section of the page as a window (Billabong design doc, section 4): a region named by its h2
+ * title, under the page's h1. The id keeps each heading linkable.
+ */
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3 border-t border-border pt-6">
-      <h2 id={id} className="text-xl">{title}</h2>
+    <Window title={title} titleId={id} bodyClassName="flex flex-col gap-3">
       {children}
-    </section>
+    </Window>
   );
 }
 
@@ -35,7 +39,7 @@ function hostname(url: string): string {
 export function ProgramDetail({ program: p }: { program: Program }) {
   const { content } = p;
   return (
-    <article className="flex max-w-3xl flex-col gap-8">
+    <article className="flex max-w-3xl flex-col gap-6">
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-fg">
           <li className="flex items-center gap-1">
@@ -58,7 +62,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
           {p.status.note && <p className="text-sm text-muted-fg">{p.status.note}</p>}
         </div>
 
-        <dl className="grid grid-cols-1 rounded-lg border border-border sm:grid-cols-3 sm:divide-x sm:divide-border max-sm:divide-y max-sm:divide-border">
+        <dl className="grid grid-cols-1 rounded-lg border border-border bg-surface sm:grid-cols-3 sm:divide-x sm:divide-border max-sm:divide-y max-sm:divide-border">
           <div className="flex flex-col gap-1 p-4">
             <dt className="text-xs text-muted-fg">Benefit</dt>
             <dd className="num text-sm">{formatBenefit(p.benefit)}</dd>
