@@ -368,7 +368,7 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 **Files:** `CLAUDE.md`, `README.md`, `docs/plans/2026-10-31-billabong-design.md`.
 
 **Steps:**
-1. `CLAUDE.md`: Overview and Design system rewritten for Billabong (palette, Rubik, `num`, buttons and the ledge exception, `Window`, `Highlight`, `Art` and `pnpm art`, highlights behind `--fg` only, the platypus and the copy rule); Structure (`components/ui/window.tsx`, `highlight.tsx`, `art.tsx`, `lib/art.ts`, `scripts/process-art.mjs`, `art/originals/`); Motion (contour hero removed); Testing (what moved); `pnpm size` figure.
+1. `CLAUDE.md`: Overview and Design system rewritten for Billabong (palette, Rubik, `num`, buttons and the ledge exception, `Window`, `Highlight`, `Art` and `pnpm art`, highlights behind `--fg` only, the platypus and the copy rule); Structure (`components/ui/window.tsx`, `highlight.tsx`, `art.tsx`, `lib/art.ts`, `scripts/process-art.mjs`, `art/originals/`); Motion (contour hero removed; the sorting story now pins from 40rem tall with pin-short below 54rem, under the sticky bar, Task 3); the `html` scroll-padding now clears the sticky bar at every width (Task 3); Testing (what moved); `pnpm size` figure.
 2. README: the design line and `pnpm art`.
 3. Design doc section 11 complete.
 4. Full gate; look at every page in both themes at both widths.
