@@ -5,12 +5,15 @@ import { focusRing } from './focus-ring';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md';
 
+// Chunky buttons (docs/plans/2026-10-31-billabong-design.md, section 4): primary, secondary and danger
+// carry the `ledge` utility (app/globals.css), a 3px bottom edge in the border's colour, a darker
+// shade of the button. Ghost buttons are flat.
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary border border-primary hover:opacity-90',
-  secondary: 'bg-bg text-fg border border-border hover:border-border-strong hover:bg-surface',
-  ghost: 'bg-transparent text-fg border border-transparent hover:bg-surface',
+  primary: 'bg-primary text-on-primary border border-primary-ledge ledge font-semibold hover:brightness-105',
+  secondary: 'bg-surface text-fg border border-border-strong ledge font-medium hover:bg-neutral-bg',
+  ghost: 'bg-transparent text-fg border border-transparent font-medium hover:bg-neutral-bg',
   // Destructive confirmations only (e.g. the Remove button inside a confirmation dialog).
-  danger: 'bg-danger text-on-danger border border-danger hover:opacity-90',
+  danger: 'bg-danger text-on-danger border border-danger-ledge ledge font-medium hover:brightness-105',
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -30,9 +33,10 @@ export function buttonClasses({
   className,
 }: { variant?: ButtonVariant; size?: ButtonSize; iconOnly?: boolean; className?: string } = {}): string {
   return cn(
-    'inline-flex select-none items-center justify-center gap-2 rounded-md font-medium',
-    // Pressed buttons sink slightly; no transform when the device asks for reduced motion.
-    'transition-[opacity,background-color,border-color,scale] duration-150 motion-safe:active:scale-[0.98]',
+    'inline-flex select-none items-center justify-center gap-2 rounded-md',
+    // Pressed buttons with a ledge move down as it shrinks (the press is in the `ledge` utility, and
+    // nothing moves under reduced motion).
+    'transition-[opacity,background-color,border-color,filter,translate,border-bottom-width] duration-150 ease-out',
     'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
     focusRing,
     VARIANTS[variant],

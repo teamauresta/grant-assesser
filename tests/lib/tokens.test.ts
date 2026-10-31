@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { contrast, mixHex } from '@/lib/contrast';
+import { contrast, luminance, mixHex } from '@/lib/contrast';
 import { AURORA_ALPHA } from '@/lib/aurora';
 import { BRAND_COLOURS } from '@/lib/celebrate';
 import { HIGHLIGHT_ALPHA } from '@/lib/highlight';
@@ -60,6 +60,11 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   // of the control's shape, so it must be visible against the page (WCAG 1.4.11, 3:1).
   it('the primary ledge stays visible on --bg (3:1)', () => {
     expect(contrast(t['--primary-ledge'], t['--bg'])).toBeGreaterThanOrEqual(3);
+  });
+  // The danger button's ledge (design doc section 4): a darker red than its fill, visible on the page.
+  it('the danger ledge stays visible on --bg (3:1) and is darker than --danger', () => {
+    expect(contrast(t['--danger-ledge'], t['--bg'])).toBeGreaterThanOrEqual(3);
+    expect(luminance(t['--danger-ledge'])).toBeLessThan(luminance(t['--danger']));
   });
   // Marker highlights (design doc section 2) sit behind --fg text only, at HIGHLIGHT_ALPHA over --bg.
   it.each(['--hl-amber', '--hl-sage', '--hl-sky'])('--fg meets AA on %s', (name) => {

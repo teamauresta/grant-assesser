@@ -18,7 +18,7 @@
  * Every text/background pair below meets WCAG AA (4.5:1) in both themes.
  * --border is decorative separation only; --border-strong (>= 3:1) outlines form controls
  * and outline pills so their boundaries meet WCAG 1.4.11. --primary-ledge is the bottom edge of an
- * amber button, part of its shape (3:1 on the page).
+ * amber button, part of its shape (3:1 on the page); --danger-ledge the same for the danger button.
  * --hl-* are marker highlights, painted at 35% over the page (HIGHLIGHT_ALPHA in lib/highlight.ts),
  * behind --fg text only: never muted text.
  * Status colours are for StatusPill only; the accent is never used for status.
@@ -42,6 +42,8 @@
   --danger: #b91c1c;
   /* Label on --danger: white in light (dark text is 2.8:1 on this red), near-black in dark. */
   --on-danger: #ffffff;
+  /* The danger button's ledge: a darker red than --danger (3:1 on the page). */
+  --danger-ledge: #7f1d1d;
   --scrim: rgb(9 9 11 / 0.5);
 
   --ok-bg: #f0fdf4;
@@ -96,6 +98,7 @@
   --accent: #86c9a9;
   --danger: #f87171;
   --on-danger: #151515;
+  --danger-ledge: #dc2626;
   --scrim: rgb(0 0 0 / 0.7);
 
   --ok-bg: #052e16;
@@ -133,6 +136,7 @@
   --color-accent: var(--accent);
   --color-danger: var(--danger);
   --color-on-danger: var(--on-danger);
+  --color-danger-ledge: var(--danger-ledge);
   --color-scrim: var(--scrim);
 
   --color-ok-bg: var(--ok-bg);
@@ -247,6 +251,24 @@
 
 @utility num {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Chunky buttons (design doc section 4): a 3px bottom edge in a darker shade of the button (its border
+ * colour). Pressing shrinks it and moves the button down, so it reads as pushed in. The only coloured
+ * edge allowed (section 5), and only on buttons (tests/e2e/billabong.spec.ts). The press is behind
+ * the media query, so under reduced motion nothing moves at all. The transition is in buttonClasses()
+ * (components/ui/button.tsx), so it does not fight that list.
+ * `:is(button, a)` applies it to buttons and links only, and lifts it above the `border` utility,
+ * which Tailwind emits later and would otherwise reset the bottom to 1px.
+ */
+@utility ledge {
+  &:is(button, a) {
+    border-bottom-width: 3px;
+    @media (prefers-reduced-motion: no-preference) {
+      &:active:not(:disabled, [aria-disabled="true"]) { translate: 0 2px; border-bottom-width: 1px; }
+    }
+  }
 }
 
 /* A quiet eucalyptus shadow: the primary call to action in the hero. */

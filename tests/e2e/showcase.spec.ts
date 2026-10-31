@@ -5,7 +5,8 @@ import { frames, populatedWorkspace, scrollSort, seedStorage } from './helpers';
 
 /**
  * The Showcase home page in a real browser: the contour lines' pause button, the sorting story, the
- * How it works previews, the persona cards' borders and the absence of gradient text.
+ * How it works previews, the persona cards' borders (and the button ledge, the one uneven border
+ * allowed) and the absence of gradient text.
  *
  * Covered elsewhere, so not repeated here: the story's maths (tests/lib/showcase.test.ts), the
  * stage and its load failure (tests/components/sort-story.test.tsx), the previews' timings
@@ -237,6 +238,34 @@ test('no gradient text on the home page', async ({ page }) => {
   expect(clipped).toEqual([]);
 });
 
+type Borders = { colours: string[]; widths: string[]; ledge: boolean };
+
+const borders = async (el: Locator): Promise<Borders> => {
+  // Let border transitions (hover) finish, so the sides are read at rest.
+  await el.evaluate((node) => Promise.all(node.getAnimations().map((a) => a.finished.catch(() => undefined))));
+  return el.evaluate((node) => {
+    const s = getComputedStyle(node);
+    return {
+      colours: [s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor],
+      widths: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
+      ledge: node.classList.contains('ledge'),
+    };
+  });
+};
+
+/**
+ * No coloured strip: every border side is the same colour and width. The one exception is the bottom
+ * width of an element carrying the `ledge` utility: a chunky button's ledge is part of the control's
+ * shape (docs/plans/2026-10-31-billabong-design.md, section 5). Its colour still matches the other
+ * sides, so the ledge can never be a strip of another colour.
+ */
+const expectEven = ({ colours, widths, ledge }: Borders) => {
+  expect(colours[0]).toBe(colours[3]);
+  expect(new Set(colours).size).toBe(1);
+  expect(widths[0]).toBe(widths[3]);
+  expect(new Set(ledge ? [widths[0], widths[1], widths[3]] : widths).size).toBe(1);
+};
+
 test('persona cards have no coloured strip: every border side is the same colour and width', async ({ page }, info) => {
   // A saved persona, so one card shows its selected border too.
   await seedStorage(page, { workspace: populatedWorkspace() });
@@ -245,25 +274,12 @@ test('persona cards have no coloured strip: every border side is the same colour
   await expect(cards).toHaveCount(3);
   await expect(cards.filter({ hasText: 'Your current persona' })).toHaveCount(1);
 
-  const borders = async (card: Locator) => {
-    // Let border transitions (hover) finish, so the sides are read at rest.
-    await card.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished.catch(() => undefined))));
-    return card.evaluate((el) => {
-      const s = getComputedStyle(el);
-      return {
-        colours: [s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor],
-        widths: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
-      };
-    });
-  };
-  const expectEven = ({ colours, widths }: { colours: string[]; widths: string[] }) => {
-    expect(colours[0]).toBe(colours[3]);
-    expect(new Set(colours).size).toBe(1);
-    expect(widths[0]).toBe(widths[3]);
-    expect(new Set(widths).size).toBe(1);
-  };
-
-  for (const card of await cards.all()) expectEven(await borders(card));
+  for (const card of await cards.all()) {
+    const sides = await borders(card);
+    // Cards are not buttons: the ledge exception never applies to them.
+    expect(sides.ledge).toBe(false);
+    expectEven(sides);
+  }
 
   if (info.project.name === 'desktop') {
     const card = cards.filter({ hasNotText: 'Your current persona' }).first();
@@ -273,5 +289,20 @@ test('persona cards have no coloured strip: every border side is the same colour
     // The hover border is on: the check below reads the hovered state, not the resting one.
     expect(hovered.colours[0]).not.toBe(resting.colours[0]);
     expectEven(hovered);
+  }
+});
+
+// The button ledge (design doc section 5) is the only uneven border allowed, and only on buttons.
+test('only buttons and links carry the ledge, and apart from its width every side matches', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('link', { name: 'Start free assessment' })).toBeVisible();
+  const ledged = page.locator('.ledge');
+  expect(await ledged.count()).toBeGreaterThan(0);
+  const tags = await ledged.evaluateAll((els) => els.map((el) => el.tagName.toLowerCase()));
+  expect(tags.filter((tag) => tag !== 'button' && tag !== 'a')).toEqual([]);
+  for (const el of await ledged.all()) {
+    const sides = await borders(el);
+    expectEven(sides);
+    expect(sides.widths[2]).toBe('3px');
   }
 });
