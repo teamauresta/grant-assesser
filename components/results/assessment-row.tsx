@@ -44,7 +44,7 @@ function PanelToggle({ open, controls, onToggle, muted = false, children }: { op
       className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-medium', muted ? 'text-muted-fg hover:text-fg' : 'text-fg hover:text-accent', focusRing)}
     >
       {children}
-      <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={cn('shrink-0 text-muted-fg transition-transform duration-150', open && 'rotate-180')} />
+      <ChevronDown aria-hidden="true" size={16} className={cn('shrink-0 text-muted-fg transition-transform duration-150', open && 'rotate-180')} />
     </button>
   );
 }
@@ -87,13 +87,13 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
 
       {blocker && (
         <p className="flex items-start gap-1.5 text-sm text-fg">
-          <Ban aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0" />
+          <Ban aria-hidden="true" size={16} className="mt-[3px] shrink-0" />
           <span><span className="font-medium">Not a fit:</span> {blocker.reason}</span>
         </p>
       )}
       {issue && (
         <p className="flex items-start gap-1.5 text-sm text-fg">
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-muted-fg" />
+          <ArrowRight aria-hidden="true" size={16} className="mt-[3px] shrink-0 text-muted-fg" />
           <span>
             <span className="font-medium">{issue.result === 'unknown' ? 'To check:' : 'To fix:'}</span> {issue.reason}
             {issue.fix && <>. {issue.fix}</>}
@@ -115,16 +115,16 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
             <>
               <Link href="/plan/" className={cn('inline-flex min-h-11 items-center gap-1 rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
                 View plan
-                <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+                <ArrowRight aria-hidden="true" size={16} />
               </Link>
               <Button variant="secondary" aria-disabled="true">
-                <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
+                <Check aria-hidden="true" size={16} className="text-accent" />
                 In your plan
               </Button>
             </>
           ) : (
             <Button variant={notFit ? 'ghost' : 'secondary'} onClick={onAdd}>
-              <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+              <Plus aria-hidden="true" size={16} />
               Add to pipeline
               <span className="sr-only">: {p.name}</span>
             </Button>

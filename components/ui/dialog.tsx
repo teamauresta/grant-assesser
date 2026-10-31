@@ -118,7 +118,7 @@ function DialogPanel({ onClose, title, description, initialFocusRef, footer, chi
             aria-label="Close"
             className={cn('-my-2 -mr-2 inline-flex size-11 shrink-0 items-center justify-center self-start rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRingInset)}
           >
-            <X aria-hidden="true" size={20} strokeWidth={1.5} />
+            <X aria-hidden="true" size={20} />
           </button>
         </div>
         {(description || children) && (

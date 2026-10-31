@@ -61,7 +61,7 @@ export default function ErrorPage({ error, retry, reset }: Props) {
           </div>
         ) : (
           <Button onClick={() => setConfirming(true)}>
-            <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
+            <RotateCcw aria-hidden="true" size={16} />
             Reset workspace
           </Button>
         )}

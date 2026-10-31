@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CircleAlert, ClipboardCheck, Download, LoaderCircle, RotateCw } from 'lucide-react';
+import { ArrowRight, CircleAlert, Download, LoaderCircle, RotateCw } from 'lucide-react';
 import { PROGRAMS } from '@/content/programs';
 import {
   DEFAULT_SECTIONS, REPORT_SECTIONS, SECTION_INFO, buildReportData, hasAnySection, reportFilename,
@@ -15,6 +15,7 @@ import { downloadFile } from '@/lib/download';
 import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 import { ReportPreview } from './report-preview';
 
@@ -91,7 +92,7 @@ function BuilderView({ now }: { now: Date }) {
       {!assessed && (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-3">
-            <ClipboardCheck aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-fg" />
+            <SageIcon name="checklist" size={24} />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">No assessment yet</p>
               <p className="text-sm text-muted-fg">
@@ -101,7 +102,7 @@ function BuilderView({ now }: { now: Date }) {
             </div>
           </div>
           <Link href="/assess/" className={buttonClasses({ variant: 'secondary', className: 'shrink-0 self-start sm:self-center' })}>
-            Start the assessment<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+            Start the assessment<ArrowRight aria-hidden="true" size={16} />
           </Link>
         </div>
       )}
@@ -130,8 +131,8 @@ function BuilderView({ now }: { now: Date }) {
                 className="flex-1"
               >
                 {busy
-                  ? <LoaderCircle aria-hidden="true" size={16} strokeWidth={1.5} className="animate-spin motion-reduce:animate-none" />
-                  : <Download aria-hidden="true" size={16} strokeWidth={1.5} />}
+                  ? <LoaderCircle aria-hidden="true" size={16} className="animate-spin motion-reduce:animate-none" />
+                  : <Download aria-hidden="true" size={16} />}
                 {busy ? 'Making PDF…' : 'Download PDF'}
               </Button>
               <Art name="prop-stamp" sizes="(min-width: 48rem) 48px, 64px" className="w-16 shrink-0 md:w-12" />
@@ -143,12 +144,12 @@ function BuilderView({ now }: { now: Date }) {
             {error && (
               <div role="alert" className="flex flex-col gap-2 rounded-md border border-danger p-3 text-sm">
                 <p className="flex items-start gap-1.5 text-danger">
-                  <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0" />
+                  <CircleAlert aria-hidden="true" size={16} className="mt-[3px] shrink-0" />
                   <span>The PDF could not be made. {error}</span>
                 </p>
                 {/* Focus moves to Download PDF before the error (and this button) goes, so it is not lost. */}
                 <Button size="sm" onClick={() => { downloadRef.current?.focus(); void download(); }} className="self-start">
-                  <RotateCw aria-hidden="true" size={16} strokeWidth={1.5} />Try again
+                  <RotateCw aria-hidden="true" size={16} />Try again
                 </Button>
               </div>
             )}

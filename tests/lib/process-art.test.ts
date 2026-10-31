@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ART, ART_WIDTHS, LOGO_WIDTHS, artFileName, artFiles, artWidths, assetWidths, type ArtName } from '@/lib/art';
+import { ART, ART_WIDTHS, ICON_NAMES, ICON_ORIGINAL_SIZE, ICON_WIDTHS, LOGO_WIDTHS, artFileName, artFiles, artWidths, assetWidths, iconFile, readyWidths, type ArtName } from '@/lib/art';
 import { APPLE_ICON_BACKGROUND, HERO_AVIF_LIMIT, avifQuality, heroOverLimit, leftovers, missing, outputsFor, processArt, readiness, shapeMatches, unexpected, writeIcons } from '@/scripts/process-art.mjs';
 import committedReady from '@/lib/art-ready.json';
 
@@ -11,13 +11,15 @@ const ROOT = join(import.meta.dirname, '..', '..');
 
 // The artwork (Billabong design doc section 6; docs/art/billabong-prompts.md): 13 images, of which the
 // character sheet is not shipped and the two hero dioramas are one light/dark pair, plus the logo
-// emblem cropped from the owner's lockup (design doc section 11, Art landed: a twelfth asset).
+// emblem cropped from the owner's lockup (design doc section 11, Art landed: a twelfth asset), plus
+// the owner's 26 sage icons (section 11, Icons landed).
 describe('ART manifest', () => {
-  it('lists the eleven illustrations and the logo emblem, with the hero as a day/dusk pair', () => {
-    expect(Object.keys(ART)).toHaveLength(12);
+  it('lists the eleven illustrations, the logo emblem and the 26 icons, with the hero as a day/dusk pair', () => {
+    expect(Object.keys(ART)).toHaveLength(12 + 26);
+    expect(ICON_NAMES).toHaveLength(26);
     expect(ART['hero-diorama']).toMatchObject({ file: 'hero-diorama-day', dark: 'hero-diorama-dusk', width: 1536, height: 1024 });
     for (const name of Object.keys(ART) as ArtName[]) {
-      if (name === 'hero-diorama' || name === 'logo-emblem') continue;
+      if (name === 'hero-diorama' || name === 'logo-emblem' || name.startsWith('icon-')) continue;
       expect(ART[name]).toMatchObject({ file: name, width: 1024, height: 1024 });
       expect(ART[name].dark).toBeUndefined();
     }
@@ -46,6 +48,17 @@ describe('ART manifest', () => {
     expect(LOGO_WIDTHS).toEqual([32, 64, 128]);
     expect(ART['logo-emblem'].dark).toBeUndefined();
   });
+
+  // Each icon sits beside a visible label (SageIcon), so all are decorative; they show at 20 to 40px,
+  // so their widths are 48, 96 and 144, from a prepared square original (scripts/prepare-icons.mjs).
+  it('lists each icon as a decorative square with icon-sized widths', () => {
+    expect(ICON_WIDTHS).toEqual([48, 96, 144]);
+    for (const name of ICON_NAMES) {
+      expect(iconFile(name)).toBe(`icon-${name}`);
+      expect(ART[iconFile(name)]).toEqual({ file: `icon-${name}`, width: ICON_ORIGINAL_SIZE, height: ICON_ORIGINAL_SIZE, alt: null, widths: ICON_WIDTHS });
+    }
+    expect(artWidths(ICON_ORIGINAL_SIZE, ICON_WIDTHS)).toEqual([48, 96, 144]);
+  });
 });
 
 describe('artWidths and artFileName', () => {
@@ -72,7 +85,19 @@ describe('artWidths and artFileName', () => {
 
   it('lists the base files light then dark, in manifest order', () => {
     expect(artFiles().slice(0, 3)).toEqual(['hero-diorama-day', 'hero-diorama-dusk', 'platypus-wave']);
-    expect(artFiles()).toHaveLength(13);
+    expect(artFiles()).toHaveLength(13 + 26);
+  });
+});
+
+// One reader of lib/art-ready.json for the Art component and the hero preload (review of 83e29be).
+describe('readyWidths', () => {
+  it('reads a file widths from the readiness map, and nothing for false, missing or malformed entries', () => {
+    const ready = { 'platypus-search': [480, 960], 'step-plan': false, odd: [480, 'x', null, 960], text: 'yes' };
+    expect(readyWidths(ready, 'platypus-search')).toEqual([480, 960]);
+    expect(readyWidths(ready, 'step-plan')).toEqual([]);
+    expect(readyWidths(ready, 'absent')).toEqual([]);
+    expect(readyWidths(ready, 'odd')).toEqual([480, 960]);
+    expect(readyWidths(ready, 'text')).toEqual([]);
   });
 });
 
@@ -88,11 +113,11 @@ describe('outputsFor', () => {
 
 describe('missing and unexpected', () => {
   it('lists the originals not yet in art/originals, as PNG names, in manifest order', () => {
-    expect(missing(ART, [])).toHaveLength(13);
+    expect(missing(ART, [])).toHaveLength(13 + 26);
     expect(missing(ART, []).slice(0, 2)).toEqual(['hero-diorama-day.png', 'hero-diorama-dusk.png']);
     const present = ['hero-diorama-day.png', 'platypus-search.png', '.gitkeep'];
     const left = missing(ART, present);
-    expect(left).toHaveLength(11);
+    expect(left).toHaveLength(11 + 26);
     expect(left).not.toContain('hero-diorama-day.png');
     expect(left).toContain('hero-diorama-dusk.png');
   });
@@ -131,6 +156,13 @@ describe('readiness', () => {
     const dir = join(ROOT, 'public', 'art');
     const files = existsSync(dir) ? readdirSync(dir) : [];
     expect(committedReady).toEqual(readiness(ART, files));
+  });
+
+  // SageIcon (a client component) builds its srcset from ICON_WIDTHS without reading
+  // lib/art-ready.json, so every icon must be committed at every width.
+  it('has every icon ready at all of ICON_WIDTHS', () => {
+    const ready: Record<string, unknown> = committedReady;
+    for (const name of ICON_NAMES) expect(ready[iconFile(name)], name).toEqual([...ICON_WIDTHS]);
   });
 });
 
@@ -222,7 +254,7 @@ describe('processArt', () => {
     expect(report.failed).toEqual([]);
     expect(report.wrongShape).toEqual([]);
     expect(report.leftovers).toEqual([]);
-    expect(report.missing).toHaveLength(13);
+    expect(report.missing).toHaveLength(13 + 26);
     expect(report.ready).toEqual(readiness(ART, []));
     expect(readdirSync(out)).toEqual([]);
   });
@@ -384,10 +416,13 @@ describe('writeIcons', () => {
   });
 });
 
-// The committed icons are the ones writeIcons makes; the old SVG compass icon is gone with the
-// compass mark (design doc section 11, Art landed), so it cannot win over the PNG.
-it('ships the PNG icons and no SVG icon in app/', () => {
-  expect(existsSync(join(ROOT, 'app', 'icon.png'))).toBe(true);
-  expect(existsSync(join(ROOT, 'app', 'apple-icon.png'))).toBe(true);
+// The committed icons have the shape writeIcons makes (a 192px transparent tab icon, a 180px opaque
+// home-screen icon); the old SVG compass icon is gone with the compass mark (design doc section 11,
+// Art landed), so it cannot win over the PNG.
+it('ships the PNG icons as writeIcons makes them, and no SVG icon in app/', async () => {
+  const icon = await sharp(join(ROOT, 'app', 'icon.png')).metadata();
+  expect([icon.format, icon.width, icon.height, icon.hasAlpha]).toEqual(['png', 192, 192, true]);
+  const apple = await sharp(join(ROOT, 'app', 'apple-icon.png')).metadata();
+  expect([apple.format, apple.width, apple.height, apple.hasAlpha]).toEqual(['png', 180, 180, false]);
   expect(existsSync(join(ROOT, 'app', 'icon.svg'))).toBe(false);
 });

@@ -96,6 +96,10 @@ describe('Eligibility art', () => {
     expect(art[0]).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByRole('region', { name: 'Eligibility' })).toContainElement(art[0]);
     expect(art[0].nextElementSibling).toHaveTextContent('Answer a few questions to see which of these you meet.');
+    // 64px on phones, 72px from sm, where the row has room (design doc section 11, Art landed); the
+    // `sizes` matches, so the browser picks the file for the width shown.
+    expect(art[0]).toHaveClass('w-16', 'sm:w-18', 'shrink-0');
+    expect(art[0].querySelector('source')).toHaveAttribute('sizes', '(min-width: 40rem) 72px, 64px');
   });
 
   it('shows no art once the checks are evaluated', () => {

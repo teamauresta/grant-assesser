@@ -1,13 +1,14 @@
-import { ClipboardCheck, FileText, LayoutGrid, SquareKanban, type LucideIcon } from 'lucide-react';
+import type { IconName } from '@/lib/art';
 
-export type NavItem = { href: string; label: string; icon: LucideIcon };
+/** A primary nav item; its icon is one of the owner's sage icons (SageIcon). */
+export type NavItem = { href: string; label: string; icon: IconName };
 
 // Hrefs carry the trailing slash the static export uses, so they match usePathname() directly.
 export const NAV_ITEMS: readonly NavItem[] = [
-  { href: '/programs/', label: 'Programs', icon: LayoutGrid },
-  { href: '/assess/', label: 'Assess', icon: ClipboardCheck },
-  { href: '/plan/', label: 'My Plan', icon: SquareKanban },
-  { href: '/report/', label: 'Report', icon: FileText },
+  { href: '/programs/', label: 'Programs', icon: 'grid' },
+  { href: '/assess/', label: 'Assess', icon: 'checklist' },
+  { href: '/plan/', label: 'My Plan', icon: 'plan-board' },
+  { href: '/report/', label: 'Report', icon: 'report' },
 ];
 
 /** True when `pathname` is `href` or a page beneath it (e.g. /programs/rdti/ is under Programs). */

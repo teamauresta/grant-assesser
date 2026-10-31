@@ -29,7 +29,7 @@ export function ClosingSoonStrip({ programs, className }: { programs: Program[];
         <h2 id="closing-soon-heading" className="text-xl">Closing soon</h2>
         <Link href="/programs/" className={cn('inline-flex min-h-11 items-center gap-1 rounded-md text-sm text-accent hover:underline', focusRing)}>
           All programs
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </div>
       {items === null ? (

@@ -26,7 +26,8 @@ describe('Art placeholder', () => {
     expect(placeholder).toHaveAttribute('aria-hidden', 'true');
     const icon = placeholder.querySelector('svg')!;
     expect(icon).toHaveAttribute('width', '16');
-    expect(icon).toHaveAttribute('stroke-width', '1.5');
+    // Lucide's default stroke, 2, since the line glyphs were matched to the sage icons (Icons landed).
+    expect(icon).toHaveAttribute('stroke-width', '2');
   });
 
   it('keeps the same box as the image: the asset aspect ratio, with the caller classes on it', () => {

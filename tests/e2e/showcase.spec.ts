@@ -104,6 +104,9 @@ for (const theme of ['light', 'dark'] as const) {
     const img = page.locator('[data-art="hero-diorama"] img:visible');
     await expect(img).toHaveCount(1);
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    // Settle before counting, so a late second fetch (the other theme's picture, another width) would
+    // be seen rather than missed.
+    await page.waitForLoadState('networkidle');
     const own = theme === 'light' ? 'hero-diorama-day-' : 'hero-diorama-dusk-';
     expect(art.length).toBe(1);
     expect(art[0].startsWith(own)).toBe(true);

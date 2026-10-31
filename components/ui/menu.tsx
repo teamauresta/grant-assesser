@@ -101,9 +101,9 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
         onKeyDown={onTriggerKeyDown}
         className={buttonClasses({ variant, size, iconOnly })}
       >
-        {Icon && <Icon aria-hidden="true" size={16} strokeWidth={1.5} />}
+        {Icon && <Icon aria-hidden="true" size={16} />}
         {label}
-        {!iconOnly && <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />}
+        {!iconOnly && <ChevronDown aria-hidden="true" size={16} className="text-muted-fg" />}
       </button>
       {open && (
         <div
@@ -125,7 +125,7 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
             {items.map((it, i) => {
               const content = (
                 <>
-                  {it.icon && <it.icon aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0 text-muted-fg" />}
+                  {it.icon && <it.icon aria-hidden="true" size={16} className="shrink-0 text-muted-fg" />}
                   <span>{it.label}</span>
                 </>
               );

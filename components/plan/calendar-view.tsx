@@ -26,7 +26,7 @@ const dayLabel = (iso: string) =>
 
 const itemHref = (i: PlanItem) => (i.kind === 'goal' ? goalHref(i.id) : `/programs/${i.program.slug}/`);
 function ItemIcon({ item: i, className }: { item: PlanItem; className?: string }) {
-  const props = { 'aria-hidden': true, size: 16, strokeWidth: 1.5, className: cn('shrink-0', className) } as const;
+  const props = { 'aria-hidden': true, size: 16, className: cn('shrink-0', className) } as const;
   if (i.kind === 'deadline') return <CalendarClock {...props} />;
   if (i.done) return <CircleCheck {...props} />;
   return i.overdue ? <CircleAlert {...props} /> : <Target {...props} />;
@@ -77,7 +77,7 @@ export function CalendarView({ now }: { now: Date }) {
       {changes > 0 && ws.lastCalendarExportAt && (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-start gap-2 text-sm">
-            <Info aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-accent" />
+            <Info aria-hidden="true" size={16} className="mt-[3px] shrink-0 text-accent" />
             <span>
               <span className="num font-medium">{changes}</span> {changes === 1 ? 'change' : 'changes'} since your last calendar export
               {' '}on <time dateTime={ws.lastCalendarExportAt} className="num">{formatDate(todayISO(new Date(ws.lastCalendarExportAt)))}</time>.
@@ -85,7 +85,7 @@ export function CalendarView({ now }: { now: Date }) {
             </span>
           </p>
           <Button onClick={exportAll} className="shrink-0">
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Re-export
           </Button>
         </div>
@@ -98,7 +98,7 @@ export function CalendarView({ now }: { now: Date }) {
         </p>
         <div className="flex shrink-0 flex-col gap-1 sm:items-end">
           <Button variant="primary" onClick={exportAll} disabled={eventCount === 0} aria-describedby={eventCount === 0 ? 'export-help' : undefined}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export all to calendar (.ics)
           </Button>
           <p id="export-help" className="text-xs text-muted-fg">
@@ -118,11 +118,11 @@ export function CalendarView({ now }: { now: Date }) {
             </h2>
             <div className="flex items-center gap-1">
               <Button variant="ghost" onClick={() => step(-1)} aria-label="Previous month" iconOnly>
-                <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.5} />
+                <ChevronLeft aria-hidden="true" size={20} />
               </Button>
               <Button onClick={() => setView({ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) })} aria-current={isCurrentMonth ? 'date' : undefined}>Today</Button>
               <Button variant="ghost" onClick={() => step(1)} aria-label="Next month" iconOnly>
-                <ChevronRight aria-hidden="true" size={20} strokeWidth={1.5} />
+                <ChevronRight aria-hidden="true" size={20} />
               </Button>
             </div>
           </div>
@@ -181,10 +181,10 @@ export function CalendarView({ now }: { now: Date }) {
             </tbody>
           </table>
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-fg">
-            <span className="inline-flex items-center gap-1"><Target aria-hidden="true" size={16} strokeWidth={1.5} />Goal</span>
-            <span className="inline-flex items-center gap-1"><CalendarClock aria-hidden="true" size={16} strokeWidth={1.5} />Program deadline</span>
-            <span className="inline-flex items-center gap-1 text-danger"><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</span>
-            <span className="inline-flex items-center gap-1"><CircleCheck aria-hidden="true" size={16} strokeWidth={1.5} />Done</span>
+            <span className="inline-flex items-center gap-1"><Target aria-hidden="true" size={16} />Goal</span>
+            <span className="inline-flex items-center gap-1"><CalendarClock aria-hidden="true" size={16} />Program deadline</span>
+            <span className="inline-flex items-center gap-1 text-danger"><CircleAlert aria-hidden="true" size={16} />Overdue</span>
+            <span className="inline-flex items-center gap-1"><CircleCheck aria-hidden="true" size={16} />Done</span>
           </p>
         </section>
 
@@ -244,7 +244,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
             <li key={key} className="flex flex-col gap-1.5">
               <h3 className={cn('text-sm font-medium', key === 'overdue' ? 'flex items-center gap-1 text-danger' : 'text-muted-fg')}>
                 {key === 'overdue'
-                  ? <><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</>
+                  ? <><CircleAlert aria-hidden="true" size={16} />Overdue</>
                   : <time dateTime={key} className="num">{key === today ? 'Today' : formatDate(key)}</time>}
               </h3>
               <ul className={LIST_FRAME}>

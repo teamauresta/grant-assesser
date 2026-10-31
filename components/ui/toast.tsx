@@ -77,7 +77,7 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
         aria-label="Dismiss"
         className={cn('-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
       >
-        <X aria-hidden="true" size={16} strokeWidth={1.5} />
+        <X aria-hidden="true" size={16} />
       </button>
     </div>
   );

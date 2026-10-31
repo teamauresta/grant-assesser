@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { NAV_ITEMS, isActivePath } from './nav-items';
 import { BrandLink } from './brand-link';
 import { PersonaChip } from './persona-chip';
@@ -26,7 +27,7 @@ export function TopNav({ logo, className }: { logo: ReactNode; className?: strin
         <BrandLink logo={logo} className="shrink-0" />
         <nav aria-label="Primary" className="min-w-0 flex-1">
           <ul className="flex items-center gap-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            {NAV_ITEMS.map(({ href, label, icon }) => {
               const active = isActivePath(pathname, href);
               return (
                 <li key={href}>
@@ -41,7 +42,11 @@ export function TopNav({ logo, className }: { logo: ReactNode; className?: strin
                       focusRing,
                     )}
                   >
-                    <Icon aria-hidden="true" size={16} strokeWidth={1.5} className="hidden lg:block" />
+                    {/* From lg, where the bar has room. Lazy: a lazy image that is not displayed is
+                        never fetched, so narrower windows skip it; the rest load at layout. */}
+                    <span className="hidden lg:block">
+                      <SageIcon name={icon} size={20} />
+                    </span>
                     {label}
                   </Link>
                 </li>

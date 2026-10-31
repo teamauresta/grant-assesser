@@ -1,4 +1,4 @@
-import { ART, artSrcSet } from '@/lib/art';
+import { ART, artSrcSet, readyWidths } from '@/lib/art';
 import artReady from '@/lib/art-ready.json';
 
 /**
@@ -8,15 +8,14 @@ import artReady from '@/lib/art-ready.json';
  */
 export const HERO_SIZES = '(min-width: 70rem) 33rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)';
 
-/** Where the diorama is the largest paint: from md, beside the headline. On phones it comes last. */
+/**
+ * Where the diorama is the largest paint: from md, beside the headline. On phones it comes last.
+ * 48rem is Tailwind's `md` breakpoint, where components/home/hero.tsx puts the picture beside the
+ * text (its `md:` classes) and HERO_SIZES switches to 45vw: change them together.
+ */
 export const HERO_PRELOAD_MEDIA = '(min-width: 48rem)';
 
 type Ready = Readonly<Record<string, unknown>>;
-
-const widthsOf = (ready: Ready, file: string): number[] => {
-  const widths = ready[file];
-  return Array.isArray(widths) ? widths.filter((w): w is number => typeof w === 'number') : [];
-};
 
 /**
  * JavaScript for the pre-paint theme script (app/layout.tsx), run with the theme in `t`: on the home
@@ -29,9 +28,9 @@ const widthsOf = (ready: Ready, file: string): number[] => {
  */
 export function heroPreloadScript(basePath: string, ready: Ready = artReady): string {
   const { file, dark } = ART['hero-diorama'];
-  const day = widthsOf(ready, file);
+  const day = readyWidths(ready, file);
   if (day.length === 0) return '';
-  const dusk = dark ? widthsOf(ready, dark) : [];
+  const dusk = dark ? readyWidths(ready, dark) : [];
   const base = `${basePath}/art/`;
   const light = artSrcSet(base, file, day, 'avif');
   const night = dusk.length && dark ? artSrcSet(base, dark, dusk, 'avif') : light;

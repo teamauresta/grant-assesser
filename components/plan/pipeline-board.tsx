@@ -107,7 +107,7 @@ export function PipelineBoard({ now }: { now: Date }) {
 
   const addButton = (
     <Button ref={addRef} onClick={() => setAdding(true)}>
-      <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+      <Plus aria-hidden="true" size={16} />
       Add custom application
     </Button>
   );
@@ -125,7 +125,7 @@ export function PipelineBoard({ now }: { now: Date }) {
           description="Add your first from your results, or browse programs."
           action={(
             <div className="flex flex-wrap justify-center gap-2">
-              <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>Browse programs<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>
+              <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>Browse programs<ArrowRight aria-hidden="true" size={16} /></Link>
               <Link href="/assess/results/" className={buttonClasses()}>See your results</Link>
               {addButton}
             </div>
@@ -245,7 +245,7 @@ export function PipelineBoard({ now }: { now: Date }) {
               className={cn('flex min-h-11 items-center gap-3 rounded-lg border border-border-strong bg-surface px-4 py-3 text-left text-sm font-medium hover:bg-bg', focusRing)}
               onClick={() => { if (outcomeFor) move(outcomeFor, stage); setOutcomeFor(undefined); }}
             >
-              <Icon aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0 text-muted-fg" />
+              <Icon aria-hidden="true" size={20} className="shrink-0 text-muted-fg" />
               <span className="flex flex-col">
                 <span>{STAGE_LABELS[stage]}</span>
                 <span className="font-normal text-muted-fg">{description}</span>

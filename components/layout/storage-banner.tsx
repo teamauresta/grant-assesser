@@ -36,7 +36,7 @@ export function StorageBanner({ className }: { className?: string }) {
       <p role="status" className="sr-only">{announcement}</p>
       {cannotSave && (
         <aside aria-label="Storage warning" className={WARN_CALLOUT}>
-          <TriangleAlert aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
+          <TriangleAlert aria-hidden="true" size={20} className="shrink-0" />
           <p className="pt-0.5">
             {CANNOT_SAVE}{' '}
             <Link href="/settings/#your-data" className={cn('font-medium underline underline-offset-2', focusRing)}>
@@ -66,12 +66,12 @@ function CorruptNotice({ storageKey, onDismiss }: { storageKey: string; onDismis
 
   return (
     <aside aria-label="Unreadable workspace" className={WARN_CALLOUT}>
-      <TriangleAlert aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
+      <TriangleAlert aria-hidden="true" size={20} className="shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col pt-0.5">
         <p>{UNREADABLE}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button onClick={download}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Download the old data
           </Button>
         </div>
@@ -79,7 +79,7 @@ function CorruptNotice({ storageKey, onDismiss }: { storageKey: string; onDismis
         <div role="alert">{error && <p className="mt-3">{error}</p>}</div>
       </div>
       <Button variant="ghost" iconOnly aria-label="Dismiss" onClick={onDismiss} className="-my-1.5 -mr-1.5 shrink-0">
-        <X aria-hidden="true" size={20} strokeWidth={1.5} className="text-warn-fg" />
+        <X aria-hidden="true" size={20} className="text-warn-fg" />
       </Button>
     </aside>
   );

@@ -15,9 +15,9 @@ const PADDINGS = { lg: 'p-4 md:p-8', md: 'p-4 md:p-6', sm: 'p-3' } as const;
 export function WindowControls() {
   return (
     <span aria-hidden="true" className="flex shrink-0 items-center gap-2 self-start py-0.5 text-muted-fg">
-      <Minus size={16} strokeWidth={1.5} />
-      <Square size={16} strokeWidth={1.5} />
-      <X size={16} strokeWidth={1.5} />
+      <Minus size={16} />
+      <Square size={16} />
+      <X size={16} />
     </span>
   );
 }

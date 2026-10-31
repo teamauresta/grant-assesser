@@ -44,7 +44,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
         <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-fg">
           <li className="flex items-center gap-1">
             <Link href="/programs/" className={cn('inline-flex min-h-11 items-center rounded-sm hover:text-fg', focusRing)}>Programs</Link>
-            <ChevronRight aria-hidden="true" size={16} strokeWidth={1.5} />
+            <ChevronRight aria-hidden="true" size={16} />
           </li>
           <li aria-current="page" className="text-fg">{p.name}</li>
         </ol>
@@ -121,7 +121,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
       {content.caveats.length > 0 && (
         <Section id="caveats" title="Caveats">
           <div className="flex gap-3 rounded-lg border border-border bg-warn-bg p-4">
-            <TriangleAlert aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-warn-fg" />
+            <TriangleAlert aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-warn-fg" />
             <ul className="flex flex-col gap-2 text-fg">
               {content.caveats.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
@@ -159,12 +159,12 @@ export function ProgramDetail({ program: p }: { program: Program }) {
               <div className="flex flex-wrap items-center gap-2">
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className={cn(linkClasses, 'inline-flex items-center gap-1')}>
                   {s.title}
-                  <ExternalLink aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />
+                  <ExternalLink aria-hidden="true" size={16} className="shrink-0" />
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
                 {s.official && (
                   <Badge>
-                    <ShieldCheck aria-hidden="true" size={16} strokeWidth={1.5} />
+                    <ShieldCheck aria-hidden="true" size={16} />
                     Official
                   </Badge>
                 )}

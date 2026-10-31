@@ -49,7 +49,7 @@ function Frame({ icon: Icon, title, body = 'justify-center px-4 py-1.5 md:py-3',
       className="flex min-h-32 flex-col overflow-hidden rounded-md border border-border bg-bg text-xs text-muted-fg md:min-h-44"
     >
       <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-fg md:py-2.5">
-        <Icon size={16} strokeWidth={1.5} className="shrink-0 text-muted-fg" />
+        <Icon size={16} className="shrink-0 text-muted-fg" />
         <span className="min-w-0 truncate font-medium">{title}</span>
       </div>
       <div className={cn('flex min-h-0 flex-1 flex-col', body)}>{children}</div>
@@ -98,7 +98,7 @@ export function PlanPreview() {
           <span className="flex items-center gap-1.5">
             <span className="block h-1 min-w-0 flex-1 rounded-full bg-border" />
             <span data-anim="pop" className="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-accent text-surface" style={at(850)}>
-              <Check size={16} strokeWidth={1.5} />
+              <Check size={16} />
             </span>
           </span>
         </span>
@@ -130,7 +130,7 @@ export function AnswerPreview() {
           <span key={id} className="flex items-center gap-2">
             {answered ? (
               <span data-anim="pop" className="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-accent text-surface" style={at(250 + i * 150)}>
-                <Check size={16} strokeWidth={1.5} />
+                <Check size={16} />
               </span>
             ) : (
               <span data-anim="fade" className="block size-[20px] shrink-0 rounded-full border border-dashed border-border-strong" style={at(250 + i * 150)} />

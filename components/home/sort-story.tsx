@@ -351,7 +351,7 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
         </div>
         <Link href="/assess/" className={buttonClasses({ className: 'self-start' })}>
           Run it for your company
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </div>
     </section>

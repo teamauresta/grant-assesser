@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, HardDriveDownload, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useNow } from '@/lib/use-now';
 import { needsBackup } from '@/lib/store/backup';
@@ -9,6 +9,7 @@ import { exportWorkspaceFile } from '@/lib/store/transfer';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { Button } from '@/components/ui/button';
 import { WARN_CALLOUT } from '@/components/ui/callout';
+import { SageIcon } from '@/components/ui/sage-icon';
 
 const DISMISS_KEY = 'gn-backup-dismissed';
 
@@ -43,7 +44,7 @@ export function BackupPrompt({ className }: { className?: string }) {
 
   return (
     <aside aria-label="Backup reminder" className={cn(WARN_CALLOUT, className)}>
-      <HardDriveDownload aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
+      <SageIcon name="backup" size={24} />
       <div className="flex min-w-0 flex-1 flex-col gap-3 pt-0.5">
         <p>
           <span className="font-semibold">Back up your workspace.</span>{' '}
@@ -51,13 +52,13 @@ export function BackupPrompt({ className }: { className?: string }) {
         </p>
         <div>
           <Button onClick={exportNow}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export workspace
           </Button>
         </div>
       </div>
       <Button variant="ghost" iconOnly aria-label="Dismiss backup reminder" onClick={dismiss} className="-my-1.5 -mr-1.5 shrink-0">
-        <X aria-hidden="true" size={20} strokeWidth={1.5} className="text-warn-fg" />
+        <X aria-hidden="true" size={20} className="text-warn-fg" />
       </Button>
     </aside>
   );

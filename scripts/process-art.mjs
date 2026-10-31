@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Processes the artwork (Billabong design doc section 6; art/README.md). Reads each original named
 // in the manifest (lib/art.ts) from art/originals/<file>.png, writes public/art/<file>-<width>.avif
-// and .webp at each width in ART_WIDTHS (the logo emblem: LOGO_WIDTHS) not larger than the original
-// (alpha kept), then writes lib/art-ready.json from what is in public/art, so the Art component
-// renders an image for each processed asset and a placeholder for the rest. From the logo emblem it
+// and .webp at each width in ART_WIDTHS (the logo emblem: LOGO_WIDTHS; the icons, which
+// scripts/prepare-icons.mjs writes first: ICON_WIDTHS) not larger than the original (alpha kept),
+// then writes lib/art-ready.json from what is in public/art, so the Art component renders an image
+// for each processed asset and a placeholder for the rest. From the logo emblem it
 // also writes the browser icons, app/icon.png and app/apple-icon.png. Missing originals are listed,
 // never errors.
 // Fails (after processing the rest, and still writing lib/art-ready.json) if an original is too
@@ -220,11 +221,10 @@ export async function writeIcons(emblem, appDir) {
   // A palette PNG keeps the tab icon small (it is fetched on every first visit).
   await sharp(emblem).resize(192, 192).png({ palette: true, quality: 90, compressionLevel: 9 }).toFile(join(appDir, 'icon.png'));
   const inner = await sharp(emblem).resize(160, 160).png().toBuffer();
-  const composed = await sharp({ create: { width: 180, height: 180, channels: 3, background: APPLE_ICON_BACKGROUND } })
+  // The canvas has three channels, so the composite is already opaque.
+  await sharp({ create: { width: 180, height: 180, channels: 3, background: APPLE_ICON_BACKGROUND } })
     .composite([{ input: inner, left: 10, top: 10 }])
-    .png()
-    .toBuffer();
-  await sharp(composed).flatten({ background: APPLE_ICON_BACKGROUND }).png({ palette: true, quality: 90, compressionLevel: 9 })
+    .png({ palette: true, quality: 90, compressionLevel: 9 })
     .toFile(join(appDir, 'apple-icon.png'));
   return ['icon.png', 'apple-icon.png'];
 }

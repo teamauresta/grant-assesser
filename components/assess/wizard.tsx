@@ -134,7 +134,7 @@ function WizardView({ step, today }: { step: Step; today: string }) {
             <div className="mx-auto flex max-w-2xl gap-3 md:mx-0">
               {step > 1 && (
                 <Button variant="secondary" className="max-md:flex-1" onClick={() => goTo(step - 1)}>
-                  <ArrowLeft aria-hidden="true" size={16} strokeWidth={1.5} />
+                  <ArrowLeft aria-hidden="true" size={16} />
                   Back
                 </Button>
               )}
@@ -150,7 +150,7 @@ function WizardView({ step, today }: { step: Step; today: string }) {
                 }}
               >
                 {last ? 'See results' : 'Next'}
-                <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+                <ArrowRight aria-hidden="true" size={16} />
               </Button>
             </div>
           </div>
@@ -164,14 +164,14 @@ function SaveNote({ available }: { available: boolean }) {
   if (!available) {
     return (
       <p className="flex items-center gap-1.5 text-sm text-danger">
-        <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />
+        <CircleAlert aria-hidden="true" size={16} />
         This browser is blocking storage, so answers are lost when you close the tab.
       </p>
     );
   }
   return (
     <p className="flex items-center gap-1.5 text-sm text-muted-fg">
-      <Check aria-hidden="true" size={16} strokeWidth={1.5} />
+      <Check aria-hidden="true" size={16} />
       Answers save in this browser as you go
     </p>
   );

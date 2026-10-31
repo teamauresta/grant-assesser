@@ -51,7 +51,7 @@ export function HelpText({ id, children }: { id?: string; children: ReactNode })
 export function ErrorText({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <p id={id} className="flex items-start gap-1.5 text-sm text-danger">
-      <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0" />
+      <CircleAlert aria-hidden="true" size={16} className="mt-[3px] shrink-0" />
       <span>{children}</span>
     </p>
   );

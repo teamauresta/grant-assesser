@@ -42,7 +42,7 @@ export function HowItWorks() {
                 <p className="text-sm text-muted-fg">{s.text}</p>
                 <Link href={s.href} className={cn('inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium text-accent underline underline-offset-4', focusRing)}>
                   {s.cta}
-                  <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+                  <ArrowRight aria-hidden="true" size={16} />
                 </Link>
                 <div className="mt-auto md:pt-2">
                   <Preview />

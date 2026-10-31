@@ -32,14 +32,14 @@ export function Hero() {
         >
           {/* On phones the badge shows only its icon, so the pill stays on one line at 375px. */}
           <span className="inline-flex items-center gap-1 rounded-full bg-primary px-1.5 py-1 text-xs font-semibold text-on-primary sm:px-2.5">
-            <BadgeCheck aria-hidden="true" size={16} strokeWidth={1.5} />
+            <BadgeCheck aria-hidden="true" size={16} />
             <span className="max-sm:sr-only">Verified</span>
           </span>
           <span>
             <span className="num">{PROGRAMS.length}</span> programs checked{' '}
             <time dateTime={verified} className="num whitespace-nowrap">{formatDate(verified)}</time>
           </span>
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
+          <ArrowRight aria-hidden="true" size={16} className="text-muted-fg" />
         </Link>
         <h1 id="hero-heading" className="text-[clamp(2.5rem,5.5vw,4.25rem)] leading-[1.05] font-bold tracking-[-0.035em]">
           <span className="block motion-safe:animate-rise">Find the funding</span>{' '}
@@ -51,7 +51,7 @@ export function Hero() {
         <div className="flex flex-wrap gap-3">
           <Link href="/assess/" className={buttonClasses({ variant: 'primary', size: 'lg' })}>
             Start free assessment
-            <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+            <ArrowRight aria-hidden="true" size={16} />
           </Link>
           <Link href="/programs/" className={buttonClasses({ size: 'lg' })}>Browse programs</Link>
         </div>
@@ -64,7 +64,8 @@ export function Hero() {
       {/* The diorama, last: below everything on phones (design doc section 8), and from md placed in
           the right column beside the text and the numbers. Priority, so it is fetched early (a
           light/dark pair stays lazy, so each theme fetches only its own picture; from md the theme
-          script preloads the active one, lib/hero-preload.ts). HERO_SIZES: 100vw less the gutters
+          script preloads the active one, lib/hero-preload.ts, from HERO_PRELOAD_MEDIA, which is this
+          md breakpoint: change them together). HERO_SIZES: 100vw less the gutters
           on phones, about 45% of the window beside the text, at most 33rem in the 1120px column. */}
       <Art
         name="hero-diorama"

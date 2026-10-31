@@ -53,7 +53,7 @@ export function StatusPill({ declared, derived, daysToClose, className }: Status
         className,
       )}
     >
-      <Icon aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />
+      <Icon aria-hidden="true" size={16} className="shrink-0" />
       <span className={cn(state === 'closing-soon' && 'num', state === 'closed' && 'line-through')}>
         {statusLabel(state, daysToClose)}
       </span>

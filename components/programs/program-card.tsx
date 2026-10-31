@@ -47,7 +47,7 @@ export function ProgramCard({ program, status, headingLevel: Heading = 'h2', not
       </div>
       {muted && (
         <p className="flex items-start gap-1.5 text-sm text-fg">
-          <Ban aria-hidden="true" size={16} strokeWidth={1.5} className="mt-0.5 shrink-0" />
+          <Ban aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
           <span><span className="font-medium">Not a fit:</span> {notFitReason}</span>
         </p>
       )}

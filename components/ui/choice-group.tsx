@@ -107,7 +107,7 @@ export function ChoiceGroup<V extends string>(props: ChoiceGroupProps<V>) {
               </span>
               {/* A fixed slot, so the label does not reflow when the icon appears. */}
               <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-accent">
-                {checked && <Check aria-hidden="true" size={16} strokeWidth={1.5} />}
+                {checked && <Check aria-hidden="true" size={16} />}
               </span>
             </label>
           );

@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { isActivePath } from './nav-items';
@@ -31,7 +31,7 @@ export function PersonaChip({ className }: { className?: string }) {
         className,
       )}
     >
-      <UserRound aria-hidden="true" size={16} strokeWidth={1.5} />
+      <SageIcon name="person" size={20} />
       {persona ? (
         <>
           <span className="sr-only">Persona: </span>

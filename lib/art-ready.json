@@ -53,5 +53,135 @@
     32,
     64,
     128
+  ],
+  "icon-backup": [
+    48,
+    96,
+    144
+  ],
+  "icon-banknote": [
+    48,
+    96,
+    144
+  ],
+  "icon-cloud": [
+    48,
+    96,
+    144
+  ],
+  "icon-handshake": [
+    48,
+    96,
+    144
+  ],
+  "icon-landmark": [
+    48,
+    96,
+    144
+  ],
+  "icon-notebook": [
+    48,
+    96,
+    144
+  ],
+  "icon-plan-board": [
+    48,
+    96,
+    144
+  ],
+  "icon-receipt": [
+    48,
+    96,
+    144
+  ],
+  "icon-rocket": [
+    48,
+    96,
+    144
+  ],
+  "icon-shield": [
+    48,
+    96,
+    144
+  ],
+  "icon-sprout": [
+    48,
+    96,
+    144
+  ],
+  "icon-target": [
+    48,
+    96,
+    144
+  ],
+  "icon-ticket": [
+    48,
+    96,
+    144
+  ],
+  "icon-trending-up": [
+    48,
+    96,
+    144
+  ],
+  "icon-trophy": [
+    48,
+    96,
+    144
+  ],
+  "icon-verified": [
+    48,
+    96,
+    144
+  ],
+  "icon-grid": [
+    48,
+    96,
+    144
+  ],
+  "icon-person": [
+    48,
+    96,
+    144
+  ],
+  "icon-calendar": [
+    48,
+    96,
+    144
+  ],
+  "icon-checklist": [
+    48,
+    96,
+    144
+  ],
+  "icon-folder": [
+    48,
+    96,
+    144
+  ],
+  "icon-download": [
+    48,
+    96,
+    144
+  ],
+  "icon-report": [
+    48,
+    96,
+    144
+  ],
+  "icon-link": [
+    48,
+    96,
+    144
+  ],
+  "icon-lock": [
+    48,
+    96,
+    144
+  ],
+  "icon-question": [
+    48,
+    96,
+    144
   ]
 }

@@ -62,7 +62,7 @@ export function EligibilityList({ gates, profile, framed = true }: EligibilityLi
           </div>
           <Link href="/assess/" className={buttonClasses({ variant: 'secondary', className: 'sm:shrink-0' })}>
             Take the assessment to check your eligibility
-            <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+            <ArrowRight aria-hidden="true" size={16} />
           </Link>
         </div>
       )}
@@ -85,7 +85,7 @@ export function GateRow({ label, severity, result: r, note, flush = false }: Gat
   const { icon: Icon, text } = r ? OUTCOME[r.result] : { icon: CircleDot, text: undefined };
   return (
     <li className={cn('flex gap-3 py-3', !flush && 'px-4')}>
-      <Icon aria-hidden="true" size={20} strokeWidth={1.5} className={cn('mt-0.5 shrink-0', r ? 'text-fg' : 'text-muted-fg')} />
+      <Icon aria-hidden="true" size={20} className={cn('mt-0.5 shrink-0', r ? 'text-fg' : 'text-muted-fg')} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-medium">{label}</span>

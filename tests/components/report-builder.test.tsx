@@ -70,6 +70,10 @@ describe('ReportBuilder', () => {
     expect(art[0]).toHaveAttribute('data-art', 'prop-stamp');
     expect(art[0]).toHaveAttribute('aria-hidden', 'true');
     expect(art[0].previousElementSibling).toBe(button);
+    // 64px on phones, where 48px did not read; 48px from md, where the Options window is narrow and a
+    // 64px stamp would wrap "Download PDF" (design doc section 11, Art landed). `sizes` matches.
+    expect(art[0]).toHaveClass('w-16', 'md:w-12', 'shrink-0');
+    expect(art[0].querySelector('source')).toHaveAttribute('sizes', '(min-width: 48rem) 48px, 64px');
     expect(within(screen.getByRole('region', { name: 'Options' })).getByRole('button', { name: 'Download PDF' })).toBe(button);
   });
 

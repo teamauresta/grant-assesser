@@ -1,8 +1,9 @@
 /**
  * The artwork manifest (Billabong design doc section 6): every image in docs/art/billabong-prompts.md
  * that ships, with its base file name, intrinsic size, default alt text (null when decorative) and,
- * for the hero, its dark-theme partner; plus the logo emblem, cropped from the owner's lockup, at its
- * own small widths. The character sheet (platypus-reference.png) is a generation aid and is not listed.
+ * for the hero, its dark-theme partner; plus the logo emblem, cropped from the owner's lockup, and the
+ * owner's sage icons (ICON_NAMES), each at its own small widths. The character sheet
+ * (platypus-reference.png) is a generation aid and is not listed.
  *
  * scripts/process-art.mjs imports this file (`pnpm art` runs it with tsx). Keep it import-free and to
  * erasable TypeScript syntax only (annotations, `type`, `as const`; no enums, namespaces or parameter
@@ -22,7 +23,22 @@ export type ArtName =
   | 'step-answer'
   | 'step-sort'
   | 'step-plan'
-  | 'logo-emblem';
+  | 'logo-emblem'
+  | `icon-${IconName}`;
+
+/**
+ * The owner's sage icons (design doc section 11, Icons landed): sixteen from Sage_Icons_16_Shadow/ and
+ * ten cut from the navigation sheet by scripts/prepare-icons.mjs, which writes each to
+ * art/originals/icon-<name>.png as an ICON_ORIGINAL_SIZE square. Shown by SageIcon
+ * (components/ui/sage-icon.tsx), always decorative beside a visible label.
+ */
+export const ICON_NAMES = [
+  'backup', 'banknote', 'cloud', 'handshake', 'landmark', 'notebook', 'plan-board', 'receipt',
+  'rocket', 'shield', 'sprout', 'target', 'ticket', 'trending-up', 'trophy', 'verified',
+  'grid', 'person', 'calendar', 'checklist', 'folder', 'download', 'report', 'link', 'lock', 'question',
+] as const;
+
+export type IconName = (typeof ICON_NAMES)[number];
 
 export type ArtAsset = {
   /** Base name of the original (art/originals/<file>.png) and of its outputs (public/art/<file>-<width>.<format>). */
@@ -34,7 +50,7 @@ export type ArtAsset = {
   height: number;
   /** Default alt text, or null when the image is decorative. */
   alt: string | null;
-  /** Output widths, when not ART_WIDTHS (the logo, shown at 32px). */
+  /** Output widths, when not ART_WIDTHS (the logo, shown at 32px, and the icons). */
   widths?: readonly number[];
 };
 
@@ -45,6 +61,24 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 
 /** The logo emblem's widths: 1x, 2x and 4x of its 32px in the top bar (a 3x screen takes 128). */
 export const LOGO_WIDTHS = [32, 64, 128] as const;
+
+/**
+ * The icons' widths: they show at 20 to 40px (the nav at 20 and 24, the home page's cards at 36 and
+ * 40), so 48 covers 1x and 2x of the nav, 96 2x of the cards, and 144 a 3x screen.
+ */
+export const ICON_WIDTHS = [48, 96, 144] as const;
+
+/** The side of each prepared icon original (art/originals/icon-<name>.png), in pixels. */
+export const ICON_ORIGINAL_SIZE = 512;
+
+/** An icon's base file name (art/originals/<file>.png, public/art/<file>-<width>.<format>). */
+export function iconFile<N extends IconName>(name: N): `icon-${N}` {
+  return `icon-${name}` as `icon-${N}`;
+}
+
+const ICONS = Object.fromEntries(ICON_NAMES.map((name): [string, ArtAsset] => [iconFile(name), {
+  file: iconFile(name), width: ICON_ORIGINAL_SIZE, height: ICON_ORIGINAL_SIZE, alt: null, widths: ICON_WIDTHS,
+}])) as Record<`icon-${IconName}`, ArtAsset>;
 
 export const ART: Record<ArtName, ArtAsset> = {
   'hero-diorama': {
@@ -66,6 +100,8 @@ export const ART: Record<ArtName, ArtAsset> = {
   'step-plan': { file: 'step-plan', width: 1024, height: 1024, alt: null },
   // Decorative: the live "Grant Navigator" text sits beside it (LogoMark).
   'logo-emblem': { file: 'logo-emblem', width: 668, height: 668, alt: null, widths: LOGO_WIDTHS },
+  // Decorative: each sits beside a visible label (SageIcon).
+  ...ICONS,
 };
 
 export const ART_FORMATS: readonly ArtFormat[] = ['avif', 'webp'];
@@ -78,6 +114,16 @@ export function assetWidths(asset: ArtAsset): readonly number[] {
 /** The widths written for an original `width` pixels wide, from `widths` (ART_WIDTHS by default). */
 export function artWidths(width: number, widths: readonly number[] = ART_WIDTHS): number[] {
   return widths.filter((w) => w <= width);
+}
+
+/**
+ * The processed widths of one base file in `ready` (lib/art-ready.json, written by `pnpm art`): its
+ * list, or none when it is false, missing or not a list. The Art component and the hero preload
+ * (lib/hero-preload.ts) both read it this way.
+ */
+export function readyWidths(ready: Readonly<Record<string, unknown>>, file: string): number[] {
+  const widths = ready[file];
+  return Array.isArray(widths) ? widths.filter((w): w is number => typeof w === 'number') : [];
 }
 
 /** A processed file's name in public/art. */

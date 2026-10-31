@@ -15,7 +15,10 @@ describe('PersonaCards', () => {
       expect(link).toHaveAttribute('href', expect.stringMatching(new RegExp(`^/assess/?\\?persona=${value}$`)));
       expect(link.style.getPropertyValue('--tone')).toBe(tone);
       expect(link.firstElementChild).toHaveAttribute('aria-hidden', 'true');
-      expect(link.firstElementChild?.querySelector('svg')).not.toBeNull();
+      // The persona's sage icon (design doc section 11, Icons landed), on its tone-tinted badge.
+      const icon = link.firstElementChild?.querySelector('[data-icon]');
+      expect(icon).toHaveAttribute('data-icon', { bootstrapped: 'sprout', 'pre-raise': 'target', 'vc-backed': 'rocket' }[value]);
+      expect(icon!.parentElement!.className).toContain('var(--tone)');
     }
   });
 

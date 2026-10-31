@@ -67,14 +67,14 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
           {ws.goals.length > openGoals && <>, <span className="num text-fg">{ws.goals.length - openGoals}</span> done</>}
         </p>
         <Button ref={addRef} variant="primary" onClick={() => setEditing({})}>
-          <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Plus aria-hidden="true" size={16} />
           Add goal
         </Button>
       </div>
 
       {missing && (
         <p className="flex items-start gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
-          <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-muted-fg" />
+          <CircleAlert aria-hidden="true" size={16} className="mt-[3px] shrink-0 text-muted-fg" />
           That goal is no longer in your plan. It may have been completed elsewhere or removed.
         </p>
       )}
@@ -159,7 +159,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-sm text-muted-fg">
           No goals for this application yet.
           <Button variant="ghost" onClick={onAdd}>
-            <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Plus aria-hidden="true" size={16} />
             Add a goal<span className="sr-only"> for {group.name}</span>
           </Button>
         </div>
@@ -212,7 +212,7 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
             <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
               {goal.dueDate ? (
                 <span className={cn('inline-flex items-center gap-1', overdue ? 'text-danger' : 'text-muted-fg')}>
-                  {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
+                  {overdue && <CircleAlert aria-hidden="true" size={16} className="shrink-0" />}
                   {overdue && <span className="font-medium">Overdue</span>}
                   <span className={cn(overdue && 'sr-only')}>Due</span>
                   <time dateTime={goal.dueDate} className="num">{formatDate(goal.dueDate)}</time>
@@ -267,9 +267,9 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
             onClick={() => setShowSteps((v) => !v)}
             className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm text-fg hover:text-accent', focusRing)}
           >
-            <ListChecks aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
+            <ListChecks aria-hidden="true" size={16} className="text-muted-fg" />
             Steps <span className="num text-muted-fg">{stepsDone}/{goal.steps.length}</span>
-            <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={cn('text-muted-fg transition-transform duration-150', showSteps && 'rotate-180')} />
+            <ChevronDown aria-hidden="true" size={16} className={cn('text-muted-fg transition-transform duration-150', showSteps && 'rotate-180')} />
           </button>
           <ul id={`${id}-steps`} hidden={!showSteps} className="flex flex-col">
             {goal.steps.map((s) => (

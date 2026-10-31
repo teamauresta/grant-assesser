@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ClipboardCheck, Pencil, Plus, Target } from 'lucide-react';
+import { ArrowRight, Check, Pencil, Plus } from 'lucide-react';
 import type { Persona, Profile } from '@/lib/schema';
 import { splitHighlight } from '@/lib/highlight';
 import { PROGRAMS } from '@/content/programs';
@@ -20,6 +20,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Highlight } from '@/components/ui/highlight';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { Tabs } from '@/components/ui/tabs';
 import { WINDOW_BAR, WINDOW_FRAME, WindowControls } from '@/components/ui/window';
 import { Reveal } from '@/components/motion/reveal';
@@ -46,10 +47,10 @@ export function Results() {
       <div className="flex flex-col gap-6">
         <ResultsHeading copy={DEFAULT_RESULTS} />
         <EmptyState
-          icon={ClipboardCheck}
+          art={<SageIcon name="checklist" size={40} />}
           title="Nothing to sort yet"
           description="Answer six short steps and we'll sort every program into Act now, Prepare, Watch and Not a fit."
-          action={<Link href="/assess/" className={buttonClasses({ variant: 'primary' })}>Start the assessment<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>}
+          action={<Link href="/assess/" className={buttonClasses({ variant: 'primary' })}>Start the assessment<ArrowRight aria-hidden="true" size={16} /></Link>}
         />
       </div>
     );
@@ -93,7 +94,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
         <ResultsHeading copy={copy} />
         <p className="text-muted-fg">{copy.intro}</p>
         <Link href="/assess/" className={cn('inline-flex min-h-11 items-center gap-1.5 self-start rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
-          <Pencil aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Pencil aria-hidden="true" size={16} />
           Edit your answers
         </Link>
       </header>
@@ -202,7 +203,7 @@ function StarterGoals({ persona, celebrate }: { persona: Persona; celebrate: boo
             <div className="flex gap-3">
               {celebrate
                 ? <Art name="platypus-celebrate" alt="" sizes="(min-width: 40rem) 72px, 56px" className="w-14 shrink-0 self-start sm:w-18" />
-                : <Target aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />}
+                : <SageIcon name="target" size={24} />}
               <div className="flex flex-col gap-0.5">
                 <p className="font-medium">{g.title}</p>
                 <p className="text-sm text-muted-fg">{g.description}</p>
@@ -212,17 +213,17 @@ function StarterGoals({ persona, celebrate }: { persona: Persona; celebrate: boo
               {added ? (
                 <>
                   <Button variant="secondary" aria-disabled="true">
-                    <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
+                    <Check aria-hidden="true" size={16} className="text-accent" />
                     Goal added
                   </Button>
                   <Link href="/plan/" className={cn('inline-flex min-h-11 items-center gap-1 rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
                     View plan
-                    <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+                    <ArrowRight aria-hidden="true" size={16} />
                   </Link>
                 </>
               ) : (
                 <Button variant="primary" onClick={() => addGoal({ title: g.title, source: 'persona' })}>
-                  <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+                  <Plus aria-hidden="true" size={16} />
                   Add goal
                 </Button>
               )}

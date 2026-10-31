@@ -1,5 +1,5 @@
 import { ImageIcon } from 'lucide-react';
-import { ART, artFileName, artSrcSet, type ArtFormat, type ArtName } from '@/lib/art';
+import { ART, artFileName, artSrcSet, readyWidths, type ArtFormat, type ArtName } from '@/lib/art';
 import artReady from '@/lib/art-ready.json';
 import { cn } from '@/lib/cn';
 
@@ -23,13 +23,6 @@ export type ArtProps = {
   className?: string;
 };
 
-const READY: Readonly<Record<string, unknown>> = artReady;
-
-/** The processed widths of one base file, from lib/art-ready.json (empty until `pnpm art` makes them). */
-function readyWidths(file: string): number[] {
-  const widths = READY[file];
-  return Array.isArray(widths) ? widths.filter((w): w is number => typeof w === 'number') : [];
-}
 
 /**
  * An illustration from the art manifest (Billabong design doc section 6). A box of the asset's aspect
@@ -47,8 +40,9 @@ export function Art({ name, sizes, alt, priority = false, eager = false, classNa
   const decorative = text === '';
   // Inlined by Next at build (next.config.ts); read at render so tests can set it.
   const base = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/art/`;
-  const lightWidths = readyWidths(asset.file);
-  const darkWidths = asset.dark ? readyWidths(asset.dark) : [];
+  // Empty until `pnpm art` makes the files.
+  const lightWidths = readyWidths(artReady, asset.file);
+  const darkWidths = asset.dark ? readyWidths(artReady, asset.dark) : [];
   // A lazy image in display:none is never fetched, so a pair stays lazy: an eager one would make
   // every visitor download both the day and the dusk picture.
   const pair = asset.dark !== undefined && darkWidths.length > 0;
@@ -75,7 +69,7 @@ export function Art({ name, sizes, alt, priority = false, eager = false, classNa
 
   const placeholder = (swap?: string) => (
     <div aria-hidden="true" className={cn('flex h-full w-full items-center justify-center rounded-lg bg-neutral-bg', swap)}>
-      <ImageIcon size={16} strokeWidth={1.5} className="text-muted-fg" />
+      <ImageIcon size={16} className="text-muted-fg" />
     </div>
   );
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { NAV_ITEMS, isActivePath } from './nav-items';
 import { BAR_BAND, INSET_BAR } from './inset-bar';
 
@@ -16,7 +17,7 @@ export function BottomNav({ className }: { className?: string }) {
   return (
     <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0 h-(--bottom-bar-h) print:hidden', BAR_BAND, className)}>
       <ul className={cn('mx-2 grid grid-cols-4', INSET_BAR)}>
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, label, icon }) => {
           const active = isActivePath(pathname, href);
           return (
             <li key={href}>
@@ -30,7 +31,7 @@ export function BottomNav({ className }: { className?: string }) {
                   'focus-visible:-outline-offset-2',
                 )}
               >
-                <Icon aria-hidden="true" size={20} strokeWidth={1.5} />
+                <SageIcon name={icon} size={24} />
                 {label}
               </Link>
             </li>

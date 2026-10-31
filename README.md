@@ -43,7 +43,7 @@ Then open http://localhost:3000/grant-assesser/ (the app is served under the `/g
 | `pnpm build` | Static export into `out/` |
 | `pnpm serve` | Serves `out/` the way GitHub Pages does, at http://localhost:4173/grant-assesser/ |
 | `pnpm size` | Checks the home page's first-load JavaScript (gzipped) against its budget (279,401 of 297,083 bytes on 31 Oct 2026), checks that confetti, the PDF renderer and the sorting story's checks stay out of the first load, and prints the figure for programs, plan, report and results. Run after `pnpm build` |
-| `pnpm art` | Turns the art originals in `art/originals/` into AVIF and WebP in `public/art/`, updates `lib/art-ready.json` and writes the browser icons from the logo emblem (see `art/README.md`) |
+| `pnpm art` | Prepares the sage icons, then turns the art originals in `art/originals/` into AVIF and WebP in `public/art/`, updates `lib/art-ready.json` and writes the browser icons from the logo emblem (see `art/README.md`) |
 | `pnpm freshness` | Prints a Markdown report of stale program data, closes within 30 days, past closes that need a decision, and broken or blocked source links |
 
 `pnpm build` needs network access: `next/font` downloads Rubik from Google Fonts at build time and self-hosts it (the site makes no request to Google).
@@ -52,7 +52,7 @@ Before the first `pnpm e2e`, install the browser once with `pnpm exec playwright
 
 ## Artwork
 
-The illustrations (the billabong dioramas, the platypus and the props) are generated from the prompts in `docs/art/billabong-prompts.md`, saved in `art/originals/` (not committed) and processed with `pnpm art`; the processed files in `public/art/` are committed, so a clone builds without the originals. The logo is the platypus emblem cropped from the owner's logo (the name beside it is live text), and the browser icons (`app/icon.png`, `app/apple-icon.png`) are made from it. Until an image is added the app shows a neutral placeholder of the same size. `art/README.md` has the steps.
+The illustrations (the billabong dioramas, the platypus and the props) are generated from the prompts in `docs/art/billabong-prompts.md`, saved in `art/originals/` (not committed) and processed with `pnpm art`; the processed files in `public/art/` are committed, so a clone builds without the originals. The logo is the platypus emblem cropped from the owner's logo (the name beside it is live text), and the browser icons (`app/icon.png`, `app/apple-icon.png`) are made from it. The feature icons (nav, persona cards, Browse by type) are the owner's sage icons, prepared by `pnpm art` from the owner's files; smaller icons, and those in buttons and pills, are Lucide line glyphs. Until an image is added the app shows a neutral placeholder of the same size. `art/README.md` has the steps.
 
 ## Updating a program
 

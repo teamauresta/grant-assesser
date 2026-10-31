@@ -49,6 +49,6 @@ describe('Results finish-line cheer with nothing to act on or prepare for', () =
     const goals = await screen.findByRole('region', { name: 'Suggested first goal' });
     expect(screen.getByRole('heading', { level: 2, name: /^Act now 0/ })).toBeInTheDocument();
     expect(goals.querySelector('[data-art]')).toBeNull();
-    expect(goals.querySelector('svg.lucide-target')).not.toBeNull();
+    expect(goals.querySelector('[data-icon="target"]')).not.toBeNull();
   });
 });

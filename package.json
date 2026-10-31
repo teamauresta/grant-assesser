@@ -14,7 +14,7 @@
     "e2e": "playwright test",
     "freshness": "tsx scripts/check-freshness.ts",
     "size": "node scripts/js-size.mjs",
-    "art": "tsx scripts/process-art.mjs"
+    "art": "tsx scripts/prepare-icons.mjs && tsx scripts/process-art.mjs"
   },
   "keywords": [],
   "author": "",

@@ -161,14 +161,14 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
                   }}
                   className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
                 >
-                  <Trash2 aria-hidden="true" size={16} strokeWidth={1.5} />
+                  <Trash2 aria-hidden="true" size={16} />
                 </button>
               </li>
             ))}
           </ol>
         )}
         <Button id={`${formId}-add-step`} variant="ghost" onClick={addStep} className="self-start">
-          <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Plus aria-hidden="true" size={16} />
           Add step
         </Button>
       </fieldset>

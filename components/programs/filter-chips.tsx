@@ -66,7 +66,7 @@ export function FilterChips<V extends string>({ label, options, isPressed, onTog
                   )}
                 >
                   {/* The state never rests on colour alone: aria-pressed, and this check. */}
-                  {pressed && <Check aria-hidden="true" size={16} strokeWidth={1.5} className="-ml-1" />}
+                  {pressed && <Check aria-hidden="true" size={16} className="-ml-1" />}
                   {text}
                 </button>
               </li>

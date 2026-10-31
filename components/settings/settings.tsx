@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Download, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Download, RotateCcw } from 'lucide-react';
 import { LIMITS, PERSONAS } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { QUESTIONS } from '@/lib/assessment/questions';
@@ -18,6 +18,7 @@ import { ChoiceGroup } from '@/components/ui/choice-group';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { ErrorText, Field, HelpText, Input, Select } from '@/components/ui/field';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 
 const FY_QUESTION = QUESTIONS.find((q) => q.id === 'fyEndMonth')!;
@@ -64,7 +65,7 @@ function SettingsBody() {
       <DataSection />
       <Section id="privacy" title="Privacy">
         <p className="flex items-start gap-2 text-sm text-muted-fg">
-          <ShieldCheck aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
+          <SageIcon name="shield" size={24} />
           <span className="pt-0.5">Your workspace is stored only in this browser. Nothing is sent to a server.</span>
         </p>
       </Section>
@@ -266,7 +267,7 @@ function DataSection() {
         <HelpText>Downloads everything in your workspace as a .json file you can import later, or in another browser.</HelpText>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button onClick={onExport}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export workspace (.json)
           </Button>
           <span className="text-sm text-muted-fg">
@@ -301,7 +302,7 @@ function DataSection() {
         <HelpText>Deletes your profile, pipeline, goals and settings from this browser.</HelpText>
         <div>
           <Button variant="danger" onClick={() => setResetOpen(true)}>
-            <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
+            <RotateCcw aria-hidden="true" size={16} />
             Reset everything
           </Button>
         </div>

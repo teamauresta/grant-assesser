@@ -1,6 +1,6 @@
-import { UserRound } from 'lucide-react';
 import { PERSONAS, type Persona, type Program } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { Window } from '@/components/ui/window';
 
 /**
@@ -14,7 +14,7 @@ export function PersonaNotes({ personas, persona }: { personas: Program['persona
     if (!note) return null;
     return (
       <aside aria-label={`Advice for ${PERSONAS_INFO[persona].label} companies`} className="flex gap-3 rounded-lg border border-border bg-surface p-4">
-        <UserRound aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+        <SageIcon name="person" size={24} />
         <p>
           <span className="font-semibold">For {PERSONAS_INFO[persona].label} companies: </span>
           {note}
