@@ -2,7 +2,6 @@
 
 import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { SearchX } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
 import type { Program } from '@/lib/schema';
@@ -17,6 +16,7 @@ import { useDeadlineProfile, useStoredProfile } from '@/lib/store/use-workspace'
 import { useNow } from '@/lib/use-now';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { LEVEL_LABELS, TYPE_LABELS } from '@/lib/format';
+import { Art } from '@/components/ui/art';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input } from '@/components/ui/field';
@@ -166,9 +166,9 @@ function DirectoryView({ programs, filters, onChange }: { programs: Program[]; f
           </ul>
         </Reveal>
       ) : (
-        /* Art: platypus-search (Task 10 replaces the icon with it). Playful copy, the way out plain (design doc section 7). */
+        /* Playful copy, the way out plain (design doc section 7). The platypus is decorative: the copy says it. */
         <EmptyState
-          icon={SearchX}
+          art={<Art name="platypus-search" alt="" sizes="(min-width: 48rem) 160px, 128px" className="w-32 md:w-40" />}
           title="No programs match."
           description="Even the platypus couldn't find one. Try a different search or fewer filters."
           action={<Button onClick={clear}>Clear filters</Button>}

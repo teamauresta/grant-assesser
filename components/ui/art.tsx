@@ -1,0 +1,84 @@
+import { ImageIcon } from 'lucide-react';
+import { ART, artFileName, type ArtFormat, type ArtName } from '@/lib/art';
+import artReady from '@/lib/art-ready.json';
+import { cn } from '@/lib/cn';
+
+export type ArtProps = {
+  name: ArtName;
+  /** The `sizes` attribute: the width the image renders at, such as "160px" or "(min-width: 48rem) 50vw, 100vw". */
+  sizes: string;
+  /** Overrides the manifest's alt text. An empty string makes the image decorative. */
+  alt?: string;
+  /** Load at once, for the hero: eager, with high fetch priority. Otherwise lazy. */
+  priority?: boolean;
+  /** Classes for the box, usually a width (`w-40`); its height follows the asset's aspect ratio. */
+  className?: string;
+};
+
+const READY: Readonly<Record<string, unknown>> = artReady;
+
+/** The processed widths of one base file, from lib/art-ready.json (empty until `pnpm art` makes them). */
+function readyWidths(file: string): number[] {
+  const widths = READY[file];
+  return Array.isArray(widths) ? widths.filter((w): w is number => typeof w === 'number') : [];
+}
+
+/**
+ * An illustration from the art manifest (Billabong design doc section 6). A box of the asset's aspect
+ * ratio holds a `<picture>` (AVIF, then WebP) when its processed files exist, otherwise a neutral
+ * placeholder, so missing art never breaks the layout or the build. A light/dark pair renders both
+ * pictures and the dark variant swaps them in CSS: the theme is set before paint, so there is no
+ * flash and no client code. Decorative images (alt "") are hidden from assistive tech. A plain
+ * `<picture>`, not next/image: the static export serves files as they are (`images.unoptimized`), and
+ * the URLs carry the base path themselves.
+ */
+export function Art({ name, sizes, alt, priority = false, className }: ArtProps) {
+  const asset = ART[name];
+  const text = alt ?? asset.alt ?? '';
+  const decorative = text === '';
+  // Inlined by Next at build (next.config.ts); read at render so tests can set it.
+  const base = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/art/`;
+  const lightWidths = readyWidths(asset.file);
+  const darkWidths = asset.dark ? readyWidths(asset.dark) : [];
+  const pair = asset.dark !== undefined && darkWidths.length > 0;
+
+  const srcSet = (file: string, widths: number[], format: ArtFormat) =>
+    widths.map((w) => `${base}${artFileName(file, w, format)} ${w}w`).join(', ');
+
+  // `display` is the swap: `block` or `hidden`, each with its dark-variant opposite (cn() merges nothing).
+  const picture = (file: string, widths: number[], display = 'block') => (
+    <picture className={cn('h-full w-full', display)}>
+      <source type="image/avif" srcSet={srcSet(file, widths, 'avif')} sizes={sizes} />
+      <source type="image/webp" srcSet={srcSet(file, widths, 'webp')} sizes={sizes} />
+      <img
+        src={`${base}${artFileName(file, widths[widths.length - 1], 'webp')}`}
+        alt={text}
+        width={asset.width}
+        height={asset.height}
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : undefined}
+        decoding="async"
+        className="h-full w-full object-contain"
+      />
+    </picture>
+  );
+
+  const placeholder = (swap?: string) => (
+    <div aria-hidden="true" className={cn('flex h-full w-full items-center justify-center rounded-lg bg-neutral-bg', swap)}>
+      <ImageIcon size={16} strokeWidth={1.5} className="text-muted-fg" />
+    </div>
+  );
+
+  const lightSwap = pair ? 'dark:hidden' : undefined;
+  const lightDisplay = pair ? 'block dark:hidden' : 'block';
+  return (
+    <div
+      className={className}
+      style={{ aspectRatio: `${asset.width} / ${asset.height}` }}
+      aria-hidden={decorative ? true : undefined}
+    >
+      {lightWidths.length ? picture(asset.file, lightWidths, lightDisplay) : placeholder(lightSwap)}
+      {pair && picture(asset.dark!, darkWidths, 'hidden dark:block')}
+    </div>
+  );
+}

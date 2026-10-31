@@ -27,4 +27,15 @@ describe('NotFound', () => {
     expect(link).toHaveAttribute('href', expect.stringMatching(/^\/programs\/?$/));
     expect(link).toHaveAttribute('class', buttonClasses({ variant: 'primary' }));
   });
+
+  // The platypus-search illustration (Billabong design doc sections 6 and 11, Task 10): decorative, since
+  // the copy says it, and a placeholder of its size until the artwork is processed.
+  it('opens with the searching platypus, hidden from assistive tech', () => {
+    render(<NotFound />);
+    const region = screen.getByRole('region', { name: 'Page not found' });
+    const art = region.querySelector<HTMLElement>('[style*="aspect-ratio"]')!;
+    expect(art.style.aspectRatio).toBe('1024 / 1024');
+    expect(art).toHaveAttribute('aria-hidden', 'true');
+    expect(art.compareDocumentPosition(within(region).getByText('This page went for a swim.')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
