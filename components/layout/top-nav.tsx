@@ -19,7 +19,7 @@ export function TopNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const onAssess = isActivePath(pathname, '/assess/');
   return (
-    <header className={cn('sticky top-0 pt-[calc(0.5rem+env(safe-area-inset-top))]', BAR_BAND, className)}>
+    <header className={cn('sticky top-0 h-(--bar-h) pt-[calc(0.5rem+env(safe-area-inset-top))] pb-2 print:static', BAR_BAND, className)}>
       <div className={cn('mx-2 flex h-14 items-center gap-4 px-3 lg:gap-6', INSET_BAR)}>
         <BrandLink className="shrink-0" />
         <nav aria-label="Primary" className="min-w-0 flex-1">

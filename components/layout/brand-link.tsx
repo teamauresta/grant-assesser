@@ -16,9 +16,10 @@ export function BrandLink({ className }: { className?: string }) {
       className={cn('inline-flex min-h-11 items-center gap-2 rounded-md text-base font-semibold tracking-tight', focusRing, className)}
     >
       <LogoMark />
-      {/* Between md and lg the top bar has no room for the name beside the nav, the persona chip and
-          "Start assessment": the logo alone shows, and the name stays the link's accessible name. */}
-      <span className="md:max-lg:sr-only">Grant Navigator</span>
+      {/* Below 360px (beside the persona chip) and between md and lg (beside the nav, the persona chip
+          and "Start assessment") there is no room for the name: the logo alone shows, and the name
+          stays the link's accessible name. */}
+      <span className="whitespace-nowrap max-[360px]:sr-only md:max-lg:sr-only">Grant Navigator</span>
     </Link>
   );
 }

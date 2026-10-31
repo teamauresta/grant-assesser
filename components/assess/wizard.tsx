@@ -82,7 +82,7 @@ function WizardView({ step, today }: { step: Step; today: string }) {
     });
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8 max-md:pb-20">
+    <div className="flex max-w-2xl flex-col gap-8 max-md:pb-[calc(var(--wizard-footer-h)+1rem)]">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <p className="text-sm text-muted-fg">
@@ -119,8 +119,9 @@ function WizardView({ step, today }: { step: Step; today: string }) {
         </div>
       </section>
 
-      {/* Mobile: a bar fixed just above the bottom navigation (56px + 1px border + safe area). */}
-      <div className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(3.5rem+1px+env(safe-area-inset-bottom))] max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
+      {/* Mobile: a bar fixed on top of the bottom navigation's band (--bottom-bar-h), --wizard-footer-h
+          tall; app/globals.css keeps focused fields clear of both (scroll-padding-bottom). */}
+      <div data-wizard-footer className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-(--bottom-bar-h) max-md:h-(--wizard-footer-h) max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
         <div className="mx-auto flex max-w-2xl gap-3 md:mx-0">
           {step > 1 && (
             <Button variant="secondary" className="max-md:flex-1" onClick={() => goTo(step - 1)}>

@@ -213,3 +213,62 @@ test('the persona chip keeps a 44px target in the bar', async ({ page }) => {
     expect(hit, `${dy}px from the centre`).toMatch(/\/settings\/$/);
   }
 });
+
+// Phones (design doc section 11, Task 3 review): the fixed bottom nav, and the wizard's fixed footer
+// above it, must never hide what has keyboard focus (WCAG 2.4.11) or each other.
+test.describe('bottom bars on a phone', () => {
+  test.use({ viewport: { width: 375, height: 700 } });
+
+  const box = (el: Element) => {
+    const r = el.getBoundingClientRect();
+    return { top: r.top, bottom: r.bottom };
+  };
+
+  /**
+   * Tabs forward up to `max` times and returns each focused element that overlaps `cover` (a
+   * selector for the fixed bar), outside the bar itself. Stops once focus reaches the bar.
+   */
+  async function hiddenFocus(page: Page, cover: string, max: number) {
+    const hidden: string[] = [];
+    for (let i = 0; i < max; i++) {
+      await page.keyboard.press('Tab');
+      await frames(page);
+      const r = await page.evaluate((sel) => {
+        const bar = document.querySelector(sel)!;
+        const el = document.activeElement as HTMLElement | null;
+        if (!el || el === document.body) return { done: false, hit: null };
+        if (bar.contains(el)) return { done: true, hit: null };
+        const a = el.getBoundingClientRect();
+        const b = bar.getBoundingClientRect();
+        const overlaps = a.bottom > b.top && a.top < b.bottom;
+        return { done: false, hit: overlaps ? `${el.tagName} ${el.textContent?.trim().slice(0, 40)}` : null };
+      }, cover);
+      if (r.hit) hidden.push(r.hit);
+      if (r.done) break;
+    }
+    return hidden;
+  }
+
+  test('the wizard footer sits above the bottom nav', async ({ page }) => {
+    await page.goto('assess/');
+    const footer = page.locator('[data-wizard-footer]');
+    await expect(footer).toBeVisible();
+    const f = await footer.evaluate(box);
+    const nav = await page.getByRole('navigation', { name: 'Primary' }).evaluate(box);
+    expect(f.bottom).toBeLessThanOrEqual(nav.top);
+  });
+
+  test('tabbing through the directory never hides focus behind the bottom nav', async ({ page }) => {
+    await page.goto('programs/');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await hiddenFocus(page, 'nav[aria-label="Primary"]:not(header nav)', 150)).toEqual([]);
+  });
+
+  test("tabbing through the wizard's fields never hides focus behind its footer", async ({ page }) => {
+    for (let step = 1; step <= 6; step++) {
+      await page.goto(`assess/?step=${step}`);
+      await expect(page.getByText(`Step ${step} of 6`)).toBeVisible();
+      expect(await hiddenFocus(page, '[data-wizard-footer]', 80), `step ${step}`).toEqual([]);
+    }
+  });
+});

@@ -2,7 +2,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
-import { SortStory } from '@/components/home/sort-story';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { PIN_QUERY, SortStory } from '@/components/home/sort-story';
 import { PROGRAMS } from '@/content/programs';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
 import { chipScatter } from '@/lib/showcase';
@@ -301,3 +303,20 @@ describe('SortStory', () => {
   });
 });
 
+
+// The story picks its mode in JavaScript (PIN_QUERY) and lays itself out with the CSS `pin` and
+// `pin-short` variants (app/globals.css): they must name the same windows, or a window could be laid
+// out pinned while it settles (or the reverse).
+describe('pin query', () => {
+  const css = readFileSync(join(import.meta.dirname, '../../app/globals.css'), 'utf8');
+  const variant = (name: string) => new RegExp(`@custom-variant ${name} \\(@media (.+?)\\);`).exec(css)?.[1];
+  const MOTION = ' and (prefers-reduced-motion: no-preference)';
+
+  it('the pin variant is PIN_QUERY plus motion allowed', () => {
+    expect(variant('pin')).toBe(PIN_QUERY + MOTION);
+  });
+
+  it('the pin-short variant is PIN_QUERY with a maximum height, plus motion allowed', () => {
+    expect(variant('pin-short')).toMatch(new RegExp(`^${PIN_QUERY.replace(/[()]/g, '\\$&')} and \\(max-height: [\\d.]+rem\\)${MOTION.replace(/[()]/g, '\\$&')}$`));
+  });
+});

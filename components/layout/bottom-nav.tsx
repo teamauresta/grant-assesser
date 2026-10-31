@@ -7,12 +7,15 @@ import { focusRing } from '@/components/ui/focus-ring';
 import { NAV_ITEMS, isActivePath } from './nav-items';
 import { BAR_BAND, INSET_BAR } from './inset-bar';
 
-/** Mobile navigation (below md): an inset, rounded bar fixed to the bottom, clear of the home indicator. */
+/**
+ * Mobile navigation (below md): an inset, rounded bar fixed to the bottom. Its band is --bottom-bar-h
+ * tall, so the gap under the bar is max(8px, the home indicator).
+ */
 export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0', BAR_BAND, className)}>
-      <ul className={cn('mx-2 mb-[max(0.5rem,env(safe-area-inset-bottom))] grid grid-cols-4', INSET_BAR)}>
+    <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0 h-(--bottom-bar-h) print:hidden', BAR_BAND, className)}>
+      <ul className={cn('mx-2 grid grid-cols-4', INSET_BAR)}>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (

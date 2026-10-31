@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <TopNav className="hidden md:block" />
           <MobileHeader className="md:hidden" />
           <StorageBanner />
-          <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] focus:outline-none md:pt-10 md:pb-12">
+          <main id="main" tabIndex={-1} className="mx-auto max-w-[1120px] px-4 pt-6 pb-[calc(var(--bottom-bar-h)+2rem)] focus:outline-none md:pt-10 md:pb-12">
             {children}
           </main>
           <BottomNav className="md:hidden" />

@@ -8,7 +8,9 @@
  * The sorting story pins (components/home/sort-story.tsx, whose PIN_QUERY must match) only where the
  * whole block fits on screen while it sorts: wide, at least 40rem tall, motion allowed. Below 54rem
  * tall it uses a tighter layout (pin-short). Elsewhere it settles once instead. The block pins below
- * the sticky top bar (4rem), so it has 36rem and 50rem of window at those heights.
+ * the sticky top band (--bar-h, 4.5rem), so it has 35.5rem and 49.5rem of window at those heights,
+ * room for the pin-short block (about 34rem) and the full one (about 48rem).
+ * tests/components/sort-story.test.tsx keeps `pin` equal to PIN_QUERY.
  */
 @custom-variant pin (@media (min-width: 48rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference));
 @custom-variant pin-short (@media (min-width: 48rem) and (min-height: 40rem) and (max-height: 53.98rem) and (prefers-reduced-motion: no-preference));
@@ -201,10 +203,32 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Keeps in-page targets (skip link, anchors) clear of the sticky top bar at every width: 8px down
-     plus the 56px bar (below the notch's safe area), and 16px to spare. */
+  /*
+   * The bars' heights, the single source for everything that must clear them (see
+   * components/layout/inset-bar.ts for who uses them). --bar-h: the sticky top band, 8px + the 56px
+   * bar + 8px, below the notch's safe area. --bottom-bar-h: the bottom nav (below md), the 58px bar
+   * (56px items and its border) above max(8px, the home indicator). --wizard-footer-h: the wizard's
+   * fixed footer on phones, which sits on the bottom nav (a 44px button, 12px padding each side and
+   * a 1px top border).
+   */
+  :root {
+    --bar-h: calc(4.5rem + env(safe-area-inset-top));
+    --bottom-bar-h: calc(3.625rem + max(0.5rem, env(safe-area-inset-bottom)));
+    --wizard-footer-h: 4.3125rem;
+  }
+
+  /* Keeps in-page targets (skip link, anchors) and keyboard focus clear of the sticky top bar, and
+     on phones of the fixed bottom nav (and the wizard's footer above it), with room to spare. */
   html {
-    scroll-padding-top: calc(5rem + env(safe-area-inset-top));
+    scroll-padding-top: calc(var(--bar-h) + 0.5rem);
+  }
+  @media (width < 48rem) {
+    html {
+      scroll-padding-bottom: calc(var(--bottom-bar-h) + 1rem);
+    }
+    html:has([data-wizard-footer]) {
+      scroll-padding-bottom: calc(var(--bottom-bar-h) + var(--wizard-footer-h) + 1rem);
+    }
   }
 
   body {

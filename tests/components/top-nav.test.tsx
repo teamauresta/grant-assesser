@@ -54,8 +54,9 @@ describe('TopNav', () => {
   it('is an inset rounded bar on --neutral-bg inside a sticky header', () => {
     renderAt('/');
     const header = screen.getByRole('banner');
-    // 8px down, below the notch: the band's padding (a margin on the bar would collapse through it).
-    expect(header).toHaveClass('sticky', 'top-0', 'bg-bg', 'pt-[calc(0.5rem+env(safe-area-inset-top))]');
+    // 8px down, below the notch: the band's padding (a margin on the bar would collapse through it),
+    // and 8px under the bar; the band is --bar-h tall, the height everything that clears it uses.
+    expect(header).toHaveClass('sticky', 'top-0', 'bg-bg', 'h-(--bar-h)', 'pt-[calc(0.5rem+env(safe-area-inset-top))]', 'pb-2', 'print:static');
     const bar = header.firstElementChild!;
     expect(bar).toHaveClass('mx-2', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border', 'h-14');
   });
@@ -73,7 +74,7 @@ describe('MobileHeader', () => {
     pathname = '/';
     render(<MobileHeader />);
     const header = screen.getByRole('banner');
-    expect(header).toHaveClass('sticky', 'top-0', 'bg-bg', 'pt-[calc(0.5rem+env(safe-area-inset-top))]');
+    expect(header).toHaveClass('sticky', 'top-0', 'bg-bg', 'h-(--bar-h)', 'pt-[calc(0.5rem+env(safe-area-inset-top))]', 'pb-2', 'print:static');
     expect(header.firstElementChild).toHaveClass('mx-2', 'h-14', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border');
     expect(within(header).getByRole('link', { name: 'Grant Navigator' })).toHaveAttribute('aria-current', 'page');
     expect(within(header).getByRole('link', { name: 'Choose persona' })).toBeInTheDocument();
@@ -86,8 +87,10 @@ describe('BottomNav', () => {
     pathname = '/programs/rdti/';
     render(<BottomNav />);
     const nav = screen.getByRole('navigation', { name: 'Primary' });
+    // The band is --bottom-bar-h tall (the 58px bar over max(8px, the home indicator)); not printed.
+    expect(nav).toHaveClass('fixed', 'bottom-0', 'bg-bg', 'h-(--bottom-bar-h)', 'print:hidden');
     const bar = nav.firstElementChild!;
-    expect(bar).toHaveClass('mx-2', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border', 'mb-[max(0.5rem,env(safe-area-inset-bottom))]');
+    expect(bar).toHaveClass('mx-2', 'rounded-lg', 'bg-neutral-bg', 'border', 'border-border');
     const current = within(nav).getByRole('link', { name: 'Programs' });
     expect(current).toHaveAttribute('aria-current', 'page');
     expect(current).toHaveClass('text-accent', 'font-semibold');
