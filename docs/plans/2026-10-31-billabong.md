@@ -211,7 +211,7 @@ export function Window({ title, as: Heading = 'h2', actions, className, bodyClas
 
 (It has `useId`, so it is a client component or takes an `id` prop; prefer an explicit `id` prop computed by the caller only if the server-component pages need it. Decide by where it is used and say why.)
 
-**Step 2: Highlight, test first.** `<Highlight tone="amber|sage|sky">` renders `<mark>` with the `highlight` utility and a tone class; `mark` keeps `color: inherit` (so it inherits `--fg`), and a unit test asserts that `Highlight` is never given a muted text class (the component sets `text-fg`).
+**Step 2: Highlight, test first.** (Built as a `<span>` after Task 4's review: `<mark>` means relevance and is announced as "highlighted".) `<Highlight tone="amber|sage|sky">` renders `<mark>` with the `highlight` utility and a tone class; `mark` keeps `color: inherit` (so it inherits `--fg`), and a unit test asserts that `Highlight` is never given a muted text class (the component sets `text-fg`).
 
 ```css
 /* Marker highlight (design doc section 2): HIGHLIGHT_ALPHA (lib/highlight.ts) of a tone over the page,
@@ -258,7 +258,7 @@ Task 1 review notes: write the highlight as this custom rule, never a Tailwind `
 **Files:** `app/assess/page.tsx`, `components/assess/wizard.tsx`, `question.tsx`, `components/ui/choice-group.tsx`, `field.tsx`, tests (`wizard-finish.test.tsx`, journey e2e).
 
 **Steps:**
-1. The wizard sits in one `Window` titled with the step ("Step 2 of 6: Your company").
+1. The wizard sits in one `Window` titled with the step ("Step 2 of 6: Your company"); the step heading keeps its focus-on-step behaviour through `headingRef` + `headingProps={{ tabIndex: -1 }}`.
 2. Choice cards: `bg-surface border-border-strong rounded-lg`, checked state `border-accent` with a 2px ring and a check icon (not colour alone), 44px targets kept.
 3. Progress bar: amber fill (`bg-primary`) on `bg-neutral-bg`, the only coloured bar (a progress indicator, allowed).
 4. Navigation: primary "Next", secondary "Back".
@@ -285,9 +285,9 @@ Task 1 review notes: write the highlight as this custom rule, never a Tailwind `
 **Files:** `components/plan/*`, `components/calendar/add-to-calendar.tsx`, `components/ui/dialog.tsx`, `menu.tsx`, tests.
 
 **Steps:**
-1. Pipeline columns as `Window`s (title "Considering", "Preparing", …, count in `num`).
+1. Pipeline columns as `Window`s (title "Considering", "Preparing", …, count in `num`): the drag handlers spread onto the section, the drop-target state through `borderClassName`, and the focus-after-move heading through `headingRef` + `headingProps={{ tabIndex: -1 }}`.
 2. Application cards: `bg-surface`, outline, the stage menu and "Move to…" as secondary buttons.
-3. Dialogs: `Window`-style title bar (same look) with a real close button (the decorative controls are not used in dialogs); `ConfirmDialog` keeps its behaviour; danger button with ledge.
+3. Dialogs: the window bar's look via `WindowBar` / `WINDOW_BAR` (or `Window controls={false} landmark={false}` with `titleId` wired to the dialog's `aria-labelledby`), with a real close button; `ConfirmDialog` keeps its behaviour; danger button with ledge.
 4. Menus: `bg-surface border-border rounded-lg` popovers.
 5. Calendar: today cell `bg-accent text-bg` (checked pair), events as small pills.
 6. Progress ring keeps `--brand`.
@@ -302,7 +302,7 @@ Task 1 review notes: write the highlight as this custom rule, never a Tailwind `
 **Steps:**
 1. Report builder options in a `Window`; the preview in a `Window` titled "Preview"; the download button primary with `loading` state (spinner icon 16px). The PDF itself is unchanged.
 2. Settings sections as `Window`s; theme choice and celebrations toggle unchanged in behaviour; data-reset danger button with ledge; copy stays plain.
-3. 404: a `Window` titled "404", playful line ("This page went for a swim."), primary "Browse programs"; `Art` slot for platypus-search.
+3. 404: a `Window as="h1"` titled "Page not found" (so the page keeps one h1), playful line ("This page went for a swim."), primary "Browse programs"; `Art` slot for platypus-search.
 4. Error page: plain copy, same layout.
 5. Banners: `bg-warn-bg text-warn-fg` callouts with an outline and the existing buttons.
 6. Gate; commit `feat(ui): report, settings and error pages`.
@@ -344,7 +344,7 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 2. Hero: two columns from `md` (text left, `Art name="hero-diorama" priority` right), stacked on phones (art below the call to action). Headline with one `Highlight` (amber) on "qualifies for"; keep the `rise` entrance; primary "Start free assessment", secondary "Browse programs"; hero stats with `num`.
 3. Persona cards: cards with spotlight, `platypus-wave` art on the first card (or above the row), tones kept.
 4. Sorting story: chips as small `bg-surface` cards with outline; all motion rules unchanged (`showcase.spec` sorting tests must pass unchanged).
-5. How it works: three `Window`s ("1. Answer six questions", "2. See what fits", "3. Plan the applications": a real sequence, so numbering is allowed) on the page background, each with its `step-*` art and its existing preview animation; remove the forest panel and the `--panel-*` tokens and their tests if nothing else uses them (feature replaced; cite).
+5. How it works: three `Window landmark={false} as="h3"`s ("1. Answer six questions", "2. See what fits", "3. Plan the applications": a real sequence, so numbering is allowed) on the page background, each with its `step-*` art and its existing preview animation; remove the forest panel and the `--panel-*` tokens and their tests if nothing else uses them (feature replaced; cite).
 6. The hero's `glow-brand` utility (a eucalyptus glow) sits under an amber button now: remove it, or retune it to a soft amber with its comment updated (Task 1 review).
 7. Celebrations: `BRAND_COLOURS` in `lib/celebrate.ts` become amber, sage and sky (light and dark); update the confetti test.
 8. `pnpm size`: the home page must stay within budget (it should drop: the contour canvas chunk is gone from the lazy set, and nothing new loads up front).
