@@ -370,6 +370,7 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 - `tests/components/results.test.tsx` production test mutates the exported `DEFAULT_RESULTS`; render with a local copy instead (Task 7 review).
 - The toaster (`components/ui/toast.tsx`) is still `bg-bg` with `shadow-lg`: restyle it as a small window-style card (`bg-surface`, `border-border`, `shadow-popover`), keeping its live region and focus behaviour (Task 9 report).
 - CLAUDE.md Motion: list the report's PDF spinner (user-started progress indicator) as an exception to the 5-second rule (Task 9 review).
+- `scripts/process-art.mjs`: an interrupted run (Ctrl-C) leaves `public/art/.tmp-<file>/`; delete stale `.tmp-*` at the start of `processArt`, gitignore `public/art/.tmp-*`, and make `leftovers` flag them; add a test for a failure during encoding (after the temp folder exists) (Task 10 review).
 
 **Files:** `CLAUDE.md`, `README.md`, `docs/plans/2026-10-31-billabong-design.md`.
 
