@@ -365,6 +365,10 @@ export const ART_WIDTHS = [480, 960, 1440] as const;
 
 ### Task 13: Docs and final check
 
+**Leftovers from reviews (do first):**
+- `components/programs/program-card.tsx`: directory Not a fit cards use `className 'border-dashed bg-bg text-muted-fg'`; switch to `Card emphasis={muted ? 'quiet' : 'default'}` (drop `bg-bg`) so they match the results page (Task 7 review).
+- `tests/components/results.test.tsx` production test mutates the exported `DEFAULT_RESULTS`; render with a local copy instead (Task 7 review).
+
 **Files:** `CLAUDE.md`, `README.md`, `docs/plans/2026-10-31-billabong-design.md`.
 
 **Steps:**
