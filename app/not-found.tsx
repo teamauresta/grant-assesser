@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { buttonClasses } from '@/components/ui/button';
-import { Window } from '@/components/ui/window';
+import { PageNoticeWindow } from '@/components/layout/page-notice';
 
 export const metadata: Metadata = { title: 'Page not found' };
 
@@ -11,15 +11,13 @@ export const metadata: Metadata = { title: 'Page not found' };
  */
 export default function NotFound() {
   return (
-    <div className="py-6 md:py-12">
-      <Window as="h1" title="Page not found" titleSize="md" className="max-w-xl" bodyClassName="flex flex-col items-start gap-4">
-        {/* Art: platypus-search (Task 10 adds the illustration here). */}
-        <p className="text-xl font-semibold">This page went for a swim.</p>
-        <p className="text-muted-fg">The page may have moved, or the link may be mistyped.</p>
-        <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>
-          Browse programs
-        </Link>
-      </Window>
-    </div>
+    <PageNoticeWindow title="Page not found">
+      {/* Art: platypus-search (Task 10 adds the illustration here). */}
+      <p className="text-xl font-semibold">This page went for a swim.</p>
+      <p className="text-muted-fg">The page may have moved, or the link may be mistyped.</p>
+      <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>
+        Browse programs
+      </Link>
+    </PageNoticeWindow>
   );
 }

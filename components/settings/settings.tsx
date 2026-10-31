@@ -13,7 +13,7 @@ import { exportWorkspaceFile, importSizeError, parseImport, type ImportSummary }
 import { useWorkspace } from '@/lib/store/use-workspace';
 import type { Workspace } from '@/lib/schema';
 import { BackupPrompt } from '@/components/layout/backup-prompt';
-import { Button } from '@/components/ui/button';
+import { Button, FILE_BUTTON_CLASSES } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { ErrorText, Field, HelpText, Input, Select } from '@/components/ui/field';
@@ -288,9 +288,8 @@ function DataSection() {
           aria-describedby={importError ? `${helpId} ${errorId}` : helpId}
           className={cn(
             'w-full max-w-md rounded-md text-sm text-muted-fg',
-            // The file button looks like a secondary button: --surface in a --border-strong outline with
-            // its 3px bottom edge, --neutral-bg on hover (the window body is --surface).
-            'file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-b-3 file:border-solid file:border-border-strong file:bg-surface file:px-4 file:text-sm file:font-medium file:text-fg hover:file:bg-neutral-bg',
+            // The file button looks like a secondary button (the window body is --surface).
+            FILE_BUTTON_CLASSES,
             focusRing,
           )}
         />

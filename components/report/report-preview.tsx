@@ -276,11 +276,11 @@ function Sources({ groups }: { groups: SourceGroup[] }) {
 
 /**
  * An HTML rendering of the report's selected sections, in the same order as the PDF. Not a PDF viewer.
- * Unframed: the report builder shows it in its Preview window.
+ * Unframed and unnamed: the report builder shows it in its Preview window, the region that names it.
  */
 export function ReportPreview({ data }: { data: ReportData }) {
   return (
-    <article aria-label="Report preview" className="flex flex-col gap-8">
+    <article className="flex flex-col gap-8">
       {/* Sections fade in and out as they are switched on and off; the first render is not animated. */}
       <AnimatePresence initial={false}>
         {!hasAnySection(data) && <Fade key="none"><Empty>Choose at least one section to include.</Empty></Fade>}

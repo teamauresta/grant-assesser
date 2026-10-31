@@ -241,17 +241,48 @@ const expectWarnCallout = (el: HTMLElement) => {
   expect(el.querySelector('.text-muted-fg')).toBeNull();
 };
 
+// The callouts are labelled asides; one polite status, always mounted at the banner's level, announces
+// their messages (design doc section 11, Task 9 review). So the banner is never an empty element:
+// with nothing to say it renders only that empty status.
 describe('StorageBanner', () => {
-  it('is hidden when storage works and nothing was rescued', () => {
-    const { container } = render(<StorageBanner />);
-    expect(container).toBeEmptyDOMElement();
+  const cannotSave = () => screen.getByRole('complementary', { name: 'Storage warning' });
+  const unreadable = () => screen.getByRole('complementary', { name: 'Unreadable workspace' });
+
+  it('shows nothing, with its empty live region mounted, when storage works and nothing was rescued', () => {
+    render(<StorageBanner />);
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('keeps the live region mounted and empty before the workspace loads', () => {
+    act(() => useWorkspace.setState({ ready: false, storageAvailable: false }));
+    try {
+      render(<StorageBanner />);
+      expect(screen.getByRole('status')).toBeEmptyDOMElement();
+      expect(screen.queryByRole('complementary')).toBeNull();
+      act(() => useWorkspace.setState({ ready: true }));
+      expect(screen.getByRole('status')).toHaveTextContent("This browser can't save your work. Export your workspace to keep it.");
+      expect(cannotSave()).toBeInTheDocument();
+    } finally {
+      act(() => useWorkspace.setState({ ready: true }));
+    }
   });
 
   it('warns when the browser cannot save and links to Settings', () => {
     act(() => useWorkspace.setState({ storageAvailable: false }));
     render(<StorageBanner />);
-    expect(screen.getByText(/This browser can't save your work/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Settings' })).toHaveAttribute('href', expect.stringMatching(/^\/settings\/?#your-data$/));
+    expect(cannotSave()).toHaveTextContent(/This browser can't save your work/);
+    expect(within(cannotSave()).getByRole('link', { name: 'Go to Settings' })).toHaveAttribute('href', expect.stringMatching(/^\/settings\/?#your-data$/));
+  });
+
+  it('nests no live region inside another, and announces both messages in its status', () => {
+    window.localStorage.setItem('gn-workspace-corrupt-1', '{"broken":');
+    act(() => useWorkspace.setState({ storageAvailable: false, corruptBackupKey: 'gn-workspace-corrupt-1' }));
+    const { container } = render(<StorageBanner />);
+    const live = Array.from(container.querySelectorAll<HTMLElement>('[role="status"], [role="alert"], [aria-live]'));
+    for (const region of live) expect(region.parentElement!.closest('[role="status"], [role="alert"], [aria-live]')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent(/can't save your work.*couldn't read your saved workspace/);
+    for (const aside of [cannotSave(), unreadable()]) expect(aside.closest('[role="status"]')).toBeNull();
   });
 
   // Design doc section 11, Task 9: warning callouts with an outline and the existing buttons.
@@ -259,12 +290,10 @@ describe('StorageBanner', () => {
     window.localStorage.setItem('gn-workspace-corrupt-1', '{"broken":');
     act(() => useWorkspace.setState({ storageAvailable: false, corruptBackupKey: 'gn-workspace-corrupt-1' }));
     render(<StorageBanner />);
-    const cannotSave = screen.getByText(/This browser can't save your work/).closest<HTMLElement>('[role="status"]')!;
-    const corrupt = screen.getByText(/couldn't read your saved workspace/).closest<HTMLElement>('[role="status"]')!;
-    expectWarnCallout(cannotSave);
-    expectWarnCallout(corrupt);
+    expectWarnCallout(cannotSave());
+    expectWarnCallout(unreadable());
     expect(screen.getByRole('button', { name: 'Download the old data' })).toHaveAttribute('class', buttonClasses());
-    expect(within(corrupt).getByRole('button', { name: 'Dismiss' })).toHaveAttribute('class', buttonClasses({ variant: 'ghost', iconOnly: true, className: '-my-1.5 -mr-1.5 shrink-0' }));
+    expect(within(unreadable()).getByRole('button', { name: 'Dismiss' })).toHaveAttribute('class', buttonClasses({ variant: 'ghost', iconOnly: true, className: '-my-1.5 -mr-1.5 shrink-0' }));
   });
 
   it('offers the rescued raw data as a download and can be dismissed', async () => {
@@ -277,6 +306,16 @@ describe('StorageBanner', () => {
     expect(await blob.text()).toBe('{"broken":');
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByText(/couldn't read your saved workspace/)).not.toBeInTheDocument();
+  });
+
+  it('reports a failed download in an alert inside the callout, outside any status', async () => {
+    act(() => useWorkspace.setState({ corruptBackupKey: 'gn-workspace-corrupt-gone' }));
+    render(<StorageBanner />);
+    const alert = within(unreadable()).getByRole('alert');
+    expect(alert).toBeEmptyDOMElement();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Download the old data' }));
+    expect(alert).toHaveTextContent("The old data couldn't be read from this browser.");
+    expect(alert.closest('[role="status"]')).toBeNull();
   });
 });
 

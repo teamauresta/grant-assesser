@@ -247,16 +247,16 @@ describe('PipelineBoard milestone cheers', () => {
   // the dialog has closed and the page is live again.
   it('cheers an award from the outcome dialog only after the dialog has closed', async () => {
     await setup();
-    const seen: { dialogOpen: boolean; toasterInert: boolean }[] = [];
+    const seen: { dialogOpen: boolean; toasterInert: boolean; live: string | null }[] = [];
     // Recorded only when a toast is added: other store updates (a dismissal, a re-render) are not
     // the moment that matters.
     const unsubscribe = useToasts.subscribe((s, prev) => {
       if (s.toasts.length <= prev.toasts.length) return;
       const region = document.querySelector('[data-toaster]');
-      expect(region).toHaveAttribute('aria-live', 'polite');
       let inert = false;
       for (let el = region as HTMLElement | null; el; el = el.parentElement) inert ||= el.inert === true;
-      seen.push({ dialogOpen: document.querySelector('[role="dialog"]') !== null, toasterInert: inert });
+      // Recorded, not asserted here: an expect failing inside the store's listener would be swallowed.
+      seen.push({ dialogOpen: document.querySelector('[role="dialog"]') !== null, toasterInert: inert, live: region?.getAttribute('aria-live') ?? null });
     });
     try {
       const dataTransfer = dragData();
@@ -266,7 +266,7 @@ describe('PipelineBoard milestone cheers', () => {
       await userEvent.setup().click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Awarded/ }));
       await screen.findByText('Awarded. Add the reporting dates to your calendar.');
       expect(seen.length).toBeGreaterThanOrEqual(1);
-      for (const moment of seen) expect(moment).toEqual({ dialogOpen: false, toasterInert: false });
+      for (const moment of seen) expect(moment).toEqual({ dialogOpen: false, toasterInert: false, live: 'polite' });
     } finally {
       unsubscribe();
     }

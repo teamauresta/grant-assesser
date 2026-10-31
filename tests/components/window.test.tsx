@@ -193,6 +193,15 @@ describe('Window', () => {
     expect(narrow).not.toHaveClass('md:p-6');
   });
 
+  // A page-like body (the report preview; design doc section 11, Task 9 review): p-4, p-8 from md up,
+  // and none of the default's md:p-6.
+  it('pads the body p-4 md:p-8 with padding="lg"', () => {
+    render(<Window title="Preview" padding="lg"><p>Page body</p></Window>);
+    const body = screen.getByText('Page body').parentElement!;
+    expect(body).toHaveClass('p-4', 'md:p-8');
+    expect(body).not.toHaveClass('md:p-6');
+  });
+
   // A step in a sequence (How it works) is not a landmark: a plain div, its heading kept.
   it('renders a div with no region landmark when landmark={false}', () => {
     render(<Window title="Step one" landmark={false}><p>Body</p></Window>);

@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Button, buttonClasses } from '@/components/ui/button';
+import { Button, FILE_BUTTON_CLASSES, buttonClasses } from '@/components/ui/button';
 
 /**
  * Chunky buttons (docs/plans/2026-10-31-billabong-design.md, section 4): the classes each variant
@@ -70,6 +70,23 @@ describe('Button', () => {
     expect(button).toHaveAttribute('type', 'button');
     expect(button).toBeDisabled();
     expect(classes(button)).toEqual(expect.arrayContaining(['disabled:opacity-50', 'focus-visible:outline-2']));
+  });
+});
+
+// The settings import's file button is drawn as a secondary button (design doc section 11, Task 9
+// review). Every colour, border, hover and size class of a md secondary button needs its `file:`
+// twin, so a change to the variant cannot leave the file button behind. Not twinned: the press
+// (ledge, a pseudo-element cannot move), transitions, the focus ring (the input itself takes focus)
+// and the layout and disabled classes.
+describe('FILE_BUTTON_CLASSES', () => {
+  it('has a file: twin of every colour, border, hover and size class of the secondary button', () => {
+    const own = new Set(FILE_BUTTON_CLASSES.split(' '));
+    const allowed = (c: string) => c === 'ledge' || /^(transition-|duration-|ease-|focus-visible:|disabled:|aria-disabled:)/.test(c)
+      || ['inline-flex', 'select-none', 'items-center', 'justify-center', 'gap-2'].includes(c);
+    const styled = buttonClasses({ variant: 'secondary' }).split(' ').filter((c) => !allowed(c));
+    expect(styled).toEqual(expect.arrayContaining(['bg-surface', 'border-border-strong', 'border-b-3', 'hover:bg-neutral-bg', 'min-h-11']));
+    const twin = (c: string) => (c.startsWith('hover:') ? `hover:file:${c.slice('hover:'.length)}` : `file:${c}`);
+    expect(styled.map(twin).filter((t) => !own.has(t))).toEqual([]);
   });
 });
 

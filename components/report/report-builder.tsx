@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CircleAlert, ClipboardCheck, Download, LoaderCircle, RotateCw } from 'lucide-react';
 import { PROGRAMS } from '@/content/programs';
@@ -54,6 +54,7 @@ function BuilderView({ now }: { now: Date }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  const downloadRef = useRef<HTMLButtonElement>(null);
 
   const data = useMemo(() => buildReportData(ws, PROGRAMS, now, sections), [ws, now, sections]);
   const available = (s: ReportSection) => assessed || !NEEDS_ASSESSMENT.includes(s);
@@ -106,9 +107,12 @@ function BuilderView({ now }: { now: Date }) {
 
       {/* The options and the preview are windows (Billabong design doc section 4). */}
       <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[280px_minmax(0,1fr)]">
+        {/* Not sticky: the window is about 1,140px tall at 1280 wide, taller than the screen, so a sticky
+            one would hide its last checkboxes, and keyboard focus on them, until the end of the page. */}
         <Window title="Options" titleSize="md" bodyClassName="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <Button
+              ref={downloadRef}
               variant="primary"
               onClick={download}
               disabled={!canDownload}
@@ -132,7 +136,8 @@ function BuilderView({ now }: { now: Date }) {
                   <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0" />
                   <span>The PDF could not be made. {error}</span>
                 </p>
-                <Button size="sm" onClick={download} disabled={busy} className="self-start">
+                {/* Focus moves to Download PDF before the error (and this button) goes, so it is not lost. */}
+                <Button size="sm" onClick={() => { downloadRef.current?.focus(); void download(); }} className="self-start">
                   <RotateCw aria-hidden="true" size={16} strokeWidth={1.5} />Try again
                 </Button>
               </div>
@@ -156,7 +161,7 @@ function BuilderView({ now }: { now: Date }) {
           />
         </Window>
 
-        <Window title="Preview" titleSize="md" className="min-w-0" bodyClassName="md:p-8">
+        <Window title="Preview" titleSize="md" className="min-w-0" padding="lg">
           <ReportPreview data={data} />
         </Window>
       </div>

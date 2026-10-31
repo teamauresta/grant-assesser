@@ -45,7 +45,8 @@ test('report sections stay visible when motion features fail to load', async ({ 
   await expect.poll(() => blocked.count).toBeGreaterThan(0);
 
   const cover = page.getByRole('checkbox', { name: /^Cover/ });
-  const section = page.getByRole('article', { name: 'Report preview' }).locator(':scope > div', { hasText: 'Funding report' });
+  // The preview article is named by its window, the Preview region (design doc section 11, Task 9 review).
+  const section = page.getByRole('region', { name: 'Preview' }).getByRole('article').locator(':scope > div', { hasText: 'Funding report' });
   await expect(cover).toBeChecked();
   await cover.uncheck();
   await expect(section).toHaveCount(0);

@@ -221,7 +221,7 @@ for (const theme of ['light', 'dark'] as const) {
       };
     }, theme);
     await banners.goto('programs/');
-    await expect(banners.getByText(/This browser can't save your work/)).toBeVisible();
+    await expect(banners.getByRole('complementary', { name: 'Storage warning' })).toBeVisible();
     await expect(banners.getByRole('button', { name: 'Download the old data' })).toBeVisible();
     await banners.screenshot({ path: join(OUT, `banners-${theme}-${project}.png`) });
   });

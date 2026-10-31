@@ -8,7 +8,7 @@ import { needsBackup } from '@/lib/store/backup';
 import { exportWorkspaceFile } from '@/lib/store/transfer';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { Button } from '@/components/ui/button';
-import { WARN_CALLOUT } from './storage-banner';
+import { WARN_CALLOUT } from '@/components/ui/callout';
 
 const DISMISS_KEY = 'gn-backup-dismissed';
 

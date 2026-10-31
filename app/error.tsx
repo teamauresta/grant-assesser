@@ -8,7 +8,7 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
-import { Window } from '@/components/ui/window';
+import { PageNoticeWindow } from '@/components/layout/page-notice';
 
 type Props = {
   error: unknown;
@@ -41,34 +41,32 @@ export default function ErrorPage({ error, retry, reset }: Props) {
   // The 404's layout (Billabong design doc section 11, Task 9): a window whose title is the page's one
   // h1. The copy stays plain: this is about the visitor's data (design doc section 7).
   return (
-    <div className="py-6 md:py-12">
-      <Window as="h1" title="Something went wrong" titleSize="md" className="max-w-xl" bodyClassName="flex flex-col items-start gap-4">
-        <p className="text-muted-fg">
-          This page couldn&apos;t be shown. Try again, or check your workspace in{' '}
-          <Link href="/settings/" className={cn('font-medium text-accent underline underline-offset-2', focusRing)}>Settings</Link>.
-        </p>
-        <Button variant="primary" onClick={() => retry()}>Try again</Button>
+    <PageNoticeWindow title="Something went wrong">
+      <p className="text-muted-fg">
+        This page couldn&apos;t be shown. Try again, or check your workspace in{' '}
+        <Link href="/settings/" className={cn('font-medium text-accent underline underline-offset-2', focusRing)}>Settings</Link>.
+      </p>
+      <Button variant="primary" onClick={() => retry()}>Try again</Button>
 
-        <div className="mt-2 flex flex-col items-start gap-3 self-stretch border-t border-border pt-6">
-          <h2 className="text-base font-semibold">Still not working?</h2>
-          <p className="text-sm text-muted-fg">
-            Your saved workspace may contain data this version can&apos;t read. Resetting deletes your profile, pipeline,
-            goals and settings from this browser. It can&apos;t be undone.
-          </p>
-          {confirming ? (
-            <div role="group" aria-label="Confirm reset" className="flex flex-wrap gap-2">
-              <Button variant="danger" onClick={() => { void resetWorkspace(); }}>Yes, reset my workspace</Button>
-              <Button onClick={() => setConfirming(false)}>Cancel</Button>
-            </div>
-          ) : (
-            <Button onClick={() => setConfirming(true)}>
-              <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
-              Reset workspace
-            </Button>
-          )}
-        </div>
-        <div role="status" className="text-sm font-medium">{done && <p>Your workspace was reset.</p>}</div>
-      </Window>
-    </div>
+      <div className="mt-2 flex flex-col items-start gap-3 self-stretch border-t border-border pt-6">
+        <h2 className="text-base font-semibold">Still not working?</h2>
+        <p className="text-sm text-muted-fg">
+          Your saved workspace may contain data this version can&apos;t read. Resetting deletes your profile, pipeline,
+          goals and settings from this browser. It can&apos;t be undone.
+        </p>
+        {confirming ? (
+          <div role="group" aria-label="Confirm reset" className="flex flex-wrap gap-2">
+            <Button variant="danger" onClick={() => { void resetWorkspace(); }}>Yes, reset my workspace</Button>
+            <Button onClick={() => setConfirming(false)}>Cancel</Button>
+          </div>
+        ) : (
+          <Button onClick={() => setConfirming(true)}>
+            <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
+            Reset workspace
+          </Button>
+        )}
+      </div>
+      <div role="status" className="text-sm font-medium">{done && <p>Your workspace was reset.</p>}</div>
+    </PageNoticeWindow>
   );
 }

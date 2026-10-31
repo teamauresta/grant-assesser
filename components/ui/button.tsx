@@ -16,6 +16,15 @@ const VARIANTS: Record<ButtonVariant, string> = {
   danger: 'bg-danger text-on-danger border border-b-3 border-danger-ledge ledge font-medium hover:brightness-105',
 };
 
+/**
+ * A native file input's button (`::file-selector-button`) drawn as a md secondary button: the `file:`
+ * twins of the secondary variant's colour, border and hover classes, and of md's size (the settings
+ * import). No press: the pseudo-element cannot move. A literal so Tailwind's scan sees every class;
+ * tests/components/button.test.tsx keeps it in step with VARIANTS.secondary.
+ */
+export const FILE_BUTTON_CLASSES =
+  'file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-b-3 file:border-solid file:border-border-strong file:bg-surface file:px-4 file:text-sm file:font-medium file:text-fg hover:file:bg-neutral-bg';
+
 const SIZES: Record<ButtonSize, string> = {
   // md is the default and meets the 44px touch target; sm is for dense desktop toolbars only; lg is
   // for the hero's calls to action.

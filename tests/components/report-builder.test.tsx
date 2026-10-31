@@ -39,9 +39,12 @@ describe('ReportBuilder', () => {
     }
     expect(within(options).getByRole('button', { name: 'Download PDF' })).toBeInTheDocument();
     expect(within(options).getByRole('group', { name: 'Sections' })).toBeInTheDocument();
-    // The preview article is the window's body content, without a frame of its own.
-    const article = within(preview).getByRole('article', { name: 'Report preview' });
+    // The preview article is the window's body content, without a frame of its own, padded by the
+    // window (padding="lg"), and named only by the region around it (no second name).
+    const article = within(preview).getByRole('article');
     expect(article.className).not.toMatch(/\b(border|rounded|shadow|bg)-/);
+    expect(article).not.toHaveAttribute('aria-label');
+    expect(article.parentElement).toHaveClass('p-4', 'md:p-8');
     // Its headings sit under the window's h2.
     expect(within(article).queryAllByRole('heading', { level: 2 })).toEqual([]);
     expect(within(article).getAllByRole('heading', { level: 3 }).length).toBeGreaterThan(0);
@@ -49,9 +52,13 @@ describe('ReportBuilder', () => {
 
   it('draws section headings over a neutral hairline, not a coloured one', () => {
     render(<ReportBuilder />);
-    for (const heading of within(screen.getByRole('article', { name: 'Report preview' })).getAllByRole('heading', { level: 3 })) {
+    for (const heading of within(screen.getByRole('region', { name: 'Preview' })).getAllByRole('heading', { level: 3 })) {
       expect(heading.className).not.toMatch(/border-(accent|primary|brand|spark)/);
     }
+    // Every section heading has the neutral hairline (the cover title has no rule).
+    const sections = screen.getByRole('region', { name: 'Preview' }).querySelectorAll('article section h3');
+    expect(sections.length).toBeGreaterThan(0);
+    for (const heading of sections) expect(heading).toHaveClass('border-b', 'border-border');
   });
 
   it('makes Download PDF the primary button, with a 16px spinner while the PDF is made', async () => {
@@ -83,6 +90,22 @@ describe('ReportBuilder', () => {
     expect(button).toHaveAccessibleName('Download PDF');
     expect(button).not.toHaveAttribute('aria-busy');
     expect(button).not.toHaveAttribute('aria-disabled');
+  });
+
+  // Try again replaces the error, and itself: focus moves to Download PDF first, so it is not lost.
+  it('keeps focus on Download PDF when Try again is pressed', async () => {
+    // Both tries fail (Geist, then the Helvetica fallback); the retry then stays busy.
+    toBlob.mockRejectedValueOnce(new Error('No fonts.')).mockRejectedValueOnce(new Error('No fonts.')).mockReturnValueOnce(new Promise<Blob>(() => {}));
+    const user = userEvent.setup();
+    render(<ReportBuilder />);
+    await user.click(screen.getByRole('button', { name: 'Download PDF' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('The PDF could not be made. No fonts.');
+    const retry = within(alert).getByRole('button', { name: 'Try again' });
+    expect(retry).not.toBeDisabled();
+    await user.click(retry);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Making PDF…' })).toHaveFocus();
   });
 
   it('shows a loading status with the windows drawn before the workspace loads', () => {
