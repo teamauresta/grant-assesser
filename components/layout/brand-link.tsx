@@ -16,7 +16,9 @@ export function BrandLink({ className }: { className?: string }) {
       className={cn('inline-flex min-h-11 items-center gap-2 rounded-md text-base font-semibold tracking-tight', focusRing, className)}
     >
       <LogoMark />
-      Grant Navigator
+      {/* Between md and lg the top bar has no room for the name beside the nav, the persona chip and
+          "Start assessment": the logo alone shows, and the name stays the link's accessible name. */}
+      <span className="md:max-lg:sr-only">Grant Navigator</span>
     </Link>
   );
 }

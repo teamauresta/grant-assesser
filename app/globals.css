@@ -6,11 +6,12 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 /*
  * The sorting story pins (components/home/sort-story.tsx, whose PIN_QUERY must match) only where the
- * whole block fits on screen while it sorts: wide, at least 36rem tall, motion allowed. Below 50rem
- * tall it uses a tighter layout (pin-short). Elsewhere it settles once instead.
+ * whole block fits on screen while it sorts: wide, at least 40rem tall, motion allowed. Below 54rem
+ * tall it uses a tighter layout (pin-short). Elsewhere it settles once instead. The block pins below
+ * the sticky top bar (4rem), so it has 36rem and 50rem of window at those heights.
  */
-@custom-variant pin (@media (min-width: 48rem) and (min-height: 36rem) and (prefers-reduced-motion: no-preference));
-@custom-variant pin-short (@media (min-width: 48rem) and (min-height: 36rem) and (max-height: 49.98rem) and (prefers-reduced-motion: no-preference));
+@custom-variant pin (@media (min-width: 48rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference));
+@custom-variant pin-short (@media (min-width: 48rem) and (min-height: 40rem) and (max-height: 53.98rem) and (prefers-reduced-motion: no-preference));
 
 /*
  * Design tokens: Billabong (docs/plans/2026-10-31-billabong-design.md, section 2), a grey-beige page
@@ -200,11 +201,10 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Keeps in-page targets (skip link, anchors) clear of the 56px sticky mobile header. */
-  @media (width < 48rem) {
-    html {
-      scroll-padding-top: 4.5rem;
-    }
+  /* Keeps in-page targets (skip link, anchors) clear of the sticky top bar at every width: 8px down
+     plus the 56px bar (below the notch's safe area), and 16px to spare. */
+  html {
+    scroll-padding-top: calc(5rem + env(safe-area-inset-top));
   }
 
   body {
@@ -260,8 +260,9 @@
  * reads as pushed in. The only coloured edge allowed (section 5), and only on buttons
  * (tests/e2e/billabong.spec.ts). The press is behind the media query, so under reduced motion nothing
  * moves at all. The transition is in buttonClasses(), so the two do not overwrite each other.
- * While pressed, ::before reaches back up to where the button's top was (2px up, plus the 1px top
- * border), so a press held near the top edge still releases on the button and clicks.
+ * While pressed, ::after reaches back up to where the button's top was (2px up, plus the 1px top
+ * border), so a press held near the top edge still releases on the button and clicks. It is ::after
+ * because the `spotlight` utility owns ::before (inset 0, no pointer events), which would cancel it.
  */
 @utility ledge {
   position: relative;
@@ -269,7 +270,7 @@
     &:active:not(:disabled, [aria-disabled="true"]) {
       translate: 0 2px;
       border-bottom-width: 1px;
-      &::before { content: ""; position: absolute; inset: -3px -1px -1px; }
+      &::after { content: ""; position: absolute; inset: -3px -1px -1px; }
     }
   }
 }

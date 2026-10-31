@@ -19,7 +19,7 @@ import { focusRing } from '@/components/ui/focus-ring';
 type Mode = 'pinned' | 'settle' | 'still';
 
 /** Where the section pins; the `pin` variant in app/globals.css is the same query plus motion allowed. */
-const PIN_QUERY = '(min-width: 48rem) and (min-height: 36rem)';
+const PIN_QUERY = '(min-width: 48rem) and (min-height: 40rem)';
 const QUERIES = ['(prefers-reduced-motion: reduce)', PIN_QUERY];
 const SETTLE_MS = 1200;
 /**
@@ -274,11 +274,13 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
   }, [story, mode]);
 
   return (
-    // Pinned: the section is the scroll range and the block sticks. A short window (pin-short) gets a
-    // one-line heading and smaller gaps and chips, so the whole block, CTA included, fits on screen.
+    // Pinned: the section is the scroll range and the block sticks, just below the sticky top bar
+    // (4rem: 8px down plus the 56px bar), over the rest of the window; the scroll range is unchanged.
+    // A short window (pin-short) gets a one-line heading and smaller gaps and chips, so the whole
+    // block, CTA included, fits on screen.
     // With nothing to sort (the story failed to load) there is no scroll range.
     <section ref={sectionRef} aria-labelledby="sort-heading" className={cn('overflow-x-clip', !broken && 'pin:h-[250vh]')}>
-      <div className="flex flex-col gap-6 pin:sticky pin:top-0 pin:min-h-dvh pin:justify-center pin:py-10 pin-short:gap-4 pin-short:py-4">
+      <div className="flex flex-col gap-6 pin:sticky pin:top-[calc(4rem+env(safe-area-inset-top))] pin:min-h-[calc(100dvh-4rem-env(safe-area-inset-top))] pin:justify-center pin:py-10 pin-short:gap-4 pin-short:py-4">
         <div className="flex max-w-2xl flex-col gap-2 pin-short:max-w-none pin-short:gap-1">
           <h2 id="sort-heading" className="text-3xl tracking-[-0.03em] md:text-5xl pin-short:text-4xl">Watch {PROGRAMS.length} programs sort themselves</h2>
           <p className="text-sm text-muted-fg md:text-base pin-short:text-sm">

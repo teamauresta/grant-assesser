@@ -22,7 +22,9 @@ export function PersonaChip({ className }: { className?: string }) {
       href="/settings/"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-150',
+        // An outline chip on --surface, drawn 36px tall to sit level with the bar's button; ::before
+        // stretches the hit area to 44px.
+        "relative inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border bg-surface px-3.5 text-sm transition-colors duration-150 before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']",
         active ? 'border-accent font-semibold text-fg' : 'border-border text-muted-fg hover:border-border-strong hover:text-fg',
         focusRing,
         className,

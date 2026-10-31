@@ -4,7 +4,8 @@ import { frames, populatedWorkspace, seedStorage } from './helpers';
 /**
  * Billabong's signature pieces in a real browser (docs/plans/2026-10-31-billabong-design.md,
  * section 4). Chunky buttons: the 3px ledge in a darker shade of the button, the press that moves the
- * button 2px down, and no movement under reduced motion.
+ * button 2px down, and no movement under reduced motion. The top bar: sticky, inset, and clear of
+ * in-page targets.
  *
  * Covered elsewhere, so not repeated here: the classes each variant carries
  * (tests/components/button.test.tsx), the ledge colours' contrast (tests/lib/tokens.test.ts), and the
@@ -89,7 +90,7 @@ test.describe('chunky buttons', () => {
   });
 
   // The press moves the button 2px down. A press held near its top edge must still click: the hit
-  // area stays where the button was (the pressed ::before in the ledge utility).
+  // area stays where the button was (the pressed ::after in the ledge utility).
   test('a slow press near the top edge still clicks', async ({ page }) => {
     await page.goto('./');
     const link = startLink(page);
@@ -137,5 +138,59 @@ test.describe('chunky buttons', () => {
       if (pages.includes(path)) await expect.poll(async () => (await carriers()).length, { message: path }).toBeGreaterThan(0);
       expect((await carriers()).filter((tag) => tag !== 'button' && tag !== 'a'), path).toEqual([]);
     }
+  });
+});
+
+// The top bar (design doc section 4): an inset, rounded bar that stays at the top while the page
+// scrolls (the mobile header below 48rem, the desktop bar above), and never hides the skip link's
+// target or an in-page anchor under itself.
+test.describe('top bar', () => {
+  /** The visible header: the desktop bar or the mobile one (the other is display: none). */
+  const header = (page: Page) => page.getByRole('banner');
+
+  test('stays on screen after scrolling 1,000px', async ({ page }) => {
+    await page.goto('programs/');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const before = (await header(page).boundingBox())!;
+    expect(before.y).toBe(0);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)).toBeGreaterThan(1_000);
+    await page.evaluate(() => window.scrollTo(0, 1_000));
+    await frames(page);
+    expect(await page.evaluate(() => window.scrollY)).toBe(1_000);
+    await expect(header(page)).toBeInViewport();
+    const after = (await header(page).boundingBox())!;
+    expect(after.y).toBe(0);
+    expect(after.height).toBe(before.height);
+    // The bar is inset from the page's edges by 8px, inside a full-width band.
+    const bar = (await header(page).locator('> div').boundingBox())!;
+    expect(bar.x).toBe(8);
+    expect(bar.y).toBe(8);
+    expect(after.width - (bar.x + bar.width)).toBe(8);
+  });
+
+  test("does not cover the skip link's target", async ({ page }) => {
+    await page.goto('programs/');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 1_000));
+    await frames(page);
+    await page.keyboard.press('Tab');
+    const skip = page.getByRole('link', { name: 'Skip to content' });
+    await expect(skip).toBeFocused();
+    await skip.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+    await frames(page);
+    const bar = (await header(page).boundingBox())!;
+    const main = (await page.locator('main').boundingBox())!;
+    expect(main.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+  });
+
+  test('does not cover an in-page anchor', async ({ page }) => {
+    await page.goto('settings/#your-data');
+    const heading = page.locator('#your-data-title');
+    await expect(heading).toBeVisible();
+    await frames(page);
+    const bar = (await header(page).boundingBox())!;
+    const target = (await heading.boundingBox())!;
+    expect(target.y).toBeGreaterThanOrEqual(bar.y + bar.height);
   });
 });
