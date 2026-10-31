@@ -23,7 +23,8 @@ export type TabsProps<V extends string> = {
 
 /**
  * WAI-ARIA tabs: arrow keys move and select (automatic activation), Home/End jump to the ends.
- * The selected tab's underline is one shared layout element, so it slides to the new tab.
+ * The selected tab's underline (3px of --accent, Billabong design doc section 4) is one shared
+ * layout element, so it slides to the new tab.
  */
 export function Tabs<V extends string>({ label, tabs, value, defaultValue, onValueChange, className }: TabsProps<V>) {
   const id = useId();
@@ -83,7 +84,7 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onVal
                   layoutId={`${id}-indicator`}
                   data-tab-indicator=""
                   aria-hidden="true"
-                  className="absolute inset-x-0 bottom-0 h-0.5 bg-accent forced-colors:bg-[CanvasText]"
+                  className="absolute inset-x-0 bottom-0 h-[3px] rounded-t-full bg-accent forced-colors:bg-[CanvasText]"
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                 />
               )}

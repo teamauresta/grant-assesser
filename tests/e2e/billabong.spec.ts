@@ -219,30 +219,35 @@ test('the persona chip keeps a 44px target in the bar', async ({ page }) => {
 test.describe('bottom bars on a phone', () => {
   test.use({ viewport: { width: 375, height: 700 } });
 
+  /** The bottom nav: the Primary nav that is not the desktop header's (hidden on phones). */
+  const BOTTOM_NAV = 'nav[aria-label="Primary"]:not(header nav)';
+
   const box = (el: Element) => {
     const r = el.getBoundingClientRect();
     return { top: r.top, bottom: r.bottom };
   };
 
   /**
-   * Tabs forward up to `max` times and returns each focused element that overlaps `cover` (a
-   * selector for the fixed bar), outside the bar itself. Stops once focus reaches the bar.
+   * Tabs forward up to `max` times and returns each focused element that overlaps any of `covers`
+   * (selectors for the fixed bars), outside the bars themselves. Stops once focus reaches a bar.
    */
-  async function hiddenFocus(page: Page, cover: string, max: number) {
+  async function hiddenFocus(page: Page, covers: string[], max: number) {
     const hidden: string[] = [];
     for (let i = 0; i < max; i++) {
       await page.keyboard.press('Tab');
       await frames(page);
-      const r = await page.evaluate((sel) => {
-        const bar = document.querySelector(sel)!;
+      const r = await page.evaluate((sels) => {
+        const bars = sels.map((sel) => document.querySelector(sel)!);
         const el = document.activeElement as HTMLElement | null;
         if (!el || el === document.body) return { done: false, hit: null };
-        if (bar.contains(el)) return { done: true, hit: null };
+        if (bars.some((bar) => bar.contains(el))) return { done: true, hit: null };
         const a = el.getBoundingClientRect();
-        const b = bar.getBoundingClientRect();
-        const overlaps = a.bottom > b.top && a.top < b.bottom;
+        const overlaps = bars.some((bar) => {
+          const b = bar.getBoundingClientRect();
+          return a.bottom > b.top && a.top < b.bottom;
+        });
         return { done: false, hit: overlaps ? `${el.tagName} ${el.textContent?.trim().slice(0, 40)}` : null };
-      }, cover);
+      }, covers);
       if (r.hit) hidden.push(r.hit);
       if (r.done) break;
     }
@@ -261,14 +266,81 @@ test.describe('bottom bars on a phone', () => {
   test('tabbing through the directory never hides focus behind the bottom nav', async ({ page }) => {
     await page.goto('programs/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    expect(await hiddenFocus(page, 'nav[aria-label="Primary"]:not(header nav)', 150)).toEqual([]);
+    expect(await hiddenFocus(page, [BOTTOM_NAV], 150)).toEqual([]);
   });
 
-  test("tabbing through the wizard's fields never hides focus behind its footer", async ({ page }) => {
+  test("tabbing through the wizard's fields never hides focus behind its footer or the bottom nav", async ({ page }) => {
     for (let step = 1; step <= 6; step++) {
       await page.goto(`assess/?step=${step}`);
       await expect(page.getByText(`Step ${step} of 6`)).toBeVisible();
-      expect(await hiddenFocus(page, '[data-wizard-footer]', 80), `step ${step}`).toEqual([]);
+      expect(await hiddenFocus(page, ['[data-wizard-footer]', BOTTOM_NAV], 80), `step ${step}`).toEqual([]);
     }
   });
+});
+
+// Marker highlights (design doc sections 2 and 9). No page uses one yet, so the checks read the built
+// CSS and paint a mark with the classes components/ui/highlight.tsx gives it.
+test.describe('marker highlight', () => {
+  /** Every `.highlight` rule in the page's style sheets, with the at-rules around it. */
+  const highlightRules = (page: Page) =>
+    page.evaluate(() => {
+      const found: { conditions: string[]; background: string; color: string }[] = [];
+      const walk = (rules: CSSRuleList, conditions: string[]) => {
+        for (const rule of rules) {
+          if (rule instanceof CSSStyleRule && rule.selectorText === '.highlight') {
+            found.push({ conditions, background: rule.style.background || rule.style.backgroundColor, color: rule.style.color });
+          }
+          if (rule instanceof CSSConditionRule || rule instanceof CSSLayerBlockRule) {
+            const at = rule instanceof CSSSupportsRule ? `@supports ${rule.conditionText}`
+              : rule instanceof CSSMediaRule ? `@media ${rule.conditionText}` : '@layer';
+            walk(rule.cssRules, [...conditions, at]);
+          }
+          if (rule instanceof CSSStyleRule && rule.cssRules.length) walk(rule.cssRules, conditions);
+        }
+      };
+      for (const sheet of document.styleSheets) walk(sheet.cssRules, []);
+      return found;
+    });
+
+  // The minifier gives a color-mix() a fallback at the tone's full strength (--fg on that is under
+  // 2:1 in dark), so the built CSS must paint the band only where color-mix() is supported.
+  test('the built CSS paints the band only through color-mix(), and Mark in forced colours', async ({ page }) => {
+    await page.goto('./');
+    const rules = await highlightRules(page);
+    const painted = rules.filter((r) => r.background);
+    expect(painted.length).toBeGreaterThan(0);
+    for (const r of painted) {
+      const forced = r.conditions.some((c) => /forced-colors: active/.test(c));
+      if (forced) expect(r.background).toMatch(/^mark$/i);
+      else {
+        // The minifier drops some spaces, so they are optional.
+        expect(r.background, JSON.stringify(r)).toMatch(/^color-mix\(in srgb, ?var\(--hl, ?var\(--hl-amber\)\) 35%, ?transparent\)$/);
+        expect(r.conditions.some((c) => /^@supports .*color-mix/.test(c)), JSON.stringify(r)).toBe(true);
+      }
+    }
+  });
+
+  for (const theme of ['light', 'dark'] as const) {
+    test(`a mark is the tone at 35% behind --fg text (${theme})`, async ({ page }) => {
+      await seedStorage(page, { theme });
+      await page.goto('./');
+      const fg = await tokenColour(page, '--fg');
+      const sky = await tokenColour(page, '--hl-sky');
+      const painted = await page.evaluate(() => {
+        const mark = document.createElement('mark');
+        mark.className = 'highlight text-fg [--hl:var(--hl-sky)]';
+        mark.textContent = 'key words';
+        document.querySelector('main')!.prepend(mark);
+        const s = getComputedStyle(mark);
+        return { background: s.backgroundColor, color: s.color };
+      });
+      expect(painted.color).toBe(fg);
+      const [r, g, b] = sky.match(/\d+/g)!.map(Number);
+      const m = painted.background.match(/^(?:rgba\((\d+), (\d+), (\d+), ([\d.]+)\)|color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\))$/);
+      expect(m, painted.background).not.toBeNull();
+      const [pr, pg, pb, alpha] = m![1] ? m!.slice(1, 5).map(Number) : m!.slice(5, 9).map((v, i) => Number(v) * (i < 3 ? 255 : 1));
+      expect(alpha).toBeCloseTo(0.35, 2);
+      for (const [got, want] of [[pr, r], [pg, g], [pb, b]]) expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
+    });
+  }
 });

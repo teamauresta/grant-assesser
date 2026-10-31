@@ -169,3 +169,52 @@ it('no monospace in app/, components/ or lib/', () => {
     .filter(([f, , line]) => !(f === join('app', 'globals.css') && /^\s*--font-mono: initial;$/.test(line)));
   expect(hits.map(([f, n]) => `${f}:${n}`)).toEqual([]);
 });
+
+/** The body of `@utility name { ... }` in globals.css, nested blocks included. */
+function utility(name: string): string {
+  const start = css.indexOf(`@utility ${name} {`);
+  if (start < 0) throw new Error(`No @utility ${name}`);
+  const open = css.indexOf('{', start);
+  let depth = 0;
+  for (let i = open; i < css.length; i++) {
+    if (css[i] === '{') depth++;
+    else if (css[i] === '}' && --depth === 0) return css.slice(open + 1, i);
+  }
+  throw new Error(`Unclosed @utility ${name}`);
+}
+
+// Marker highlights (design doc section 2). The contrast checks above use HIGHLIGHT_ALPHA; the rule
+// that paints the band must use the same strength.
+describe('the highlight utility', () => {
+  const rule = utility('highlight');
+
+  it('mixes its tone at HIGHLIGHT_ALPHA', () => {
+    const mixes = [...rule.matchAll(/color-mix\(in srgb, var\(--hl, var\(--hl-amber\)\) (\d+(?:\.\d+)?)%, transparent\)/g)];
+    expect(mixes).toHaveLength(1);
+    expect(Number(mixes[0][1])).toBe(HIGHLIGHT_ALPHA * 100);
+  });
+
+  it('paints --fg text', () => {
+    expect(rule).toMatch(/^\s*color: var\(--fg\);/m);
+  });
+
+  // The CSS minifier gives a color-mix() a fallback for browsers without it: the first colour at full
+  // strength, and --fg on a full-strength highlight is under 2:1 in dark. So the band is painted only
+  // inside @supports, and without color-mix there is no band at all (tests/e2e/billabong.spec.ts
+  // checks the built CSS).
+  it('paints the band only where color-mix() is supported', () => {
+    const supports = /@supports \(color: color-mix\(in srgb, red, red\)\) \{([^}]*)\}/.exec(rule);
+    expect(supports?.[1]).toMatch(/background: color-mix\(/);
+    expect(rule.replace(supports![0], '')).not.toMatch(/background(-color)?:\s*(color-mix|var)/);
+  });
+
+  it('uses the system Mark colours in forced-colours mode', () => {
+    expect(rule).toMatch(/@media \(forced-colors: active\) \{\s*background: Mark;\s*color: MarkText;\s*\}/);
+  });
+
+  // No bg-hl-* colour utilities: their opacity modifier (bg-hl-amber/35) has the same full-strength
+  // fallback, so highlights go through the utility (components/ui/highlight.tsx) only.
+  it('has no hl colour in the theme', () => {
+    expect(css).not.toMatch(/--color-hl-/);
+  });
+});

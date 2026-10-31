@@ -119,9 +119,10 @@ function WizardView({ step, today }: { step: Step; today: string }) {
         </div>
       </section>
 
-      {/* Mobile: a bar fixed on top of the bottom navigation's band (--bottom-bar-h), --wizard-footer-h
-          tall; app/globals.css keeps focused fields clear of both (scroll-padding-bottom). */}
-      <div data-wizard-footer className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-(--bottom-bar-h) max-md:h-(--wizard-footer-h) max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
+      {/* Mobile: a bar fixed on top of the bottom navigation's band (--bottom-bar-h), at least
+          --wizard-footer-h tall: with enlarged text its button grows, and the bar grows upwards rather
+          than under the nav. app/globals.css keeps focused fields clear of both (scroll-padding-bottom). */}
+      <div data-wizard-footer className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-(--bottom-bar-h) max-md:min-h-(--wizard-footer-h) max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
         <div className="mx-auto flex max-w-2xl gap-3 md:mx-0">
           {step > 1 && (
             <Button variant="secondary" className="max-md:flex-1" onClick={() => goTo(step - 1)}>

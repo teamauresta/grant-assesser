@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { StatusPill, statusLabel } from '@/components/ui/status-pill';
+import { Badge } from '@/components/ui/badge';
 
 function pill() {
   return screen.getByTestId('status-pill');
@@ -61,5 +62,28 @@ describe('StatusPill', () => {
   it('falls back to a generic label for closing-soon without a day count', () => {
     render(<StatusPill declared="open" derived="closing-soon" />);
     expect(pill()).toHaveTextContent('Closing soon');
+  });
+});
+
+// Billabong pills (design doc section 4): fully rounded with a 1px outline. Filled status tones keep
+// their colours with a transparent outline; the neutral and outline tones are outlined in
+// --border-strong (3:1, WCAG 1.4.11).
+describe('pill shape', () => {
+  it.each([
+    ['open', 'border-transparent', 'bg-ok-bg'],
+    ['closing-soon', 'border-transparent', 'bg-warn-bg'],
+    ['paused', 'border-border-strong', 'bg-neutral-bg'],
+    ['closed', 'border-border-strong', 'bg-neutral-bg'],
+    ['unverified', 'border-border-strong', 'bg-transparent'],
+    ['upcoming', 'border-border-strong', 'bg-transparent'],
+  ] as const)('StatusPill %s is rounded, outlined %s, filled %s', (state, border, bg) => {
+    render(<StatusPill declared="open" derived={state} />);
+    expect(pill()).toHaveClass('rounded-full', 'border', border, bg, 'text-xs', 'font-medium');
+    expect(pill().querySelector('svg')).toHaveAttribute('width', '16');
+  });
+
+  it.each(['outline', 'subtle'] as const)('Badge %s is rounded with a --border-strong outline', (variant) => {
+    render(<Badge variant={variant}>Official</Badge>);
+    expect(screen.getByText('Official')).toHaveClass('rounded-full', 'border', 'border-border-strong', 'text-xs', 'font-medium');
   });
 });

@@ -22,8 +22,8 @@
  * --border is decorative separation only; --border-strong (>= 3:1) outlines form controls
  * and outline pills so their boundaries meet WCAG 1.4.11. --primary-ledge is the bottom edge of an
  * amber button, part of its shape (3:1 on the page); --danger-ledge the same for the danger button.
- * --hl-* are marker highlights, painted at 35% over the page (HIGHLIGHT_ALPHA in lib/highlight.ts),
- * behind --fg text only: never muted text.
+ * --hl-* are marker highlights, painted at 35% over the page by the highlight utility
+ * (HIGHLIGHT_ALPHA in lib/highlight.ts), behind --fg text only: never muted text.
  * Status colours are for StatusPill only; the accent is never used for status.
  * The Eucalyptus brand colours (--brand, --brand-2, --spark) are for brand moments only: the logo, the
  * hero phrase and contour lines, the progress ring, persona tones and celebrations. Never for status
@@ -149,9 +149,9 @@
   --color-neutral-bg: var(--neutral-bg);
   --color-neutral-fg: var(--neutral-fg);
 
-  --color-hl-amber: var(--hl-amber);
-  --color-hl-sage: var(--hl-sage);
-  --color-hl-sky: var(--hl-sky);
+  /* The highlight tones get no colour utilities here: an opacity modifier on one (bg-hl-amber/35)
+     has a fallback that paints the tone at full strength. Highlights go through the highlight
+     utility below (components/ui/highlight.tsx). */
 
   --color-brand: var(--brand);
   --color-brand-2: var(--brand-2);
@@ -296,6 +296,28 @@
       border-bottom-width: 1px;
       &::after { content: ""; position: absolute; inset: -3px -1px -1px; }
     }
+  }
+}
+
+/*
+ * Marker highlight (design doc section 2): HIGHLIGHT_ALPHA (lib/highlight.ts) of a tone (--hl, set by
+ * components/ui/highlight.tsx) over the page, behind --fg text only. A slight skew and rounded ends,
+ * like a pen stroke. The band is inside @supports because the minifier gives a color-mix() a
+ * fallback at the first colour's full strength, and --fg on a full-strength highlight is under 2:1 in
+ * dark: without color-mix() there is simply no band. Forced colours use the system's Mark colours.
+ */
+@utility highlight {
+  color: var(--fg);
+  border-radius: 0.3em 0.15em;
+  padding-inline: 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  @supports (color: color-mix(in srgb, red, red)) {
+    background: color-mix(in srgb, var(--hl, var(--hl-amber)) 35%, transparent);
+  }
+  @media (forced-colors: active) {
+    background: Mark;
+    color: MarkText;
   }
 }
 
