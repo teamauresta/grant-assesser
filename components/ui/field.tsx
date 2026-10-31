@@ -51,15 +51,19 @@ export function HelpText({ id, children }: { id?: string; children: ReactNode })
 export function ErrorText({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <p id={id} className="flex items-start gap-1.5 text-sm text-danger">
-      <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0" />
+      <CircleAlert aria-hidden="true" size={16} className="mt-[3px] shrink-0" />
       <span>{children}</span>
     </p>
   );
 }
 
-/** 16px text so iOS does not zoom on focus; 44px tall; strong border so the control's edge meets 3:1. */
+/**
+ * 16px text so iOS does not zoom on focus; 44px tall; strong border so the control's edge meets 3:1.
+ * --surface, like the secondary button and the wizard's choice cards, so a field reads as white on the
+ * page and matches the window body it sits in (design doc section 11, Task 6).
+ */
 export const controlClasses = cn(
-  'w-full min-h-11 rounded-md border border-border-strong bg-bg px-3 py-2 text-base text-fg',
+  'w-full min-h-11 rounded-md border border-border-strong bg-surface px-3 py-2 text-base text-fg',
   'placeholder:text-muted-fg disabled:cursor-not-allowed disabled:opacity-50',
   'aria-invalid:border-danger',
   focusRing,

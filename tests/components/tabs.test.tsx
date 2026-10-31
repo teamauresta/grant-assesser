@@ -29,3 +29,17 @@ describe('Tabs', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Beta panel');
   });
 });
+
+// Billabong tabs (design doc section 4): a 3px --accent underline on the active tab, which is --fg and
+// semibold; the others are muted until hovered.
+describe('Tabs style', () => {
+  it('underlines the active tab in the accent, 3px', () => {
+    render(<Tabs label="Views" tabs={tabs} />);
+    const alpha = screen.getByRole('tab', { name: 'Alpha' });
+    const beta = screen.getByRole('tab', { name: 'Beta' });
+    expect(alpha).toHaveClass('text-fg', 'font-semibold');
+    expect(beta).toHaveClass('text-muted-fg', 'hover:text-fg');
+    expect(beta).not.toHaveClass('font-semibold');
+    expect(alpha.querySelector('[data-tab-indicator]')).toHaveClass('h-[3px]', 'bg-accent');
+  });
+});

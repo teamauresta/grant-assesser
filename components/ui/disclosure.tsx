@@ -25,7 +25,6 @@ export function Disclosure({ summary, children, defaultOpen, className }: Disclo
         <ChevronDown
           aria-hidden="true"
           size={16}
-          strokeWidth={1.5}
           className="shrink-0 text-muted-fg transition-transform duration-150 group-open:rotate-180"
         />
       </summary>

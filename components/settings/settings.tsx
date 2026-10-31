@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Download, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Download, RotateCcw } from 'lucide-react';
 import { LIMITS, PERSONAS } from '@/lib/schema';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { QUESTIONS } from '@/lib/assessment/questions';
@@ -13,11 +13,13 @@ import { exportWorkspaceFile, importSizeError, parseImport, type ImportSummary }
 import { useWorkspace } from '@/lib/store/use-workspace';
 import type { Workspace } from '@/lib/schema';
 import { BackupPrompt } from '@/components/layout/backup-prompt';
-import { Button } from '@/components/ui/button';
+import { Button, FILE_BUTTON_CLASSES } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { ErrorText, Field, HelpText, Input, Select } from '@/components/ui/field';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
+import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 
 const FY_QUESTION = QUESTIONS.find((q) => q.id === 'fyEndMonth')!;
 const REMINDER_OPTIONS = [14, 7, 3, 1] as const;
@@ -41,7 +43,7 @@ export function describeSummary(s: ImportSummary): string {
 export function Settings() {
   const ready = useWorkspace((s) => s.ready);
   return (
-    <div className="flex max-w-3xl flex-col gap-10">
+    <div className="flex max-w-3xl flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl">Settings</h1>
         <p className="text-muted-fg">Your persona, company basics, appearance and reminders, and a backup of your workspace.</p>
@@ -63,7 +65,7 @@ function SettingsBody() {
       <DataSection />
       <Section id="privacy" title="Privacy">
         <p className="flex items-start gap-2 text-sm text-muted-fg">
-          <ShieldCheck aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
+          <SageIcon name="shield" size={24} />
           <span className="pt-0.5">Your workspace is stored only in this browser. Nothing is sent to a server.</span>
         </p>
       </Section>
@@ -71,15 +73,16 @@ function SettingsBody() {
   );
 }
 
+/**
+ * A settings section: a window (Billabong design doc section 4), a region named by its h2 title. The
+ * id stays on the frame for links such as /settings/#your-data; the description opens the body.
+ */
 function Section({ id, title, description, children }: { id: string; title: string; description?: ReactNode; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-24 flex-col gap-4 border-t border-border pt-8">
-      <div className="flex flex-col gap-1">
-        <h2 id={`${id}-title`} className="text-xl">{title}</h2>
-        {description && <p className="text-sm text-muted-fg">{description}</p>}
-      </div>
+    <Window id={id} title={title} titleId={`${id}-title`} titleSize="md" className="scroll-mt-24" bodyClassName="flex flex-col gap-4">
+      {description && <p className="text-sm text-muted-fg">{description}</p>}
       {children}
-    </section>
+    </Window>
   );
 }
 
@@ -264,7 +267,7 @@ function DataSection() {
         <HelpText>Downloads everything in your workspace as a .json file you can import later, or in another browser.</HelpText>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button onClick={onExport}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export workspace (.json)
           </Button>
           <span className="text-sm text-muted-fg">
@@ -286,7 +289,8 @@ function DataSection() {
           aria-describedby={importError ? `${helpId} ${errorId}` : helpId}
           className={cn(
             'w-full max-w-md rounded-md text-sm text-muted-fg',
-            'file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-solid file:border-border-strong file:bg-bg file:px-4 file:text-sm file:font-medium file:text-fg hover:file:bg-surface',
+            // The file button looks like a secondary button (the window body is --surface).
+            FILE_BUTTON_CLASSES,
             focusRing,
           )}
         />
@@ -298,7 +302,7 @@ function DataSection() {
         <HelpText>Deletes your profile, pipeline, goals and settings from this browser.</HelpText>
         <div>
           <Button variant="danger" onClick={() => setResetOpen(true)}>
-            <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
+            <RotateCcw aria-hidden="true" size={16} />
             Reset everything
           </Button>
         </div>
@@ -348,7 +352,7 @@ function ResetDialog({ open, onClose, onConfirm }: { open: boolean; onClose: () 
       )}
     >
       <form id={formId} onSubmit={submit}>
-        <Field label={<>Type <span className="font-mono">reset</span> to confirm</>}>
+        <Field label={<>Type <span className="font-semibold">reset</span> to confirm</>}>
           {(control) => (
             <Input
               {...control}
@@ -367,14 +371,25 @@ function ResetDialog({ open, onClose, onConfirm }: { open: boolean; onClose: () 
 }
 
 function SettingsSkeleton() {
+  // Four section windows' frames with their bars and glyphs, so the page does not jump when the
+  // workspace loads. A status, so "Loading your settings" is announced as text (a plain div cannot
+  // take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your settings" className="flex flex-col gap-10">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex flex-col gap-4 border-t border-border pt-8">
-          <div className="h-7 w-40 rounded bg-surface" />
-          <div className="h-24 rounded-lg border border-border bg-surface" />
-        </div>
-      ))}
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading your settings</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={cn(WINDOW_FRAME, 'border-border')}>
+            <div className={WINDOW_BAR}>
+              <div className="h-6 flex-1">
+                <div className="h-full w-32 rounded bg-surface" />
+              </div>
+              <WindowControls />
+            </div>
+            <div className="h-28" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

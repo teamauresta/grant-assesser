@@ -11,6 +11,7 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { LIST_FRAME } from '@/components/ui/list';
 import { goalHref } from '@/lib/plan/routes';
 
 const PLAN_ICS_FILENAME = 'grant-navigator-plan.ics';
@@ -25,7 +26,7 @@ const dayLabel = (iso: string) =>
 
 const itemHref = (i: PlanItem) => (i.kind === 'goal' ? goalHref(i.id) : `/programs/${i.program.slug}/`);
 function ItemIcon({ item: i, className }: { item: PlanItem; className?: string }) {
-  const props = { 'aria-hidden': true, size: 16, strokeWidth: 1.5, className: cn('shrink-0', className) } as const;
+  const props = { 'aria-hidden': true, size: 16, className: cn('shrink-0', className) } as const;
   if (i.kind === 'deadline') return <CalendarClock {...props} />;
   if (i.done) return <CircleCheck {...props} />;
   return i.overdue ? <CircleAlert {...props} /> : <Target {...props} />;
@@ -76,15 +77,15 @@ export function CalendarView({ now }: { now: Date }) {
       {changes > 0 && ws.lastCalendarExportAt && (
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-start gap-2 text-sm">
-            <Info aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-accent" />
+            <Info aria-hidden="true" size={16} className="mt-[3px] shrink-0 text-accent" />
             <span>
-              <span className="num font-mono font-medium">{changes}</span> {changes === 1 ? 'change' : 'changes'} since your last calendar export
-              {' '}on <time dateTime={ws.lastCalendarExportAt} className="num font-mono">{formatDate(todayISO(new Date(ws.lastCalendarExportAt)))}</time>.
+              <span className="num font-medium">{changes}</span> {changes === 1 ? 'change' : 'changes'} since your last calendar export
+              {' '}on <time dateTime={ws.lastCalendarExportAt} className="num">{formatDate(todayISO(new Date(ws.lastCalendarExportAt)))}</time>.
               {' '}Re-import the file to update your calendar.
             </span>
           </p>
           <Button onClick={exportAll} className="shrink-0">
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Re-export
           </Button>
         </div>
@@ -97,13 +98,13 @@ export function CalendarView({ now }: { now: Date }) {
         </p>
         <div className="flex shrink-0 flex-col gap-1 sm:items-end">
           <Button variant="primary" onClick={exportAll} disabled={eventCount === 0} aria-describedby={eventCount === 0 ? 'export-help' : undefined}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export all to calendar (.ics)
           </Button>
           <p id="export-help" className="text-xs text-muted-fg">
             {eventCount === 0
               ? 'Add a goal with a due date or a program with a deadline first.'
-              : <><span className="num font-mono">{eventCount}</span> {eventCount === 1 ? 'event' : 'events'}</>}
+              : <><span className="num">{eventCount}</span> {eventCount === 1 ? 'event' : 'events'}</>}
           </p>
         </div>
       </div>
@@ -117,11 +118,11 @@ export function CalendarView({ now }: { now: Date }) {
             </h2>
             <div className="flex items-center gap-1">
               <Button variant="ghost" onClick={() => step(-1)} aria-label="Previous month" iconOnly>
-                <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.5} />
+                <ChevronLeft aria-hidden="true" size={20} />
               </Button>
               <Button onClick={() => setView({ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) })} aria-current={isCurrentMonth ? 'date' : undefined}>Today</Button>
               <Button variant="ghost" onClick={() => step(1)} aria-label="Next month" iconOnly>
-                <ChevronRight aria-hidden="true" size={20} strokeWidth={1.5} />
+                <ChevronRight aria-hidden="true" size={20} />
               </Button>
             </div>
           </div>
@@ -149,12 +150,12 @@ export function CalendarView({ now }: { now: Date }) {
                       <td
                         key={d}
                         aria-current={isToday ? 'date' : undefined}
-                        className={cn('h-16 border border-border p-0.5 align-top sm:h-24 sm:p-1', outside && 'bg-surface')}
+                        className={cn('h-16 border border-border p-0.5 align-top sm:h-24 sm:p-1', outside ? 'bg-bg' : 'bg-surface')}
                       >
                         <div className="flex flex-col gap-0.5">
                           <span
                             className={cn(
-                              'num inline-flex size-6 items-center justify-center self-center rounded-full font-mono text-xs sm:self-start',
+                              'num inline-flex size-6 items-center justify-center self-center rounded-full text-xs sm:self-start',
                               isToday ? 'bg-accent font-semibold text-bg' : outside ? 'text-muted-fg' : 'text-fg',
                             )}
                           >
@@ -165,7 +166,7 @@ export function CalendarView({ now }: { now: Date }) {
                             <ul className="flex flex-wrap justify-center gap-0.5 sm:flex-col sm:flex-nowrap">
                               {dayItems.slice(0, MAX_CHIPS).map((i) => <Chip key={i.id} item={i} />)}
                               {extra > 0 && (
-                                <li className="num px-1 text-center font-mono text-xs text-muted-fg sm:text-left">
+                                <li className="num px-1 text-center text-xs text-muted-fg sm:text-left">
                                   +{extra}<span className="sr-only"> more, listed in the agenda</span>
                                 </li>
                               )}
@@ -180,10 +181,10 @@ export function CalendarView({ now }: { now: Date }) {
             </tbody>
           </table>
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-fg">
-            <span className="inline-flex items-center gap-1"><Target aria-hidden="true" size={16} strokeWidth={1.5} />Goal</span>
-            <span className="inline-flex items-center gap-1"><CalendarClock aria-hidden="true" size={16} strokeWidth={1.5} />Program deadline</span>
-            <span className="inline-flex items-center gap-1 text-danger"><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</span>
-            <span className="inline-flex items-center gap-1"><CircleCheck aria-hidden="true" size={16} strokeWidth={1.5} />Done</span>
+            <span className="inline-flex items-center gap-1"><Target aria-hidden="true" size={16} />Goal</span>
+            <span className="inline-flex items-center gap-1"><CalendarClock aria-hidden="true" size={16} />Program deadline</span>
+            <span className="inline-flex items-center gap-1 text-danger"><CircleAlert aria-hidden="true" size={16} />Overdue</span>
+            <span className="inline-flex items-center gap-1"><CircleCheck aria-hidden="true" size={16} />Done</span>
           </p>
         </section>
 
@@ -203,11 +204,13 @@ function Chip({ item }: { item: PlanItem }) {
         href={itemHref(item)}
         title={label}
         className={cn(
-          'flex min-h-6 min-w-6 items-center justify-center gap-1 rounded px-0.5 text-xs leading-5 sm:justify-start sm:border sm:px-1',
-          item.kind === 'deadline' ? 'font-medium sm:border-border-strong sm:bg-bg' : 'sm:border-border sm:bg-bg',
+          // A small pill (Billabong design doc section 4): an outline on --surface from sm up, the
+          // icon alone on phones. Deadlines are medium weight; the icon tells the kinds apart.
+          'flex min-h-6 min-w-6 items-center justify-center gap-1 rounded-full px-0.5 text-xs leading-5 sm:justify-start sm:border sm:border-border-strong sm:bg-surface sm:px-2',
+          item.kind === 'deadline' && 'font-medium',
           overdue && 'text-danger',
           done && 'text-muted-fg',
-          'hover:bg-surface',
+          'hover:bg-neutral-bg',
           focusRing,
         )}
       >
@@ -234,17 +237,17 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
     <section aria-labelledby="agenda-heading" className="flex flex-col gap-3">
       <h2 id="agenda-heading" className="text-xl">Next {AGENDA_DAYS} days</h2>
       {groups.length === 0 ? (
-        <p className="rounded-lg border border-border px-4 py-6 text-sm text-muted-fg">Nothing due in the next {AGENDA_DAYS} days.</p>
+        <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-fg">Nothing due in the next {AGENDA_DAYS} days.</p>
       ) : (
         <ol className="flex flex-col gap-4">
           {groups.map(([key, list]) => (
             <li key={key} className="flex flex-col gap-1.5">
               <h3 className={cn('text-sm font-medium', key === 'overdue' ? 'flex items-center gap-1 text-danger' : 'text-muted-fg')}>
                 {key === 'overdue'
-                  ? <><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</>
-                  : <time dateTime={key} className="num font-mono">{key === today ? 'Today' : formatDate(key)}</time>}
+                  ? <><CircleAlert aria-hidden="true" size={16} />Overdue</>
+                  : <time dateTime={key} className="num">{key === today ? 'Today' : formatDate(key)}</time>}
               </h3>
-              <ul className="divide-y divide-border rounded-lg border border-border">
+              <ul className={LIST_FRAME}>
                 {list.map((i) => <AgendaRow key={i.id} item={i} />)}
               </ul>
             </li>
@@ -258,7 +261,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
 function AgendaRow({ item }: { item: PlanItem }) {
   const overdue = item.kind === 'goal' && item.overdue;
   return (
-    <li className="relative flex gap-2 px-3 py-2.5 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+    <li className="relative flex gap-2 px-3 py-2.5 hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
       <ItemIcon item={item} className={cn('mt-[3px]', overdue ? 'text-danger' : 'text-muted-fg')} />
       <div className="flex min-w-0 flex-col">
         <Link href={itemHref(item)} className="break-words text-sm font-medium after:absolute after:inset-0 focus-visible:outline-none">
@@ -268,9 +271,9 @@ function AgendaRow({ item }: { item: PlanItem }) {
         <span className="text-xs text-muted-fg">
           {item.context}
           {item.kind === 'deadline' && item.deadline.time && (
-            <>{item.context && ' · '}<span className="num font-mono">{item.deadline.time}</span> {item.deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time</>
+            <>{item.context && ' · '}<span className="num">{item.deadline.time}</span> {item.deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time</>
           )}
-          {overdue && item.kind === 'goal' && <>{item.context && ' · '}due <span className="num font-mono">{formatDate(item.date)}</span></>}
+          {overdue && item.kind === 'goal' && <>{item.context && ' · '}due <span className="num">{formatDate(item.date)}</span></>}
         </span>
       </div>
     </li>

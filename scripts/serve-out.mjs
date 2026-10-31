@@ -11,7 +11,7 @@ export const BASE_PATH = '/grant-assesser';
 const PORT = Number(process.env.PORT ?? 4173);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'out');
 
-const TYPES = {
+export const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -19,6 +19,8 @@ const TYPES = {
   '.txt': 'text/plain; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.avif': 'image/avif',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',

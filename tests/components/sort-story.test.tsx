@@ -2,7 +2,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
-import { SortStory } from '@/components/home/sort-story';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { PIN_QUERY, SortStory } from '@/components/home/sort-story';
 import { PROGRAMS } from '@/content/programs';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
 import { chipScatter } from '@/lib/showcase';
@@ -109,6 +111,18 @@ describe('SortStory', () => {
     }
     if (story.closed > 0) expect(screen.getByText(new RegExp(`${story.closed} closed programs are left out`))).toBeInTheDocument();
     expect(document.querySelector('[data-stage]')!.className).not.toMatch(/(^|\s)min-h-\[59rem\]|min-\[\d+px\]:min-h/);
+  });
+
+  // Billabong design doc section 8: the chips are small cards on --surface with an outline, not pills.
+  it('draws every chip as a small outlined card on --surface', async () => {
+    media({});
+    render(<SortStory />);
+    await filled();
+    for (const chip of chips()) {
+      const link = within(chip).getByRole('link');
+      expect(link).toHaveClass('rounded-md', 'border', 'border-border', 'bg-surface');
+      expect(link).not.toHaveClass('rounded-full');
+    }
   });
 
   it('gives every chip its seeded tilt and stagger', async () => {
@@ -301,3 +315,20 @@ describe('SortStory', () => {
   });
 });
 
+
+// The story picks its mode in JavaScript (PIN_QUERY) and lays itself out with the CSS `pin` and
+// `pin-short` variants (app/globals.css): they must name the same windows, or a window could be laid
+// out pinned while it settles (or the reverse).
+describe('pin query', () => {
+  const css = readFileSync(join(import.meta.dirname, '../../app/globals.css'), 'utf8');
+  const variant = (name: string) => new RegExp(`@custom-variant ${name} \\(@media (.+?)\\);`).exec(css)?.[1];
+  const MOTION = ' and (prefers-reduced-motion: no-preference)';
+
+  it('the pin variant is PIN_QUERY plus motion allowed', () => {
+    expect(variant('pin')).toBe(PIN_QUERY + MOTION);
+  });
+
+  it('the pin-short variant is PIN_QUERY with a maximum height, plus motion allowed', () => {
+    expect(variant('pin-short')).toMatch(new RegExp(`^${PIN_QUERY.replace(/[()]/g, '\\$&')} and \\(max-height: [\\d.]+rem\\)${MOTION.replace(/[()]/g, '\\$&')}$`));
+  });
+});

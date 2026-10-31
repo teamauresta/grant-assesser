@@ -8,6 +8,7 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { PageNoticeWindow } from '@/components/layout/page-notice';
 
 type Props = {
   error: unknown;
@@ -37,16 +38,17 @@ export default function ErrorPage({ error, retry, reset }: Props) {
     reset();
   };
 
+  // The 404's layout (Billabong design doc section 11, Task 9): a window whose title is the page's one
+  // h1. The copy stays plain: this is about the visitor's data (design doc section 7).
   return (
-    <div className="flex max-w-xl flex-col items-start gap-4 py-12">
-      <h1 className="text-3xl">Something went wrong</h1>
+    <PageNoticeWindow title="Something went wrong">
       <p className="text-muted-fg">
         This page couldn&apos;t be shown. Try again, or check your workspace in{' '}
         <Link href="/settings/" className={cn('font-medium text-accent underline underline-offset-2', focusRing)}>Settings</Link>.
       </p>
       <Button variant="primary" onClick={() => retry()}>Try again</Button>
 
-      <div className="mt-4 flex flex-col items-start gap-3 border-t border-border pt-6">
+      <div className="mt-2 flex flex-col items-start gap-3 self-stretch border-t border-border pt-6">
         <h2 className="text-base font-semibold">Still not working?</h2>
         <p className="text-sm text-muted-fg">
           Your saved workspace may contain data this version can&apos;t read. Resetting deletes your profile, pipeline,
@@ -59,12 +61,12 @@ export default function ErrorPage({ error, retry, reset }: Props) {
           </div>
         ) : (
           <Button onClick={() => setConfirming(true)}>
-            <RotateCcw aria-hidden="true" size={16} strokeWidth={1.5} />
+            <RotateCcw aria-hidden="true" size={16} />
             Reset workspace
           </Button>
         )}
       </div>
       <div role="status" className="text-sm font-medium">{done && <p>Your workspace was reset.</p>}</div>
-    </div>
+    </PageNoticeWindow>
   );
 }

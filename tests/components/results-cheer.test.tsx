@@ -57,11 +57,12 @@ describe('Results finish-line cheer', () => {
   });
 
   it('drops a finish flag left by the empty state, so a later visit does not cheer', async () => {
-    // The wizard was left without answers: Results shows "Take the assessment first".
+    // The wizard was left without answers: Results shows its empty state, "Nothing to sort yet".
+    // (It said "Take the assessment first" before the Billabong copy pass, design doc section 7.)
     useWorkspace.setState({ ws: emptyWorkspace(now) });
     markAssessmentFinished();
     render(<><Results /><Toaster /></>);
-    expect(await screen.findByText('Take the assessment first')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing to sort yet')).toBeInTheDocument();
     // Answers arrive later (e.g. a persona picked, then the browser's Back button) without finishing.
     act(() => { useWorkspace.setState({ ws: { ...emptyWorkspace(now), profile: bootstrappedVic } }); });
     expect(await screen.findByText('Edit your answers')).toBeInTheDocument();

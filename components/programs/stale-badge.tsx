@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 export function StaleBadge() {
   return (
     <Badge>
-      <RefreshCw aria-hidden="true" size={16} strokeWidth={1.5} />
+      <RefreshCw aria-hidden="true" size={16} />
       Needs re-check
     </Badge>
   );

@@ -38,7 +38,7 @@ export function VerifiedNote({ program }: { program: Program }) {
   return (
     <p className="flex flex-wrap items-center gap-2 text-sm text-muted-fg">
       <span>
-        Verified <time dateTime={lastVerified} className="num font-mono">{formatDate(lastVerified)}</time>
+        Verified <time dateTime={lastVerified} className="num">{formatDate(lastVerified)}</time>
       </span>
       {status?.stale && <StaleBadge />}
     </p>

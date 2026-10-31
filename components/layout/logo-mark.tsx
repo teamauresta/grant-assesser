@@ -1,17 +1,13 @@
+import { Art } from '@/components/ui/art';
 import { cn } from '@/lib/cn';
 
 /**
- * The compass-and-rising-needle mark: a eucalyptus tile with a sand compass. Decorative: the brand
- * name sits beside it. Same geometry as app/icon.svg. It uses --logo (the light --brand) in both
- * themes so the compass (--on-logo) keeps 3:1.
+ * The logo: the owner's platypus emblem (the platypus in glasses with a compass, in a gold ring), a
+ * 32px picture from the art pipeline (`logo-emblem` in lib/art.ts; AVIF then WebP at 1x to 4x).
+ * Decorative: the live "Grant Navigator" text sits beside it. Eager, since it is in the top bar on
+ * every page, but without fetch priority, so it never competes with the hero. The lockup's baked
+ * wordmark is not used: it is dark green and nearly invisible on the dark theme.
  */
 export function LogoMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" className={cn('size-7 shrink-0', className)}>
-      <rect width="32" height="32" rx="7" fill="var(--logo)" />
-      <circle cx="16" cy="16" r="9.5" fill="none" stroke="var(--on-logo)" strokeWidth="1.75" />
-      <path d="M20.6 11.4 L17.6 17.6 L11.4 20.6 L14.4 14.4 Z" fill="var(--on-logo)" />
-      <circle cx="16" cy="16" r="1.1" fill="var(--logo)" />
-    </svg>
-  );
+  return <Art name="logo-emblem" alt="" sizes="32px" eager className={cn('size-8 shrink-0', className)} />;
 }

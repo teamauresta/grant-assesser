@@ -71,8 +71,24 @@ describe('FundingSummary', () => {
     expect(high).toHaveTextContent(/^\$43\.5K$/);
   });
 
+  // The region was named by a hidden "Funding summary" heading; it is now a window titled "Your
+  // funding estimate" (Billabong design doc, section 4: the results summary is a window; plan Task 7).
+  // docs/art/billabong-prompts.md: the compass beside the figures, decorative, and from sm only, so on
+  // a phone the figures keep the whole width.
+  it('shows the compass beside the figures from sm, hidden from assistive technology', () => {
+    render(<FundingSummary estimate={estimate([30_000, 45_000], 5_000)} counted={counted} />);
+    const region = screen.getByRole('region', { name: 'Your funding estimate' });
+    const art = region.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'prop-compass');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(art[0]).toHaveClass('hidden', 'sm:block', 'w-20');
+    // Beside the figures, in the same row.
+    expect(art[0].previousElementSibling?.tagName).toBe('DL');
+  });
+
   it('puts an id on the section, for aiming the results burst', () => {
     render(<FundingSummary estimate={estimate([30_000, 45_000], 0)} counted={counted} />);
-    expect(document.getElementById(FUNDING_SUMMARY_ID)).toBe(screen.getByRole('region', { name: 'Funding summary' }));
+    expect(document.getElementById(FUNDING_SUMMARY_ID)).toBe(screen.getByRole('region', { name: 'Your funding estimate' }));
   });
 });

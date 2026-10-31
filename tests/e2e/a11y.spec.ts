@@ -54,7 +54,7 @@ test.describe('axe: dark theme', () => {
 
 /** What each populated page must show before axe runs, so the check covers real content, not an empty state. */
 const POPULATED: { path: string; ready: (page: Page) => Promise<void> }[] = [
-  // Home with the resume card and the dark How it works panel (home is also in the empty and dark lists).
+  // Home with the resume card and the How it works windows (home is also in the empty and dark lists).
   { path: '', ready: async (page) => {
     await expect(page.getByText('Pick up where you left off')).toBeVisible();
   } },

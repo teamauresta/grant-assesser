@@ -28,18 +28,18 @@ export function AddToPipeline({ program }: { program: Program }) {
     <div className="flex flex-col items-start gap-1.5">
       {ready && inPlan ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <Button variant="secondary" aria-disabled="true" className="cursor-default">
-            <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
+          <Button variant="secondary" aria-disabled="true">
+            <Check aria-hidden="true" size={16} className="text-accent" />
             In your plan
           </Button>
           <Link href="/plan/" className={cn('inline-flex min-h-11 items-center gap-1 rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
             View plan
-            <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+            <ArrowRight aria-hidden="true" size={16} />
           </Link>
         </div>
       ) : (
         <Button variant="primary" disabled={!ready} onClick={add}>
-          <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Plus aria-hidden="true" size={16} />
           Add to pipeline
         </Button>
       )}

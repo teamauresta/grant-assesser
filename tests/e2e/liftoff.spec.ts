@@ -72,7 +72,8 @@ test.describe('celebrations', () => {
   test('Awarded shows its message and a link to the calendar', async ({ page }) => {
     await openPlan(page);
     await moveKickStart(page, 'Awarded');
-    await expect(page.getByText('Awarded. Add the reporting dates to your calendar.')).toBeVisible();
+    // Messages from the Billabong copy pass (design doc, section 7).
+    await expect(page.getByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeVisible();
     const link = page.getByRole('link', { name: 'Open calendar' });
     await expect(link).toBeVisible();
     await link.click();
@@ -85,7 +86,7 @@ test.describe('celebrations', () => {
     await openPlan(page);
     await expect(confettiCanvases(page)).toHaveCount(0);
     await moveKickStart(page, 'Submitted');
-    await expect(page.getByText("Submitted. That's the hardest part done.")).toBeVisible();
+    await expect(page.getByText("Submitted! The hard part's done. Time for a cuppa.")).toBeVisible();
     await expect(confettiCanvases(page)).toHaveCount(1);
   });
 
@@ -100,7 +101,7 @@ test.describe('celebrations', () => {
     const before = await confettiCanvases(page).count();
     expect(before).toBe(0);
     await moveKickStart(page, 'Submitted');
-    await expect(page.getByText("Submitted. That's the hardest part done.")).toBeVisible();
+    await expect(page.getByText("Submitted! The hard part's done. Time for a cuppa.")).toBeVisible();
     // A burst loads canvas-confetti with import() first, so wait for the network to settle before
     // checking that no canvas was added.
     await page.waitForLoadState('networkidle');

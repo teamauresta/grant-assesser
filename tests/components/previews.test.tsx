@@ -4,7 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { act, render } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import type { ComponentType } from 'react';
-import { AssessPreview, PlanPreview, ReportPreview } from '@/components/home/previews';
+import { AnswerPreview, AssessPreview, PlanPreview } from '@/components/home/previews';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
 
 afterEach(() => {
@@ -36,7 +36,9 @@ function stubObserver() {
 
 const startAt = (top: number) => vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top, bottom: top + 140, left: 0, right: 300, width: 300, height: 140, x: 0, y: top, toJSON: () => ({}) } as DOMRect);
 
-const PREVIEWS: [string, ComponentType][] = [['AssessPreview', AssessPreview], ['PlanPreview', PlanPreview], ['ReportPreview', ReportPreview]];
+// The How it works steps are Answer, See what fits and Plan (Billabong plan, Task 11 step 5): the
+// Report preview gave way to the Answer preview (design doc section 11, Task 11).
+const PREVIEWS: [string, ComponentType][] = [['AnswerPreview', AnswerPreview], ['AssessPreview', AssessPreview], ['PlanPreview', PlanPreview]];
 
 const root = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-preview]')!;
 
@@ -147,17 +149,30 @@ describe('PlanPreview', () => {
   });
 });
 
-describe('ReportPreview', () => {
-  // On phones the page runs off the card's bottom edge before the summary row, so the row is hidden
-  // there rather than animating parts nobody can see.
-  it('shows the summary blocks only from md up', () => {
-    const { container } = render(<ReportPreview />);
-    const fades = root(container).querySelectorAll('[data-anim="fade"]');
-    expect(fades.length).toBe(2);
-    const row = fades[0].parentElement!;
-    expect(row).toBe(fades[1].parentElement);
-    expect(row.classList).toContain('hidden');
-    expect(row.classList).toContain('md:grid');
+describe('AnswerPreview', () => {
+  it('ticks the first three questions one after another and leaves the last open', () => {
+    const { container } = render(<AnswerPreview />);
+    const el = root(container);
+    expect(el.textContent).toContain('Assessment');
+    const ticks = [...el.querySelectorAll<HTMLElement>('[data-anim="pop"]')];
+    expect(ticks).toHaveLength(3);
+    for (const tick of ticks) expect(tick.querySelector('svg')).not.toBeNull();
+    const delays = ticks.map((t) => Number.parseInt(t.style.getPropertyValue('--d'), 10));
+    expect(delays).toEqual([...delays].sort((a, b) => a - b));
+    expect(new Set(delays).size).toBe(3);
+    const open = el.querySelectorAll('[data-anim="fade"]');
+    expect(open).toHaveLength(1);
+    expect(open[0].querySelector('svg')).toBeNull();
+    expect(el.querySelectorAll('[data-anim="grow"]')).toHaveLength(4);
+  });
+});
+
+// The previews sit in the step windows on --surface, in the page's neutral tokens (design doc
+// section 8); the forest panel's colours are gone.
+describe.each(PREVIEWS)('%s colours', (_, Preview) => {
+  it('uses no --panel-* colour', () => {
+    const { container } = render(<Preview />);
+    expect(container.innerHTML).not.toMatch(/panel-/);
   });
 });
 

@@ -10,6 +10,7 @@ import { useNow } from '@/lib/use-now';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
+import { LIST_FRAME } from '@/components/ui/list';
 import { goalHref } from '@/lib/plan/routes';
 
 const MAX_ITEMS = 5;
@@ -41,24 +42,24 @@ export function DueThisWeek({ className }: { className?: string }) {
       <div className="flex items-baseline justify-between gap-4">
         <h2 id="due-this-week-heading" className="text-xl">Due this week</h2>
         <Link href="/plan/?tab=goals" className={cn('inline-flex min-h-11 items-center gap-1 rounded-md text-sm text-accent hover:underline', focusRing)}>
-          {due.length > MAX_ITEMS ? <>See all <span className="num font-mono">{due.length}</span></> : 'See all goals'}
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+          {due.length > MAX_ITEMS ? <>See all <span className="num">{due.length}</span></> : 'See all goals'}
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </div>
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className={LIST_FRAME}>
         {due.slice(0, MAX_ITEMS).map((g) => {
           const overdue = g.dueDate < today;
           const context = g.applicationId ? names.get(g.applicationId) : undefined;
           return (
-            <li key={g.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+            <li key={g.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
               <div className="min-w-0">
                 <Link href={goalHref(g.id)} className="break-words font-medium after:absolute after:inset-0 focus-visible:outline-none">{g.title}</Link>
                 {context && <p className="text-xs text-muted-fg">{context}</p>}
               </div>
               <span className={cn('inline-flex items-center gap-1 text-sm', overdue ? 'font-medium text-danger' : 'text-muted-fg')}>
-                {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
+                {overdue && <CircleAlert aria-hidden="true" size={16} className="shrink-0" />}
                 {overdue && <span>Overdue</span>}
-                <time dateTime={g.dueDate} className="num font-mono">{when(g.dueDate, today)}</time>
+                <time dateTime={g.dueDate} className="num">{when(g.dueDate, today)}</time>
               </span>
             </li>
           );

@@ -38,7 +38,7 @@ export function ResumeCard() {
         </p>
         <Link href="/plan/" className={cn('inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium text-accent hover:underline', focusRing)}>
           Open My plan
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </div>
     </Card>

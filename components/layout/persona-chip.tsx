@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { PERSONAS_INFO } from '@/lib/personas';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { isActivePath } from './nav-items';
@@ -22,13 +22,16 @@ export function PersonaChip({ className }: { className?: string }) {
       href="/settings/"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-150',
+        // An outline chip on --surface, drawn 36px tall to sit level with the bar's button; ::before
+        // stretches the hit area to 44px. It is placed against the padding box, inside the 1px
+        // border, so 5px reaches 4px past each edge.
+        "relative inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border bg-surface px-3.5 text-sm transition-colors duration-150 before:absolute before:inset-x-0 before:-inset-y-[5px] before:content-['']",
         active ? 'border-accent font-semibold text-fg' : 'border-border text-muted-fg hover:border-border-strong hover:text-fg',
         focusRing,
         className,
       )}
     >
-      <UserRound aria-hidden="true" size={16} strokeWidth={1.5} />
+      <SageIcon name="person" size={20} />
       {persona ? (
         <>
           <span className="sr-only">Persona: </span>

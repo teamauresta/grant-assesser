@@ -65,4 +65,15 @@ describe('Plan header', () => {
     expect(h.queryByRole('img')).toBeNull();
     expect(h.queryByText(/goals done/)).toBeNull();
   });
+
+  // Until the store has loaded: a skeleton that says so in text (a plain div cannot take an
+  // aria-label), drawn as the four pipeline windows (design doc section 11, Task 8).
+  it('shows a loading skeleton that says so in text', () => {
+    const { container } = render(<Plan />);
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Loading your plan');
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(status).not.toHaveAttribute('aria-label');
+    expect(container.querySelectorAll('.shadow-window')).toHaveLength(4);
+  });
 });

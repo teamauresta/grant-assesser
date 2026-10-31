@@ -4,17 +4,19 @@ import { useCallback, useId, useRef, useState, type DragEvent, type FormEvent } 
 import Link from 'next/link';
 import { LayoutGroup } from 'motion/react';
 import * as m from 'motion/react-m';
-import { ArrowRight, CircleX, Plus, SquareKanban, Trophy, Undo2 } from 'lucide-react';
+import { ArrowRight, CircleX, Plus, Trophy, Undo2 } from 'lucide-react';
 import { LIMITS, type Application } from '@/lib/schema';
 import { BOARD_COLUMNS, STAGE_LABELS, applicationName, columnOf, type BoardColumn, type Stage } from '@/lib/plan/applications';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cheer, originOf, stageCheer } from '@/lib/celebrate';
 import { cn } from '@/lib/cn';
+import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { Window } from '@/components/ui/window';
 import { useMotionReady } from '@/components/motion/motion-provider';
 import { ApplicationCard } from './application-card';
 
@@ -23,6 +25,27 @@ const OUTCOMES = [
   { stage: 'declined', icon: CircleX, description: 'The application was not successful.' },
   { stage: 'withdrawn', icon: Undo2, description: 'You decided not to go ahead.' },
 ] as const;
+
+/**
+ * A column window's border while a card is dragged: the accent under the pointer, dashed
+ * --border-strong on the other columns it can drop on, and the window's own --border otherwise.
+ */
+function columnBorder(over: boolean, target: boolean): string {
+  if (over) return 'border-accent';
+  return target ? 'border-dashed border-border-strong' : 'border-border';
+}
+
+/** A column's title: its stage and how many applications it holds (a number, and words for screen readers). */
+function ColumnTitle({ label, count }: { label: string; count: number }) {
+  return (
+    <>
+      {label}{' '}
+      <span className="num font-normal text-muted-fg">
+        {count}{' '}<span className="sr-only">{count === 1 ? 'application' : 'applications'}</span>
+      </span>
+    </>
+  );
+}
 
 /** Pipeline board: four columns, drag and drop on desktop, and a Move to… menu on every card. */
 export function PipelineBoard({ now }: { now: Date }) {
@@ -53,7 +76,9 @@ export function PipelineBoard({ now }: { now: Date }) {
     setFocusId(a.id);
     setAnnouncement(`Moved ${nameOf(a)} to ${STAGE_LABELS[stage]}.`);
     const c = stageCheer(stage);
-    // Aim the burst at the card in its new column, once the move has rendered.
+    // Aim the burst at the card in its new column, once the move has rendered. A frame later also
+    // means after the outcome dialog has closed: while a dialog is open the toasts are inert, so the
+    // message would be neither announced nor reachable (tests/components/pipeline-board.test.tsx).
     if (c) requestAnimationFrame(() => { void cheer(`${a.id}:${stage}`, c, originOf(document.querySelector(`[data-app-id="${a.id}"]`))); });
   };
 
@@ -82,7 +107,7 @@ export function PipelineBoard({ now }: { now: Date }) {
 
   const addButton = (
     <Button ref={addRef} onClick={() => setAdding(true)}>
-      <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+      <Plus aria-hidden="true" size={16} />
       Add custom application
     </Button>
   );
@@ -92,13 +117,15 @@ export function PipelineBoard({ now }: { now: Date }) {
     return (
       <div className="flex flex-col gap-4">
         {status}
+        {/* The filing cabinet (docs/art/billabong-prompts.md), decorative: the copy says what to do. Small,
+            so the three ways out stay on a phone's first screen. */}
         <EmptyState
-          icon={SquareKanban}
+          art={<Art name="prop-filing-cabinet" sizes="(min-width: 48rem) 128px, 96px" className="w-24 md:w-32" />}
           title="Every funded startup started with one application."
           description="Add your first from your results, or browse programs."
           action={(
             <div className="flex flex-wrap justify-center gap-2">
-              <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>Browse programs<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>
+              <Link href="/programs/" className={buttonClasses({ variant: 'primary' })}>Browse programs<ArrowRight aria-hidden="true" size={16} /></Link>
               <Link href="/assess/results/" className={buttonClasses()}>See your results</Link>
               {addButton}
             </div>
@@ -122,15 +149,22 @@ export function PipelineBoard({ now }: { now: Date }) {
       </div>
 
       <LayoutGroup>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* data-board: the hook tests/e2e/billabong.spec.ts walks up to when checking that nothing clips a card. */}
+        <div data-board className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {BOARD_COLUMNS.map((column) => {
             const apps = pipeline.filter((a) => column.stages.includes(a.stage));
             const headingId = `column-${column.id}`;
             const dropTarget = dragId !== undefined && !apps.some((a) => a.id === dragId);
             return (
-              <section
+              // Each column is a window (Billabong design doc section 4). The frame never clips, so a
+              // card gliding to another column stays visible all the way.
+              <Window
                 key={column.id}
-                aria-labelledby={headingId}
+                titleId={headingId}
+                title={<ColumnTitle label={column.label} count={apps.length} />}
+                titleSize="md"
+                headingRef={(el) => { headingRefs.current[column.id] = el; }}
+                headingProps={{ tabIndex: -1 }}
                 onDragOver={(e) => {
                   if (!dropTarget) return;
                   e.preventDefault();
@@ -139,22 +173,11 @@ export function PipelineBoard({ now }: { now: Date }) {
                 }}
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverColumn((c) => (c === column.id ? undefined : c)); }}
                 onDrop={(e) => onDrop(e, column)}
-                className={cn(
-                  'flex min-w-0 flex-col gap-3 rounded-lg border bg-surface p-3 transition-[border-color,background-color] duration-150',
-                  overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border',
-                )}
+                borderClassName={columnBorder(overColumn === column.id, dropTarget)}
+                className="flex min-w-0 flex-col transition-[border-color] duration-150"
+                padding="sm"
+                bodyClassName="flex flex-1 flex-col gap-3"
               >
-                <h2
-                  id={headingId}
-                  ref={(el) => { headingRefs.current[column.id] = el; }}
-                  tabIndex={-1}
-                  className="flex items-baseline justify-between gap-2 px-1 text-base focus:outline-none"
-                >
-                  {column.label}
-                  <span className="num font-mono text-sm font-normal text-muted-fg">
-                    {apps.length}<span className="sr-only"> {apps.length === 1 ? 'application' : 'applications'}</span>
-                  </span>
-                </h2>
                 {apps.length ? (
                   <ul className="flex flex-col gap-3">
                     {apps.map((a) => (
@@ -186,11 +209,11 @@ export function PipelineBoard({ now }: { now: Date }) {
                     ))}
                   </ul>
                 ) : (
-                  <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-fg">
+                  <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-fg">
                     {column.id === 'outcome' ? 'Awarded, declined and withdrawn applications appear here.' : 'Nothing here yet.'}
                   </p>
                 )}
-              </section>
+              </Window>
             );
           })}
         </div>
@@ -219,10 +242,10 @@ export function PipelineBoard({ now }: { now: Date }) {
             <button
               key={stage}
               type="button"
-              className={cn('flex min-h-11 items-center gap-3 rounded-md border border-border bg-bg px-4 py-3 text-left text-sm font-medium hover:border-border-strong hover:bg-surface', focusRing)}
+              className={cn('flex min-h-11 items-center gap-3 rounded-lg border border-border-strong bg-surface px-4 py-3 text-left text-sm font-medium hover:bg-bg', focusRing)}
               onClick={() => { if (outcomeFor) move(outcomeFor, stage); setOutcomeFor(undefined); }}
             >
-              <Icon aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0 text-muted-fg" />
+              <Icon aria-hidden="true" size={20} className="shrink-0 text-muted-fg" />
               <span className="flex flex-col">
                 <span>{STAGE_LABELS[stage]}</span>
                 <span className="font-normal text-muted-fg">{description}</span>
@@ -239,7 +262,7 @@ function RemoveDescription({ application, goals }: { application: Application; g
   return (
     <>
       {goals > 0
-        ? <>This also deletes its <span className="num font-mono">{goals}</span> {goals === 1 ? 'goal' : 'goals'}{application.notes ? ' and your notes' : ''}. </>
+        ? <>This also deletes its <span className="num">{goals}</span> {goals === 1 ? 'goal' : 'goals'}{application.notes ? ' and your notes' : ''}. </>
         : application.notes ? <>This also deletes your notes. </> : null}
       This can&rsquo;t be undone.
     </>

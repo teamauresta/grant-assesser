@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { resolveRequestPath } from '@/scripts/serve-out.mjs';
+import { TYPES, resolveRequestPath } from '@/scripts/serve-out.mjs';
 
 const root = path.resolve('/srv/out');
 const at = (rel: string) => path.join(root, rel);
@@ -28,5 +28,14 @@ describe('resolveRequestPath', () => {
   });
   it('rejects malformed encodings', () => {
     expect(resolveRequestPath('/grant-assesser/%E0%A4%A', root)).toBeNull();
+  });
+});
+
+// The processed artwork in public/art (Billabong design doc section 11, Task 10), typed as GitHub Pages
+// types it.
+describe('TYPES', () => {
+  it('serves AVIF and WebP as images', () => {
+    expect(TYPES['.avif']).toBe('image/avif');
+    expect(TYPES['.webp']).toBe('image/webp');
   });
 });

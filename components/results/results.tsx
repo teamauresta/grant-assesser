@@ -2,22 +2,27 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ClipboardCheck, Pencil, Plus, Target } from 'lucide-react';
+import { ArrowRight, Check, Pencil, Plus } from 'lucide-react';
 import type { Persona, Profile } from '@/lib/schema';
+import { splitHighlight } from '@/lib/highlight';
 import { PROGRAMS } from '@/content/programs';
 import { assessAll, estimateFunding, type Track } from '@/lib/assess';
 import { GROUP_INFO, TRACK_INFO, countedPrograms, groupsForTrack, type ResultGroup } from '@/lib/assessment/results';
-import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS } from '@/lib/personas';
+import { DEFAULT_RESULTS, PERSONA_RESULTS, PERSONA_STARTER_GOALS, type PersonaResultsCopy } from '@/lib/personas';
 import { DISCLAIMER } from '@/lib/copy';
 import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, originOf, resultsCelebration } from '@/lib/celebrate';
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
+import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
+import { Highlight } from '@/components/ui/highlight';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { Tabs } from '@/components/ui/tabs';
+import { WINDOW_BAR, WINDOW_FRAME, WindowControls } from '@/components/ui/window';
 import { Reveal } from '@/components/motion/reveal';
 import { AssessmentRow } from './assessment-row';
 import { FUNDING_SUMMARY_ID, FundingSummary } from './funding-summary';
@@ -40,12 +45,12 @@ export function Results() {
   if (!profile) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl">Your results</h1>
+        <ResultsHeading copy={DEFAULT_RESULTS} />
         <EmptyState
-          icon={ClipboardCheck}
-          title="Take the assessment first"
-          description="Answer six short steps and we will sort every program into Act now, Prepare, Watch and Not a fit."
-          action={<Link href="/assess/" className={buttonClasses({ variant: 'primary' })}>Start the assessment<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>}
+          art={<SageIcon name="checklist" size={40} />}
+          title="Nothing to sort yet"
+          description="Answer six short steps and we'll sort every program into Act now, Prepare, Watch and Not a fit."
+          action={<Link href="/assess/" className={buttonClasses({ variant: 'primary' })}>Start the assessment<ArrowRight aria-hidden="true" size={16} /></Link>}
         />
       </div>
     );
@@ -59,6 +64,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   const assessments = useMemo(() => assessAll(PROGRAMS, profile, now), [profile, now]);
   const estimate = useMemo(() => estimateFunding(assessments, profile), [assessments, profile]);
   const counted = useMemo(() => countedPrograms(estimate, PROGRAMS), [estimate]);
+  const canActNow = useMemo(() => assessments.some((a) => a.group === 'act-now'), [assessments]);
   const pipeline = useWorkspace((s) => s.ws.pipeline);
   const addApplication = useWorkspace((s) => s.addApplication);
   const inPlan = useMemo(() => new Set(pipeline.map((a) => a.programSlug)), [pipeline]);
@@ -85,10 +91,10 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex max-w-3xl flex-col gap-3">
-        <h1 className="text-3xl">{copy.title}</h1>
+        <ResultsHeading copy={copy} />
         <p className="text-muted-fg">{copy.intro}</p>
         <Link href="/assess/" className={cn('inline-flex min-h-11 items-center gap-1.5 self-start rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
-          <Pencil aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Pencil aria-hidden="true" size={16} />
           Edit your answers
         </Link>
       </header>
@@ -98,7 +104,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
         <p className="text-xs text-muted-fg">{DISCLAIMER}</p>
       </div>
 
-      {profile.persona && <StarterGoals persona={profile.persona} />}
+      {profile.persona && <StarterGoals persona={profile.persona} celebrate={canActNow} />}
 
       <Tabs
         label="Result tracks"
@@ -109,7 +115,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
           label: (
             <>
               {TRACK_INFO[t].label}{' '}
-              <span className="num font-mono font-normal text-muted-fg">{byTrack[t].reduce((n, g) => n + g.items.length, 0)}</span>
+              <span className="num font-normal text-muted-fg">{byTrack[t].reduce((n, g) => n + g.items.length, 0)}</span>
             </>
           ),
           content: (
@@ -126,6 +132,15 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   );
 }
 
+/**
+ * The page's h1, with its one marker band (Billabong design doc, section 4) on the copy's phrase.
+ * Exported for tests, which render it with their own copy rather than mutate the shared constants.
+ */
+export function ResultsHeading({ copy }: { copy: PersonaResultsCopy }) {
+  const [before, phrase, after] = splitHighlight(copy.title, copy.highlight);
+  return <h1 className="text-3xl">{before}{phrase && <Highlight>{phrase}</Highlight>}{after}</h1>;
+}
+
 function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: ResultGroup[]; inPlan: Set<string | undefined>; onAdd: (slug: string) => void }) {
   return (
     <div className="flex flex-col gap-8">
@@ -138,14 +153,16 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
               <div className="flex flex-col gap-0.5">
                 <h2 id={id} className="flex items-baseline gap-2 text-xl">
                   {GROUP_INFO[group].label}{' '}
-                  <span className="num font-mono text-base font-normal text-muted-fg">
+                  <span className="num text-base font-normal text-muted-fg">
                     {items.length}<span className="sr-only"> {items.length === 1 ? 'program' : 'programs'}</span>
                   </span>
                 </h2>
                 <p className="text-sm text-muted-fg">{GROUP_INFO[group].description}</p>
               </div>
               {items.length ? (
-                <ul className={cn('divide-y divide-border rounded-lg border border-border', group === 'not-a-fit' ? 'border-dashed' : 'bg-surface')}>
+                // Each result is its own card (Billabong plan, Task 7); Not a fit cards are quiet.
+                // role="list": Safari and VoiceOver drop a list's semantics when its list style is none.
+                <ul role="list" className="flex flex-col gap-3">
                   {items.map((a) => (
                     <AssessmentRow
                       key={a.program.slug}
@@ -166,7 +183,12 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
   );
 }
 
-function StarterGoals({ persona }: { persona: Persona }) {
+/**
+ * The persona's suggested first goal. With something to act on now, its card opens with the
+ * celebrating platypus instead of the target icon (docs/art/billabong-prompts.md): decorative, like the
+ * icon, so the card reads the same.
+ */
+function StarterGoals({ persona, celebrate }: { persona: Persona; celebrate: boolean }) {
   const goals = useWorkspace((s) => s.ws.goals);
   const addGoal = useWorkspace((s) => s.addGoal);
   const starters = PERSONA_STARTER_GOALS[persona];
@@ -179,7 +201,9 @@ function StarterGoals({ persona }: { persona: Persona }) {
         return (
           <Card key={g.title} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-3">
-              <Target aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+              {celebrate
+                ? <Art name="platypus-celebrate" alt="" sizes="(min-width: 40rem) 72px, 56px" className="w-14 shrink-0 self-start sm:w-18" />
+                : <SageIcon name="target" size={24} />}
               <div className="flex flex-col gap-0.5">
                 <p className="font-medium">{g.title}</p>
                 <p className="text-sm text-muted-fg">{g.description}</p>
@@ -188,18 +212,18 @@ function StarterGoals({ persona }: { persona: Persona }) {
             <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1">
               {added ? (
                 <>
-                  <Button variant="secondary" aria-disabled="true" className="cursor-default">
-                    <Check aria-hidden="true" size={16} strokeWidth={1.5} className="text-accent" />
+                  <Button variant="secondary" aria-disabled="true">
+                    <Check aria-hidden="true" size={16} className="text-accent" />
                     Goal added
                   </Button>
                   <Link href="/plan/" className={cn('inline-flex min-h-11 items-center gap-1 rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>
                     View plan
-                    <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+                    <ArrowRight aria-hidden="true" size={16} />
                   </Link>
                 </>
               ) : (
-                <Button variant="secondary" onClick={() => addGoal({ title: g.title, source: 'persona' })}>
-                  <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+                <Button variant="primary" onClick={() => addGoal({ title: g.title, source: 'persona' })}>
+                  <Plus aria-hidden="true" size={16} />
                   Add goal
                 </Button>
               )}
@@ -212,15 +236,29 @@ function StarterGoals({ persona }: { persona: Persona }) {
 }
 
 function ResultsSkeleton() {
+  // The heading and intro, the funding window's frame with its bar and glyphs, the tabs and result
+  // cards, so the page does not jump when the workspace loads. A status, so "Loading your results" is
+  // announced as text (a plain div cannot take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your results" className="flex flex-col gap-8">
-      <div className="flex max-w-3xl flex-col gap-3">
-        <div className="h-9 w-72 rounded bg-surface" />
-        <div className="h-16 rounded bg-surface" />
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading your results</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        <div className="flex max-w-3xl flex-col gap-3">
+          <div className="h-9 w-72 max-w-full rounded bg-surface" />
+          <div className="h-16 rounded bg-surface" />
+        </div>
+        <div className={cn(WINDOW_FRAME, 'border-border')}>
+          <div className={WINDOW_BAR}>
+            <div className="h-6 flex-1">
+              <div className="h-full w-48 rounded bg-surface" />
+            </div>
+            <WindowControls />
+          </div>
+          <div className="h-36" />
+        </div>
+        <div className="h-11 w-64 max-w-full rounded bg-surface" />
+        {[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-lg border border-border bg-surface" />)}
       </div>
-      <div className="h-36 rounded-lg border border-border bg-surface" />
-      <div className="h-11 w-64 rounded bg-surface" />
-      {[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-lg border border-border bg-surface" />)}
     </div>
   );
 }

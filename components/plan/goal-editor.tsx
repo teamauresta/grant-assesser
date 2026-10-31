@@ -139,7 +139,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
           <ol className="flex flex-col gap-2">
             {steps.map((s, i) => (
               <li key={s.id} className="flex items-center gap-2">
-                <span aria-hidden="true" className="num w-5 shrink-0 text-right font-mono text-sm text-muted-fg">{i + 1}</span>
+                <span aria-hidden="true" className="num w-5 shrink-0 text-right text-sm text-muted-fg">{i + 1}</span>
                 <Input
                   ref={(el) => {
                     stepRefs.current[i] = el;
@@ -159,16 +159,16 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
                     // Keep focus in the list: the previous step, or the Add step button.
                     requestAnimationFrame(() => (stepRefs.current[i - 1] ?? document.getElementById(`${formId}-add-step`))?.focus());
                   }}
-                  className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+                  className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
                 >
-                  <Trash2 aria-hidden="true" size={16} strokeWidth={1.5} />
+                  <Trash2 aria-hidden="true" size={16} />
                 </button>
               </li>
             ))}
           </ol>
         )}
         <Button id={`${formId}-add-step`} variant="ghost" onClick={addStep} className="self-start">
-          <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Plus aria-hidden="true" size={16} />
           Add step
         </Button>
       </fieldset>

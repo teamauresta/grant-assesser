@@ -1,28 +1,18 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { GROUP_INFO, GROUP_ORDER } from '@/lib/groups';
 import { SORT_END } from '@/lib/showcase';
-import { frames, populatedWorkspace, scrollSort, seedStorage } from './helpers';
+import { populatedWorkspace, scrollSort, seedStorage } from './helpers';
 
 /**
- * The Showcase home page in a real browser: the contour lines' pause button, the sorting story, the
- * How it works previews, the persona cards' borders and the absence of gradient text.
+ * The Showcase home page in a real browser: the hero, the sorting story, the How it works previews,
+ * the persona cards' borders (and the button ledge, the one uneven border allowed) and the absence
+ * of gradient text. The contour lines and their pause button were removed with the WebGL hero
+ * (Billabong design doc sections 5 and 8; section 11, Task 11), and their tests with them.
  *
  * Covered elsewhere, so not repeated here: the story's maths (tests/lib/showcase.test.ts), the
  * stage and its load failure (tests/components/sort-story.test.tsx), the previews' timings
  * (tests/components/previews.test.tsx), and axe on the home page (a11y.spec.ts).
  */
-
-const pauseButton = (page: Page) => page.getByRole('button', { name: 'Pause background animation' });
-const auroraCanvas = (page: Page) => page.locator('[data-hero-aurora] canvas');
-/** The canvas writes its frame count every 30 frames; the tests only need it as a number. */
-const frameCount = (page: Page) => auroraCanvas(page).evaluate((el) => Number((el as HTMLElement).dataset.frame ?? NaN));
-/**
- * How long a still counter must stay still. Each test that uses it first shows a moving counter
- * advancing within the same window, so a still one is a real stop, not a slow frame rate.
- */
-const STILL_WINDOW = 1_500;
-const advancesWithin = (page: Page, from: number, timeout: number) =>
-  expect.poll(() => frameCount(page), { timeout, intervals: [100] }).toBeGreaterThan(from);
 
 const stage = (page: Page) => page.locator('[data-stage]');
 const chips = (page: Page) => stage(page).locator('[data-chip]');
@@ -73,56 +63,63 @@ test('hero headline: the second line rises 80ms after the first', async ({ page 
   expect(delays).toEqual(['0s', '0.08s']);
 });
 
-test.describe('aurora', () => {
-  test('plays, pauses, and remembers the pause', async ({ page }) => {
-    await page.goto('./');
-    await expect(auroraCanvas(page)).toHaveCount(1);
-    // Headless Chromium can take a moment before its first 30 frames: poll rather than sample.
-    await expect.poll(() => frameCount(page), { timeout: 10_000 }).toBeGreaterThan(0);
-    // Drawing, so WebGL works here and the still contour rings are not standing in for the canvas.
-    await expect(page.locator('[data-aurora-fallback]')).toHaveCount(0);
-    // Running, the counter moves within the window the paused checks below use.
-    await advancesWithin(page, await frameCount(page), STILL_WINDOW);
-
-    await pauseButton(page).click();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'true');
-    // A tick already queued when the button was pressed may still run once.
-    await frames(page);
-    const paused = await frameCount(page);
-    await page.waitForTimeout(STILL_WINDOW);
-    expect(await frameCount(page)).toBe(paused);
-
-    await page.reload();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'true');
-    await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-    await page.waitForTimeout(STILL_WINDOW);
-    await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-
-    await pauseButton(page).click();
-    await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'false');
-    await advancesWithin(page, 0, STILL_WINDOW);
-  });
-
-  test.describe('under reduced motion', () => {
-    test.use({ reducedMotion: 'reduce' });
-
-    test('draws one still frame and offers no pause button', async ({ page }) => {
-      await page.goto('./');
-      // Wait until the client has decided: the canvas has drawn its frame, or the fallback shows.
-      await expect(page.locator('[data-hero-aurora] canvas[data-frame], [data-aurora-fallback]')).toHaveCount(1);
-      await page.waitForTimeout(STILL_WINDOW);
-      await expect(pauseButton(page)).toHaveCount(0);
-      if (!(await auroraCanvas(page).count())) return;
-      await expect(auroraCanvas(page)).toHaveAttribute('data-frame', '0');
-
-      // The control: with motion allowed again, the same canvas moves within the same window and
-      // the button comes back, so the still counter above was not a slow one.
-      await page.emulateMedia({ reducedMotion: 'no-preference' });
-      await expect(pauseButton(page)).toHaveAttribute('aria-pressed', 'false');
-      await advancesWithin(page, 0, STILL_WINDOW);
-    });
-  });
+// The Billabong hero (design doc section 8: the diorama "to the right (below on phones)"): text and
+// numbers left and the diorama right from md; on phones the diorama comes last, below the calls to
+// action and the numbers. No sideways scroll now that nothing bleeds to the viewport's edges.
+test('hero: the diorama sits beside the text on wide screens and below everything on phones', async ({ page }, info) => {
+  await page.goto('./');
+  const hero = page.getByRole('region', { name: /^Find the funding/ });
+  const art = hero.locator('[data-art]');
+  await expect(art).toHaveCount(1);
+  await expect(art).toHaveAttribute('data-art', 'hero-diorama');
+  const box = async (l: Locator) => (await l.boundingBox())!;
+  const [a, h1, cta, stats] = await Promise.all([art, hero.getByRole('heading', { level: 1 }), hero.getByRole('link', { name: 'Start free assessment' }), hero.locator('dl')].map(box));
+  expect(a.width).toBeGreaterThan(200);
+  if (info.project.name === 'desktop') {
+    expect(a.x).toBeGreaterThanOrEqual(h1.x + h1.width - 1);
+    expect(a.x).toBeGreaterThanOrEqual(stats.x + stats.width - 1);
+    expect(a.y).toBeLessThan(cta.y + cta.height);
+  } else {
+    expect(stats.y).toBeGreaterThanOrEqual(cta.y + cta.height);
+    expect(a.y).toBeGreaterThanOrEqual(stats.y + stats.height);
+  }
+  expect(await noSideScroll(page)).toBe(true);
+  // Removed with the contour hero: no canvas, no pause button.
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /background animation/ })).toHaveCount(0);
 });
+
+// The real dioramas (design doc section 11, Art landed): each theme downloads only its own picture,
+// once, and from md the theme script preloads it (the pair is lazy, which would hold the fetch until
+// layout); on a phone, where the diorama comes last, nothing is preloaded.
+for (const theme of ['light', 'dark'] as const) {
+  test(`hero (${theme}): only the ${theme === 'light' ? 'day' : 'dusk'} picture is fetched, preloaded from md`, async ({ page }, info) => {
+    const art: string[] = [];
+    page.on('request', (r) => {
+      const name = r.url().split('/').pop() ?? '';
+      if (name.startsWith('hero-diorama-')) art.push(name);
+    });
+    await seedStorage(page, { theme });
+    await page.goto('./');
+    const img = page.locator('[data-art="hero-diorama"] img:visible');
+    await expect(img).toHaveCount(1);
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    // Settle before counting, so a late second fetch (the other theme's picture, another width) would
+    // be seen rather than missed.
+    await page.waitForLoadState('networkidle');
+    const own = theme === 'light' ? 'hero-diorama-day-' : 'hero-diorama-dusk-';
+    expect(art.length).toBe(1);
+    expect(art[0].startsWith(own)).toBe(true);
+    const preload = page.locator('link[rel="preload"][as="image"]');
+    await expect(preload).toHaveCount(1);
+    expect(await preload.getAttribute('imagesrcset')).toContain(own);
+    expect(await preload.getAttribute('media')).toBe('(min-width: 48rem)');
+    // Who fetched it: the preload link from md, the lazy <img> itself on a phone (the link's media fails).
+    const entries = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => `${(e as PerformanceResourceTiming).initiatorType} ${e.name.split('/').pop()}`));
+    const by = info.project.name === 'desktop' ? 'link' : 'img';
+    expect(entries.filter((e) => e.includes('hero-diorama-'))).toEqual([expect.stringMatching(new RegExp(`^${by} ${own}`))]);
+  });
+}
 
 test.describe('sorting story', () => {
   test('desktop: scrolling through the pinned section sorts every chip', async ({ page }, info) => {
@@ -237,6 +234,34 @@ test('no gradient text on the home page', async ({ page }) => {
   expect(clipped).toEqual([]);
 });
 
+type Borders = { colours: string[]; widths: string[]; ledge: boolean };
+
+const borders = async (el: Locator): Promise<Borders> => {
+  // Let border transitions (hover) finish, so the sides are read at rest.
+  await el.evaluate((node) => Promise.all(node.getAnimations().map((a) => a.finished.catch(() => undefined))));
+  return el.evaluate((node) => {
+    const s = getComputedStyle(node);
+    return {
+      colours: [s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor],
+      widths: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
+      ledge: node.classList.contains('ledge'),
+    };
+  });
+};
+
+/**
+ * No coloured strip: every border side is the same colour and width. The one exception is the bottom
+ * width of an element carrying the `ledge` utility: a chunky button's ledge is part of the control's
+ * shape (docs/plans/2026-10-31-billabong-design.md, section 5). Its colour still matches the other
+ * sides, so the ledge can never be a strip of another colour.
+ */
+const expectEven = ({ colours, widths, ledge }: Borders) => {
+  expect(colours[0]).toBe(colours[3]);
+  expect(new Set(colours).size).toBe(1);
+  expect(widths[0]).toBe(widths[3]);
+  expect(new Set(ledge ? [widths[0], widths[1], widths[3]] : widths).size).toBe(1);
+};
+
 test('persona cards have no coloured strip: every border side is the same colour and width', async ({ page }, info) => {
   // A saved persona, so one card shows its selected border too.
   await seedStorage(page, { workspace: populatedWorkspace() });
@@ -245,25 +270,12 @@ test('persona cards have no coloured strip: every border side is the same colour
   await expect(cards).toHaveCount(3);
   await expect(cards.filter({ hasText: 'Your current persona' })).toHaveCount(1);
 
-  const borders = async (card: Locator) => {
-    // Let border transitions (hover) finish, so the sides are read at rest.
-    await card.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished.catch(() => undefined))));
-    return card.evaluate((el) => {
-      const s = getComputedStyle(el);
-      return {
-        colours: [s.borderTopColor, s.borderRightColor, s.borderBottomColor, s.borderLeftColor],
-        widths: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
-      };
-    });
-  };
-  const expectEven = ({ colours, widths }: { colours: string[]; widths: string[] }) => {
-    expect(colours[0]).toBe(colours[3]);
-    expect(new Set(colours).size).toBe(1);
-    expect(widths[0]).toBe(widths[3]);
-    expect(new Set(widths).size).toBe(1);
-  };
-
-  for (const card of await cards.all()) expectEven(await borders(card));
+  for (const card of await cards.all()) {
+    const sides = await borders(card);
+    // Cards are not buttons: the ledge exception never applies to them.
+    expect(sides.ledge).toBe(false);
+    expectEven(sides);
+  }
 
   if (info.project.name === 'desktop') {
     const card = cards.filter({ hasNotText: 'Your current persona' }).first();
@@ -273,5 +285,42 @@ test('persona cards have no coloured strip: every border side is the same colour
     // The hover border is on: the check below reads the hovered state, not the resting one.
     expect(hovered.colours[0]).not.toBe(resting.colours[0]);
     expectEven(hovered);
+  }
+});
+
+// The waving platypus on the first persona card (design doc section 8) overhangs its badge row rather
+// than growing it: it stays inside its card and clear of the label under it, and on wide screens the
+// three labels stay on one line.
+test('persona cards: the platypus clears the first label and does not push it down', async ({ page }, info) => {
+  await page.goto('./');
+  const cards = page.getByRole('region', { name: 'Where is your company today?' }).locator('[data-spotlight]');
+  await expect(cards).toHaveCount(3);
+  const art = cards.first().locator('[data-art]');
+  await expect(art).toHaveCount(1);
+  await expect(art).toHaveAttribute('data-art', 'platypus-wave');
+  // Every box is read in one frame: when the section starts below the first screen, Reveal lifts it
+  // in with a 12px translate after hydration, and boxes read at different moments of that transition
+  // would not line up. Each card's second child is its label row (the first is the badge row).
+  const { tops, artBox, card } = await cards.evaluateAll((els) => {
+    const box = (el: Element) => { const r = el.getBoundingClientRect(); return { y: r.top, height: r.height }; };
+    return { tops: els.map((el) => el.children[1].getBoundingClientRect().top), artBox: box(els[0].querySelector('[data-art]')!), card: box(els[0]) };
+  });
+  if (info.project.name === 'desktop') expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
+  expect(artBox.y).toBeGreaterThanOrEqual(card.y);
+  expect(artBox.y + artBox.height).toBeLessThanOrEqual(tops[0] + 1);
+});
+
+// The button ledge (design doc section 5) is the only uneven border allowed, and only on buttons.
+test('only buttons and links carry the ledge, and apart from its width every side matches', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('link', { name: 'Start free assessment' })).toBeVisible();
+  const ledged = page.locator('.ledge');
+  expect(await ledged.count()).toBeGreaterThan(0);
+  const tags = await ledged.evaluateAll((els) => els.map((el) => el.tagName.toLowerCase()));
+  expect(tags.filter((tag) => tag !== 'button' && tag !== 'a')).toEqual([]);
+  for (const el of await ledged.all()) {
+    const sides = await borders(el);
+    expectEven(sides);
+    expect(sides.widths[2]).toBe('3px');
   }
 });

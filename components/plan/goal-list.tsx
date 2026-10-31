@@ -2,22 +2,24 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, CircleAlert, Ellipsis, ListChecks, Pencil, Plus, Target, Trash2 } from 'lucide-react';
+import { ChevronDown, CircleAlert, Ellipsis, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Goal } from '@/lib/schema';
 import { getProgram } from '@/content/programs';
 import { formatDate } from '@/lib/dates';
 import { appBaseUrl, goalFilename, hasDueDate, workspaceGoalEvent } from '@/lib/calendar/events';
 import { goalsByApplication, isOverdue, type GoalGroup } from '@/lib/plan/selectors';
 import { completesApplication } from '@/lib/plan/progress';
-import { cheer, originOf } from '@/lib/celebrate';
+import { cheer, goalsDoneCheer, originOf } from '@/lib/celebrate';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
+import { Art } from '@/components/ui/art';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/field';
 import { focusRing } from '@/components/ui/focus-ring';
+import { LIST_FRAME } from '@/components/ui/list';
 import { Menu } from '@/components/ui/menu';
 import { GoalEditor } from './goal-editor';
 
@@ -61,25 +63,26 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
       <p role="status" className="sr-only">{announcement}</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-fg">
-          <span className="num font-mono text-fg">{openGoals}</span> open {openGoals === 1 ? 'goal' : 'goals'}
-          {ws.goals.length > openGoals && <>, <span className="num font-mono text-fg">{ws.goals.length - openGoals}</span> done</>}
+          <span className="num text-fg">{openGoals}</span> open {openGoals === 1 ? 'goal' : 'goals'}
+          {ws.goals.length > openGoals && <>, <span className="num text-fg">{ws.goals.length - openGoals}</span> done</>}
         </p>
         <Button ref={addRef} variant="primary" onClick={() => setEditing({})}>
-          <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+          <Plus aria-hidden="true" size={16} />
           Add goal
         </Button>
       </div>
 
       {missing && (
-        <p className="flex items-start gap-2 rounded-lg border border-border px-4 py-3 text-sm">
-          <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-muted-fg" />
+        <p className="flex items-start gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
+          <CircleAlert aria-hidden="true" size={16} className="mt-[3px] shrink-0 text-muted-fg" />
           That goal is no longer in your plan. It may have been completed elsewhere or removed.
         </p>
       )}
 
       {visible.length === 0 ? (
+        /* The searching platypus, as on the directory's empty state; decorative, the copy says it. */
         <EmptyState
-          icon={Target}
+          art={<Art name="platypus-search" alt="" sizes="(min-width: 48rem) 128px, 96px" className="w-24 md:w-32" />}
           title="Big applications get done one small goal at a time."
           description="Add a program to your pipeline and its checklist becomes your first goals. You can also add your own."
           action={<Link href="/programs/" className={cn('inline-flex min-h-11 items-center rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>Browse programs</Link>}
@@ -132,7 +135,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
   const done = group.goals.filter((g) => g.status === 'done').length;
   const sectionRef = useRef<HTMLElement>(null);
   const celebrate = (appId: string) => {
-    void cheer(`${appId}:goals-done`, { message: `All goals done for ${group.name}.`, burst: 'goals-done' }, originOf(sectionRef.current));
+    void cheer(`${appId}:goals-done`, goalsDoneCheer(group.name), originOf(sectionRef.current));
   };
   return (
     <section ref={sectionRef} id={headingId} aria-labelledby={`${headingId}-h`} className="flex scroll-mt-24 flex-col gap-3">
@@ -143,20 +146,20 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
             : group.name}
         </h2>
         {group.goals.length > 0 && (
-          <p className="num font-mono text-sm text-muted-fg">
+          <p className="num text-sm text-muted-fg">
             {done}/{group.goals.length}<span className="sr-only"> goals done</span>
           </p>
         )}
       </div>
       {group.goals.length ? (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className={LIST_FRAME}>
           {group.goals.map((g) => <GoalRow key={g.id} goal={g} now={now} onEdit={() => onEdit(g)} onRemove={() => onRemove(g)} onCompletesApplication={celebrate} />)}
         </ul>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-fg">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-sm text-muted-fg">
           No goals for this application yet.
           <Button variant="ghost" onClick={onAdd}>
-            <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Plus aria-hidden="true" size={16} />
             Add a goal<span className="sr-only"> for {group.name}</span>
           </Button>
         </div>
@@ -190,7 +193,7 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
       tabIndex={-1}
       className={cn(
         'flex scroll-mt-24 flex-col gap-3 p-4 transition-colors duration-200 focus:outline-none',
-        'data-[highlight=true]:bg-surface data-[highlight=true]:ring-2 data-[highlight=true]:ring-inset data-[highlight=true]:ring-accent',
+        'data-[highlight=true]:bg-neutral-bg data-[highlight=true]:ring-2 data-[highlight=true]:ring-inset data-[highlight=true]:ring-accent',
       )}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -209,10 +212,10 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
             <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
               {goal.dueDate ? (
                 <span className={cn('inline-flex items-center gap-1', overdue ? 'text-danger' : 'text-muted-fg')}>
-                  {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
+                  {overdue && <CircleAlert aria-hidden="true" size={16} className="shrink-0" />}
                   {overdue && <span className="font-medium">Overdue</span>}
                   <span className={cn(overdue && 'sr-only')}>Due</span>
-                  <time dateTime={goal.dueDate} className="num font-mono">{formatDate(goal.dueDate)}</time>
+                  <time dateTime={goal.dueDate} className="num">{formatDate(goal.dueDate)}</time>
                 </span>
               ) : (
                 <span className="text-muted-fg">No due date</span>
@@ -264,9 +267,9 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
             onClick={() => setShowSteps((v) => !v)}
             className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm text-fg hover:text-accent', focusRing)}
           >
-            <ListChecks aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
-            Steps <span className="num font-mono text-muted-fg">{stepsDone}/{goal.steps.length}</span>
-            <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={cn('text-muted-fg transition-transform duration-150', showSteps && 'rotate-180')} />
+            <ListChecks aria-hidden="true" size={16} className="text-muted-fg" />
+            Steps <span className="num text-muted-fg">{stepsDone}/{goal.steps.length}</span>
+            <ChevronDown aria-hidden="true" size={16} className={cn('text-muted-fg transition-transform duration-150', showSteps && 'rotate-180')} />
           </button>
           <ul id={`${id}-steps`} hidden={!showSteps} className="flex flex-col">
             {goal.steps.map((s) => (

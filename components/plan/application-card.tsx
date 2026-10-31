@@ -74,7 +74,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
       onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', a.id); onDragStart?.(e); }}
       onDragEnd={() => { setArmed(false); onDragEnd?.(); }}
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-border bg-bg p-4 transition-opacity duration-150',
+        'flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition-opacity duration-150',
         focusRing,
         dragging && 'opacity-50',
       )}
@@ -87,7 +87,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
           <div className="flex flex-wrap items-center gap-1.5">
             {outcome && OutcomeIcon && (
               <Badge>
-                <OutcomeIcon aria-hidden="true" size={16} strokeWidth={1.5} />
+                <OutcomeIcon aria-hidden="true" size={16} />
                 {STAGE_LABELS[a.stage]}
               </Badge>
             )}
@@ -100,9 +100,9 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
             title="Drag to another column"
             onPointerDown={() => setArmed(true)}
             onPointerUp={() => setArmed(false)}
-            className="-mr-1 hidden size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg active:cursor-grabbing md:inline-flex"
+            className="-mr-1 hidden size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg active:cursor-grabbing md:inline-flex"
           >
-            <GripVertical size={16} strokeWidth={1.5} />
+            <GripVertical size={16} />
           </span>
         )}
       </div>
@@ -114,7 +114,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
           <>
             <p className="flex items-baseline justify-between gap-2">
               <Link href={`/plan/?tab=goals#group-${a.id}`} className={cn(linkClass, 'text-fg')}>
-                <span className="num font-mono">{progress.done}</span> of <span className="num font-mono">{progress.total}</span> goals done
+                <span className="num">{progress.done}</span> of <span className="num">{progress.total}</span> goals done
               </Link>
             </p>
             <div aria-hidden="true" className="h-1 overflow-hidden rounded-full bg-border">
@@ -153,9 +153,9 @@ function NextGoal({ goal, now }: { goal: Goal & { dueDate: string }; now: Date }
       <span className="text-xs text-muted-fg">Next goal</span>
       <Link href={goalHref(goal.id)} className={cn(linkClass, 'font-medium break-words')}>{goal.title}</Link>
       <span className={cn('inline-flex items-center gap-1 text-xs', overdue ? 'text-danger' : 'text-muted-fg')}>
-        {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
+        {overdue && <CircleAlert aria-hidden="true" size={16} className="shrink-0" />}
         {overdue && <span className="font-medium">Overdue ·</span>}
-        <time dateTime={goal.dueDate} className="num font-mono">{formatDate(goal.dueDate)}</time>
+        <time dateTime={goal.dueDate} className="num">{formatDate(goal.dueDate)}</time>
       </span>
     </p>
   );
@@ -202,7 +202,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
           aria-describedby={error ? `${id}-error` : undefined}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); stop(); } }}
-          className={cn('min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-bg px-3 font-mono text-base aria-invalid:border-danger', focusRing)}
+          className={cn('num min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-surface px-3 text-base aria-invalid:border-danger', focusRing)}
         />
         {error && <ErrorText id={`${id}-error`}>{error}</ErrorText>}
         <div className="flex gap-2">
@@ -218,7 +218,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
       <p className="flex flex-col">
         <span className="text-xs text-muted-fg">Expected amount</span>
         {a.expectedAmount
-          ? <span className="num font-mono text-sm">{formatMoney(a.expectedAmount, 'AUD')}</span>
+          ? <span className="num text-sm">{formatMoney(a.expectedAmount, 'AUD')}</span>
           : <span className="text-sm text-muted-fg">Not set</span>}
       </p>
       <button
@@ -226,9 +226,9 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
         type="button"
         onClick={start}
         aria-label={`${a.expectedAmount ? 'Edit' : 'Set'} expected amount for ${name}`}
-        className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+        className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
       >
-        <Pencil aria-hidden="true" size={16} strokeWidth={1.5} />
+        <Pencil aria-hidden="true" size={16} />
       </button>
     </div>
   );

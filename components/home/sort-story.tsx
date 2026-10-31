@@ -19,7 +19,7 @@ import { focusRing } from '@/components/ui/focus-ring';
 type Mode = 'pinned' | 'settle' | 'still';
 
 /** Where the section pins; the `pin` variant in app/globals.css is the same query plus motion allowed. */
-const PIN_QUERY = '(min-width: 48rem) and (min-height: 36rem)';
+export const PIN_QUERY = '(min-width: 48rem) and (min-height: 40rem)';
 const QUERIES = ['(prefers-reduced-motion: reduce)', PIN_QUERY];
 const SETTLE_MS = 1200;
 /**
@@ -274,11 +274,13 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
   }, [story, mode]);
 
   return (
-    // Pinned: the section is the scroll range and the block sticks. A short window (pin-short) gets a
-    // one-line heading and smaller gaps and chips, so the whole block, CTA included, fits on screen.
+    // Pinned: the section is the scroll range and the block sticks, just below the sticky top bar
+    // (--bar-h), over the rest of the window; the scroll range is unchanged.
+    // A short window (pin-short) gets a one-line heading and smaller gaps and chips, so the whole
+    // block, CTA included, fits on screen.
     // With nothing to sort (the story failed to load) there is no scroll range.
     <section ref={sectionRef} aria-labelledby="sort-heading" className={cn('overflow-x-clip', !broken && 'pin:h-[250vh]')}>
-      <div className="flex flex-col gap-6 pin:sticky pin:top-0 pin:min-h-dvh pin:justify-center pin:py-10 pin-short:gap-4 pin-short:py-4">
+      <div className="flex flex-col gap-6 pin:sticky pin:top-(--bar-h) pin:min-h-[calc(100dvh-var(--bar-h))] pin:justify-center pin:py-10 pin-short:gap-4 pin-short:py-4">
         <div className="flex max-w-2xl flex-col gap-2 pin-short:max-w-none pin-short:gap-1">
           <h2 id="sort-heading" className="text-3xl tracking-[-0.03em] md:text-5xl pin-short:text-4xl">Watch {PROGRAMS.length} programs sort themselves</h2>
           <p className="text-sm text-muted-fg md:text-base pin-short:text-sm">
@@ -330,10 +332,13 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
                       className="max-w-full"
                       style={{ '--sr': `${s.rotate}deg` } as CSSProperties}
                     >
+                      {/* A small card (Billabong design doc, section 8): --surface in a --border outline,
+                          rounded like a card rather than a pill. The same size as the old pill, so the
+                          reserved heights and the pinned layouts still fit. */}
                       <Link
                         href={`/programs/${chip.slug}/`}
                         title={chip.name}
-                        className={cn('block truncate rounded-full border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong pin-short:py-0.5', focusRing)}
+                        className={cn('block truncate rounded-md border border-border bg-surface px-3 py-1 text-xs hover:border-border-strong pin-short:py-0.5', focusRing)}
                       >
                         {chip.name}
                       </Link>
@@ -344,9 +349,9 @@ export function SortStory({ load = loadStory }: { /** Loads the story module; te
             </div>
           ))}
         </div>
-        <Link href="/assess/" className={buttonClasses({ className: 'min-h-11 self-start' })}>
+        <Link href="/assess/" className={buttonClasses({ className: 'self-start' })}>
           Run it for your company
-          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       </div>
     </section>

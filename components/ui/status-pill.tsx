@@ -27,10 +27,15 @@ const STYLES: Record<DerivedState, { icon: LucideIcon; tone: Tone }> = {
   closed: { icon: CircleX, tone: 'neutral' },
 };
 
+/**
+ * Billabong pills (design doc section 4): fully rounded with a 1px outline, transparent on the filled
+ * status tones and --border-strong on the neutral and outline ones, so a neutral pill still has an
+ * edge on a neutral title bar. The status colours themselves are unchanged.
+ */
 const TONES: Record<Tone, string> = {
   ok: 'bg-ok-bg text-ok-fg border-transparent',
   warn: 'bg-warn-bg text-warn-fg border-transparent',
-  neutral: 'bg-neutral-bg text-neutral-fg border-transparent',
+  neutral: 'bg-neutral-bg text-neutral-fg border-border-strong',
   outline: 'bg-transparent text-neutral-fg border-border-strong',
 };
 
@@ -48,7 +53,7 @@ export function StatusPill({ declared, derived, daysToClose, className }: Status
         className,
       )}
     >
-      <Icon aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />
+      <Icon aria-hidden="true" size={16} className="shrink-0" />
       <span className={cn(state === 'closing-soon' && 'num', state === 'closed' && 'line-through')}>
         {statusLabel(state, daysToClose)}
       </span>

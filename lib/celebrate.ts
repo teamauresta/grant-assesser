@@ -11,11 +11,12 @@ export type Cheer = { message: string; action?: ToastAction; burst?: BurstKind }
 export type Origin = { x: number; y: number };
 
 /**
- * Confetti colours: the Eucalyptus brand colours of both themes (eucalyptus, sage, ochre, then the
- * lighter night versions). Hex values are fine here: canvas-confetti needs literal colours and this
- * is not component styling. Keep in step with app/globals.css.
+ * Confetti colours: amber, sage and sky, the highlight tones (--hl-amber, --hl-sage, --hl-sky) of both
+ * themes, each once; they are the same in light and dark (Billabong design doc, section 8). Hex values
+ * are fine here: canvas-confetti needs literal colours and this is not component styling. Keep in step
+ * with app/globals.css (tests/lib/tokens.test.ts checks it).
  */
-export const BRAND_COLOURS = ['#1f5c4a', '#3f6e5a', '#a4531b', '#86c9a9', '#9fd3b8', '#e3a266'];
+export const CONFETTI_COLOURS = ['#f2a93b', '#9cc5a1', '#7fb3d5'];
 
 const BURSTS: Record<BurstKind, Options[]> = {
   results: [{ particleCount: 90, spread: 70, startVelocity: 38 }],
@@ -57,7 +58,7 @@ export async function burst(kind: BurstKind, origin?: Origin): Promise<void> {
     for (const options of BURSTS[kind]) {
       // `...options` comes last so the award bursts keep their own side origins.
       void confetti({
-        colors: BRAND_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
+        colors: CONFETTI_COLOURS, ticks: 180, scalar: 0.9, disableForReducedMotion: true,
         ...(origin && kind !== 'awarded' ? { origin } : { origin: { y: 0.6 } }),
         ...options,
       });
@@ -97,14 +98,24 @@ export function consumeAssessmentFinish(): string | null {
 }
 export const consumeAssessmentFinished = (): boolean => consumeAssessmentFinish() !== null;
 
-/** What moving an application to a stage says, or null when the move needs no message. */
+/**
+ * What moving an application to a stage says, or null when the move needs no message. Celebrations
+ * get the Billabong voice (design doc, section 7): one joke, at most one exclamation mark, never about
+ * money, eligibility or deadlines; the instruction after the joke stays plain.
+ */
 export function stageCheer(stage: Stage): Cheer | null {
   switch (stage) {
-    case 'submitted': return { message: "Submitted. That's the hardest part done.", burst: 'submitted' };
-    case 'awarded': return { message: 'Awarded. Add the reporting dates to your calendar.', burst: 'awarded', action: { label: 'Open calendar', href: '/plan/?tab=calendar' } };
+    case 'submitted': return { message: "Submitted! The hard part's done. Time for a cuppa.", burst: 'submitted' };
+    case 'awarded': return { message: 'Awarded! The platypus is doing laps. Add the reporting dates to your calendar.', burst: 'awarded', action: { label: 'Open calendar', href: '/plan/?tab=calendar' } };
+    // Kind and plain, no joke (Billabong design doc, section 7).
     case 'declined': return { message: 'Most funded startups applied more than once. See what else fits.', action: { label: 'See your results', href: '/assess/results/' } };
     default: return null;
   }
+}
+
+/** What finishing every goal of an application says: its name first, then one light line. */
+export function goalsDoneCheer(name: string): Cheer {
+  return { message: `All goals done for ${name}. Not a box left unticked.`, burst: 'goals-done' };
 }
 
 /** The Results cheer: confetti only when there is something to act on or prepare for. */
@@ -113,9 +124,9 @@ export function resultsCelebration(actNow: number, prepare: number): Cheer {
   return actNow + prepare > 0 ? { message, burst: 'results' } : { message };
 }
 
-/** The line shown when Results first opens after the assessment. */
+/** The line shown when Results first opens after the assessment. The "nothing open" line stays plain: nothing to celebrate. */
 export function resultsCheer(actNow: number, prepare: number): string {
-  if (actNow > 0) return `${actNow} ${actNow === 1 ? 'program' : 'programs'} you can act on now. Start with the one closing first.`;
+  if (actNow > 0) return `Good news: ${actNow} ${actNow === 1 ? 'program' : 'programs'} you can act on now. Start with the one closing first.`;
   if (prepare > 0) return `${prepare} ${prepare === 1 ? 'program is' : 'programs are'} worth preparing for. Your plan starts here.`;
   return 'Nothing is open for you today. Watch the programs below for their next round.';
 }

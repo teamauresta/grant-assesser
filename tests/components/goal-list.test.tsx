@@ -48,7 +48,8 @@ describe('GoalList milestone cheer', () => {
     expect(toasts()).toEqual([]);
 
     await user.click(screen.getByRole('checkbox', { name: 'Done: Book pitch meetings' }));
-    expect(await screen.findByText('All goals done for Angel round.')).toBeInTheDocument();
+    // Copy from the Billabong copy pass (design doc, section 7); the application's name stays in it.
+    expect(await screen.findByText('All goals done for Angel round. Not a box left unticked.')).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
   });
 
@@ -61,7 +62,8 @@ describe('GoalList milestone cheer', () => {
     await settle();
     expect(toasts()).toEqual([]);
     await user.selectOptions(screen.getByLabelText('Status of Book pitch meetings'), 'done');
-    expect(await screen.findByText('All goals done for Angel round.')).toBeInTheDocument();
+    // Copy from the Billabong copy pass (design doc, section 7); the application's name stays in it.
+    expect(await screen.findByText('All goals done for Angel round. Not a box left unticked.')).toBeInTheDocument();
   });
 
   it('does not cheer for a declined application', async () => {
@@ -74,5 +76,25 @@ describe('GoalList milestone cheer', () => {
     await settle();
     expect(toasts()).toEqual([]);
     expect(confetti).not.toHaveBeenCalled();
+  });
+});
+
+// docs/art/billabong-prompts.md: the searching platypus on the empty goals list, as on the
+// directory's empty state; decorative, the copy says it.
+describe('GoalList empty state', () => {
+  it('opens with the searching platypus, hidden from assistive technology', () => {
+    render(<GoalList now={now} />);
+    const empty = screen.getByText('Big applications get done one small goal at a time.').parentElement!;
+    const art = empty.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'platypus-search');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(art[0]).toHaveClass('w-24', 'md:w-32');
+  });
+
+  it('shows no art once there are goals', () => {
+    seed();
+    const { container } = render(<GoalList now={now} />);
+    expect(container.querySelector('[data-art]')).toBeNull();
   });
 });

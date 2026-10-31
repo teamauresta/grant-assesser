@@ -15,7 +15,7 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
     // wraps (as "Closing in 30 days" does on phones).
     <div className="row-span-2 grid grid-rows-subgrid">
       <dt className="text-sm text-muted-fg">{label}</dt>
-      <dd className="text-3xl font-semibold tracking-tight md:text-5xl">{children}</dd>
+      <dd className="num text-3xl font-semibold tracking-tight md:text-5xl">{children}</dd>
     </div>
   );
 }

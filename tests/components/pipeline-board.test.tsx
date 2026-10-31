@@ -15,9 +15,16 @@ import { PipelineBoard } from '@/components/plan/pipeline-board';
 import { Toaster } from '@/components/ui/toast';
 import { resetCelebrations } from '@/lib/celebrate';
 import { useToasts } from '@/lib/toast';
+import { WINDOW_BAR } from '@/components/ui/window';
+import { buttonClasses } from '@/components/ui/button';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const column = (name: string) => screen.getByRole('region', { name: new RegExp(`^${name}`) });
+/** A stand-in for the drag events' DataTransfer (jsdom has none). */
+const dragData = () => {
+  const data: Record<string, string> = {};
+  return { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+};
 
 beforeAll(async () => { await useWorkspace.getState().init(); });
 beforeEach(() => {
@@ -34,6 +41,26 @@ describe('PipelineBoard', () => {
     expect(screen.getByText('Add your first from your results, or browse programs.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /browse programs/i })).toHaveAttribute('href', expect.stringMatching(/^\/programs\/?$/));
     expect(screen.getByRole('link', { name: /see your results/i })).toHaveAttribute('href', expect.stringMatching(/^\/assess\/results\/?$/));
+  });
+
+  // docs/art/billabong-prompts.md: the filing cabinet on the empty pipeline, decorative (the copy says
+  // what to do), and small, so the three ways out stay on a phone's first screen.
+  it('opens the empty state with the filing cabinet, hidden from assistive technology', () => {
+    render(<PipelineBoard now={now} />);
+    const empty = screen.getByText('Every funded startup started with one application.').parentElement!;
+    const art = empty.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'prop-filing-cabinet');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(art[0]).toHaveClass('w-24', 'md:w-32');
+    // In place of the icon: the first thing in the empty state.
+    expect(empty.firstElementChild).toBe(art[0]);
+  });
+
+  it('shows no art once there is an application', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    const { container } = render(<PipelineBoard now={now} />);
+    expect(container.querySelector('[data-art]')).toBeNull();
   });
 
   it('"Move to…" changes the stage, moves the card to its column and keeps focus on it', async () => {
@@ -103,6 +130,79 @@ describe('PipelineBoard', () => {
   });
 });
 
+// The columns are windows and the cards sit on --surface (Billabong design doc section 4 and
+// section 11, Task 8).
+describe('PipelineBoard windows', () => {
+  it('draws each column as a window titled with its stage and count', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    useWorkspace.getState().addCustomApplication('Seed round');
+    render(<PipelineBoard now={now} />);
+    for (const [name, count] of [['Considering', '2 applications'], ['Preparing', '0 applications'], ['Submitted', '0 applications'], ['Outcome', '0 applications']]) {
+      const region = column(name);
+      const heading = within(region).getByRole('heading', { level: 2, name: `${name} ${count}` });
+      expect(region).toHaveAttribute('aria-labelledby', heading.id);
+      expect(heading.id).toBe(`column-${name.toLowerCase()}`);
+      expect(WINDOW_BAR.split(' ').every((c) => heading.parentElement!.classList.contains(c))).toBe(true);
+      expect(heading.querySelector('.num')).not.toBeNull();
+      expect(region).toHaveClass('bg-surface', 'shadow-window', 'border-border');
+    }
+  });
+
+  it('marks drop targets on the window frame while a card is dragged', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const dataTransfer = dragData();
+    fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+    // The card's own column is not a target; the others are dashed, and the one under the pointer is accent.
+    expect(column('Considering')).toHaveClass('border-border');
+    expect(column('Preparing')).toHaveClass('border-dashed', 'border-border-strong');
+    fireEvent.dragOver(column('Preparing'), { dataTransfer });
+    expect(column('Preparing')).toHaveClass('border-accent');
+    // One call per class: not.toHaveClass with several passes when any one of them is missing.
+    expect(column('Preparing')).not.toHaveClass('border-border');
+    expect(column('Preparing')).not.toHaveClass('border-border-strong');
+    fireEvent.drop(column('Preparing'), { dataTransfer });
+    expect(useWorkspace.getState().ws.pipeline[0].stage).toBe('preparing');
+    expect(column('Preparing')).toHaveClass('border-border');
+  });
+
+  it('focuses the column heading after removing a card from it', async () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    useWorkspace.getState().addCustomApplication('Seed round');
+    render(<PipelineBoard now={now} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'More actions for Angel round' }));
+    await user.click(screen.getByRole('menuitem', { name: /remove from pipeline/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: /^Considering/ })).toHaveFocus());
+    expect(screen.getByRole('heading', { level: 2, name: /^Considering/ })).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('draws cards on --surface with a neutral outline, Move to… a secondary button', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const card = screen.getByRole('article', { name: 'Angel round' });
+    expect(card).toHaveClass('bg-surface', 'border', 'border-border', 'rounded-lg');
+    expect(card).not.toHaveClass('bg-bg');
+    expect(within(card).getByRole('button', { name: 'Move Angel round to…' })).toHaveAttribute('class', buttonClasses());
+  });
+
+  // The outcome dialog's choices are cards on the dialog's --surface body.
+  it('offers the outcomes as outlined choices on the dialog body', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const dataTransfer = dragData();
+    fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+    fireEvent.dragOver(column('Outcome'), { dataTransfer });
+    fireEvent.drop(column('Outcome'), { dataTransfer });
+    const dialog = screen.getByRole('dialog', { name: 'What was the outcome?' });
+    for (const name of [/^Awarded/, /^Declined/, /^Withdrawn/]) {
+      const choice = within(dialog).getByRole('button', { name });
+      expect(choice).toHaveClass('bg-surface', 'border-border-strong', 'hover:bg-bg');
+    }
+  });
+});
+
 describe('PipelineBoard milestone cheers', () => {
   const toasts = () => useToasts.getState().toasts.map((t) => t.message);
   /** Renders the board with the toaster and moves "Angel round" through Move to… */
@@ -117,10 +217,12 @@ describe('PipelineBoard milestone cheers', () => {
     return { id, moveTo };
   }
 
+  // The submitted and awarded messages are from the Billabong copy pass (design doc, section 7); the
+  // declined message is unchanged, kind and plain.
   it('cheers a submission with a toast and a burst', async () => {
     const { id, moveTo } = await setup();
     await moveTo('Submitted');
-    expect(await screen.findByText("Submitted. That's the hardest part done.")).toBeInTheDocument();
+    expect(await screen.findByText("Submitted! The hard part's done. Time for a cuppa.")).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
     expect(document.querySelector(`li[data-app-id="${id}"]`)).toContainElement(screen.getByRole('article', { name: 'Angel round' }));
   });
@@ -128,7 +230,7 @@ describe('PipelineBoard milestone cheers', () => {
   it('cheers an award and links to the calendar', async () => {
     const { moveTo } = await setup();
     await moveTo('Outcome: Awarded');
-    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    expect(await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open calendar' })).toHaveAttribute('href', expect.stringMatching(/^\/plan\/?\?tab=calendar$/));
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
   });
@@ -151,16 +253,45 @@ describe('PipelineBoard milestone cheers', () => {
 
   it('cheers an award chosen in the outcome dialog after a drop on Outcome', async () => {
     const { id } = await setup();
-    const data: Record<string, string> = {};
-    const dataTransfer = { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+    const dataTransfer = dragData();
     fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
     fireEvent.dragOver(column('Outcome'), { dataTransfer });
     fireEvent.drop(column('Outcome'), { dataTransfer });
     const dialog = screen.getByRole('dialog', { name: 'What was the outcome?' });
     await userEvent.setup().click(within(dialog).getByRole('button', { name: /^Awarded/ }));
     expect(useWorkspace.getState().ws.pipeline.find((a) => a.id === id)?.stage).toBe('awarded');
-    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    expect(await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
+  });
+
+  // A toast fired while a dialog is open would be inert (the dialog makes everything else inert), so
+  // never announced and its link unreachable. The award chosen in the outcome dialog cheers only once
+  // the dialog has closed and the page is live again.
+  it('cheers an award from the outcome dialog only after the dialog has closed', async () => {
+    await setup();
+    const seen: { dialogOpen: boolean; toasterInert: boolean; live: string | null }[] = [];
+    // Recorded only when a toast is added: other store updates (a dismissal, a re-render) are not
+    // the moment that matters.
+    const unsubscribe = useToasts.subscribe((s, prev) => {
+      if (s.toasts.length <= prev.toasts.length) return;
+      const region = document.querySelector('[data-toaster]');
+      let inert = false;
+      for (let el = region as HTMLElement | null; el; el = el.parentElement) inert ||= el.inert === true;
+      // Recorded, not asserted here: an expect failing inside the store's listener would be swallowed.
+      seen.push({ dialogOpen: document.querySelector('[role="dialog"]') !== null, toasterInert: inert, live: region?.getAttribute('aria-live') ?? null });
+    });
+    try {
+      const dataTransfer = dragData();
+      fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+      fireEvent.dragOver(column('Outcome'), { dataTransfer });
+      fireEvent.drop(column('Outcome'), { dataTransfer });
+      await userEvent.setup().click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Awarded/ }));
+      await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.');
+      expect(seen.length).toBeGreaterThanOrEqual(1);
+      for (const moment of seen) expect(moment).toEqual({ dialogOpen: false, toasterInert: false, live: 'polite' });
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('says nothing for Withdrawn', async () => {
@@ -174,11 +305,11 @@ describe('PipelineBoard milestone cheers', () => {
   it('cheers a submission once, even after moving back and submitting again', async () => {
     const { moveTo } = await setup();
     await moveTo('Submitted');
-    await screen.findByText("Submitted. That's the hardest part done.");
+    await screen.findByText("Submitted! The hard part's done. Time for a cuppa.");
     await moveTo('Considering');
     await moveTo('Submitted');
     await new Promise((r) => setTimeout(r, 20));
-    expect(toasts()).toEqual(["Submitted. That's the hardest part done."]);
+    expect(toasts()).toEqual(["Submitted! The hard part's done. Time for a cuppa."]);
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 

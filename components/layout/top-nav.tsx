@@ -1,23 +1,33 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
+import { buttonClasses } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
+import { SageIcon } from '@/components/ui/sage-icon';
 import { NAV_ITEMS, isActivePath } from './nav-items';
 import { BrandLink } from './brand-link';
 import { PersonaChip } from './persona-chip';
+import { BAR_BAND, INSET_BAR } from './inset-bar';
 
-/** Desktop navigation (md and up). */
-export function TopNav({ className }: { className?: string }) {
+/**
+ * Desktop navigation (md and up): an inset, rounded bar that sticks to the top, below the notch's
+ * safe area. Logo and nav links on the left; the persona chip and "Start assessment" on the right.
+ * The call to action is hidden on /assess/ (the wizard and its results), where it would lead nowhere.
+ * `logo` is the server-rendered `LogoMark` (see BrandLink).
+ */
+export function TopNav({ logo, className }: { logo: ReactNode; className?: string }) {
   const pathname = usePathname();
+  const onAssess = isActivePath(pathname, '/assess/');
   return (
-    <header className={cn('border-b border-border bg-bg', className)}>
-      <div className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-4">
-        <BrandLink />
-        <nav aria-label="Primary" className="flex-1">
+    <header className={cn('sticky top-0 h-(--bar-h) pt-[calc(0.5rem+env(safe-area-inset-top))] pb-2 print:static', BAR_BAND, className)}>
+      <div className={cn('mx-2 flex h-14 items-center gap-4 px-3 lg:gap-6', INSET_BAR)}>
+        <BrandLink logo={logo} className="shrink-0" />
+        <nav aria-label="Primary" className="min-w-0 flex-1">
           <ul className="flex items-center gap-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            {NAV_ITEMS.map(({ href, label, icon }) => {
               const active = isActivePath(pathname, href);
               return (
                 <li key={href}>
@@ -25,13 +35,18 @@ export function TopNav({ className }: { className?: string }) {
                     href={href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'relative inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm transition-colors duration-150',
-                      "after:absolute after:inset-x-3 after:-bottom-[11px] after:h-0.5 after:rounded-full after:content-['']",
-                      active ? 'font-semibold text-fg after:bg-accent' : 'text-muted-fg hover:text-fg',
+                      'relative inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-md px-3 text-sm transition-colors duration-150',
+                      // The state indicator: a 3px underline inside the bar, resting on its bottom edge.
+                      "after:absolute after:inset-x-3 after:-bottom-[5px] after:h-[3px] after:rounded-full after:content-['']",
+                      active ? 'font-semibold text-fg after:bg-accent forced-colors:after:bg-[CanvasText]' : 'text-muted-fg hover:bg-bg hover:text-fg',
                       focusRing,
                     )}
                   >
-                    <Icon aria-hidden="true" size={16} strokeWidth={1.5} />
+                    {/* From lg, where the bar has room. Lazy: a lazy image that is not displayed is
+                        never fetched, so narrower windows skip it; the rest load at layout. */}
+                    <span className="hidden lg:block">
+                      <SageIcon name={icon} size={20} />
+                    </span>
                     {label}
                   </Link>
                 </li>
@@ -39,7 +54,14 @@ export function TopNav({ className }: { className?: string }) {
             })}
           </ul>
         </nav>
-        <PersonaChip />
+        <div className="flex shrink-0 items-center gap-2">
+          <PersonaChip />
+          {!onAssess && (
+            <Link href="/assess/" className={buttonClasses({ variant: 'primary', size: 'sm' })}>
+              Start assessment
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );

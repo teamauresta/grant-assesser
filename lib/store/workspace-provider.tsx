@@ -48,7 +48,7 @@ export function WorkspaceProvider({ children }: { children?: ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:bottom-6"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--bottom-bar-h)+1.375rem)] z-50 flex justify-center px-4 md:bottom-6"
       >
         {notice && <p className="rounded-md border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-fg">Updated from another tab</p>}
       </div>

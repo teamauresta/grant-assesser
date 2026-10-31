@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, HardDriveDownload, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useNow } from '@/lib/use-now';
 import { needsBackup } from '@/lib/store/backup';
 import { exportWorkspaceFile } from '@/lib/store/transfer';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { Button } from '@/components/ui/button';
+import { WARN_CALLOUT } from '@/components/ui/callout';
+import { SageIcon } from '@/components/ui/sage-icon';
 
 const DISMISS_KEY = 'gn-backup-dismissed';
 
@@ -16,8 +18,9 @@ function dismissedThisSession(): boolean {
 }
 
 /**
- * A quiet inline reminder to export the workspace when it has gone more than 14 days without a
- * backup. Dismissing hides it for the rest of the browser session. Never a modal.
+ * An inline reminder to export the workspace when it has gone more than 14 days without a backup,
+ * drawn as the storage banner's warning callout. Dismissing hides it for the rest of the browser
+ * session. Never a modal.
  */
 export function BackupPrompt({ className }: { className?: string }) {
   const now = useNow();
@@ -40,24 +43,22 @@ export function BackupPrompt({ className }: { className?: string }) {
   };
 
   return (
-    <aside aria-label="Backup reminder" className={cn('flex items-start gap-3 rounded-lg border border-border bg-surface p-4 text-sm', className)}>
-      <HardDriveDownload aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0 text-muted-fg" />
+    <aside aria-label="Backup reminder" className={cn(WARN_CALLOUT, className)}>
+      <SageIcon name="backup" size={24} />
       <div className="flex min-w-0 flex-1 flex-col gap-3 pt-0.5">
         <p>
-          <span className="font-medium">Back up your workspace.</span>{' '}
-          <span className="text-muted-fg">
-            It has been more than two weeks without an export, and your plan is stored only in this browser.
-          </span>
+          <span className="font-semibold">Back up your workspace.</span>{' '}
+          It has been more than two weeks without an export, and your plan is stored only in this browser.
         </p>
         <div>
           <Button onClick={exportNow}>
-            <Download aria-hidden="true" size={16} strokeWidth={1.5} />
+            <Download aria-hidden="true" size={16} />
             Export workspace
           </Button>
         </div>
       </div>
-      <Button variant="ghost" iconOnly aria-label="Dismiss backup reminder" onClick={dismiss} className="-my-1.5 -mr-1.5 shrink-0 text-muted-fg">
-        <X aria-hidden="true" size={20} strokeWidth={1.5} />
+      <Button variant="ghost" iconOnly aria-label="Dismiss backup reminder" onClick={dismiss} className="-my-1.5 -mr-1.5 shrink-0">
+        <X aria-hidden="true" size={20} className="text-warn-fg" />
       </Button>
     </aside>
   );

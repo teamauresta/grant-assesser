@@ -27,14 +27,50 @@ describe('Hero', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Find the funding your startup qualifies for');
   });
 
-  // Eucalyptus: the phrase is plain --accent, never gradient text; the call to action has a quiet
-  // eucalyptus shadow (design doc, section 2).
-  it('colours the headline phrase in solid accent and gives the primary link the brand glow', () => {
+  // Billabong (design doc section 8; it replaces the Eucalyptus accent phrase and the eucalyptus glow
+  // under the call to action, a requirement change): one amber marker highlight on "qualifies for",
+  // in the headline's own --fg, never gradient text, and the second line keeps its rise.
+  it('highlights "qualifies for" once, in amber, and keeps the rise on both lines', () => {
+    const { container } = render(<Hero />);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    const bands = h1.querySelectorAll('.highlight');
+    expect(bands).toHaveLength(1);
+    expect(bands[0]).toHaveTextContent(/^qualifies for$/);
+    expect(bands[0]).toHaveClass('[--hl:var(--hl-amber)]');
+    expect(container.querySelectorAll('.highlight')).toHaveLength(1);
+    const lines = [...h1.children];
+    expect(lines.map((l) => l.className)).toEqual([expect.stringContaining('motion-safe:animate-rise'), expect.stringContaining('motion-safe:animate-rise-late')]);
+    for (const line of lines) expect(line).not.toHaveClass('text-accent');
+    expect(h1.querySelector('.text-lift, .text-accent')).toBeNull();
+  });
+
+  // The amber button is the call to action; the eucalyptus glow under it is gone (Billabong plan,
+  // Task 11 step 6; design doc section 11).
+  it('draws the primary call to action as the large amber button, with no glow', () => {
     render(<Hero />);
-    const phrase = screen.getByText('your startup qualifies for');
-    expect(phrase).toHaveClass('text-accent');
-    expect(phrase).not.toHaveClass('text-lift');
-    expect(screen.getByRole('link', { name: 'Start free assessment' })).toHaveClass('glow-brand');
+    const start = screen.getByRole('link', { name: 'Start free assessment' });
+    expect(start).toHaveClass('bg-primary', 'min-h-12');
+    expect(start).not.toHaveClass('glow-brand');
+    expect(screen.getByRole('link', { name: 'Browse programs' })).toHaveClass('bg-surface', 'min-h-12');
+  });
+
+  // The diorama (design doc section 8: "the day or dusk diorama to the right (below on phones)"):
+  // fetched with priority, last in the DOM, so on phones it comes after the text, the calls to action
+  // and the numbers; from md it is placed in the right column beside both, and the numbers in the
+  // left column's second row.
+  it('shows the hero diorama last on phones and beside the text and numbers from md', () => {
+    const { container } = render(<Hero />);
+    const section = screen.getByRole('region', { name: 'Find the funding your startup qualifies for' });
+    const art = section.querySelector<HTMLElement>('[data-art]')!;
+    expect(art).toHaveAttribute('data-art', 'hero-diorama');
+    expect(art).toHaveClass('w-full', 'md:col-start-2', 'md:row-span-2', 'md:row-start-1');
+    const order = [...section.children];
+    const cta = screen.getByRole('link', { name: 'Start free assessment' });
+    const stats = order.find((c) => c.contains(container.querySelector('dl')))!;
+    expect(stats).toHaveClass('md:col-start-1', 'md:row-start-2');
+    expect(order.findIndex((c) => c.contains(cta))).toBeLessThan(order.indexOf(stats));
+    expect(order.indexOf(stats)).toBeLessThan(order.indexOf(art));
+    expect(order.at(-1)).toBe(art);
   });
 
   it('never puts "now"-based numbers in the server HTML', () => {
@@ -54,6 +90,15 @@ describe('Hero', () => {
     expect(dd('Programs')).toContain(String(PROGRAMS.length));
     expect(dd('Open now')).not.toMatch(/\d/);
     expect(dd('Closing in 30 days')).not.toMatch(/\d/);
+  });
+
+  // Counts in tabular digits (Billabong plan, conventions: `num`), so a count-up never jitters.
+  it('sets the numbers and the verification date in tabular digits', () => {
+    const { container } = render(<Hero />);
+    const dds = container.querySelectorAll('dd');
+    expect(dds).toHaveLength(3);
+    for (const dd of dds) expect(dd).toHaveClass('num');
+    expect(container.querySelector('time')).toHaveClass('num');
   });
 
   it('shows the live numbers once the client knows "now"', () => {
