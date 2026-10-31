@@ -151,7 +151,7 @@ export function PipelineBoard({ now }: { now: Date }) {
                   className="flex items-baseline justify-between gap-2 px-1 text-base focus:outline-none"
                 >
                   {column.label}
-                  <span className="num font-mono text-sm font-normal text-muted-fg">
+                  <span className="num text-sm font-normal text-muted-fg">
                     {apps.length}<span className="sr-only"> {apps.length === 1 ? 'application' : 'applications'}</span>
                   </span>
                 </h2>
@@ -239,7 +239,7 @@ function RemoveDescription({ application, goals }: { application: Application; g
   return (
     <>
       {goals > 0
-        ? <>This also deletes its <span className="num font-mono">{goals}</span> {goals === 1 ? 'goal' : 'goals'}{application.notes ? ' and your notes' : ''}. </>
+        ? <>This also deletes its <span className="num">{goals}</span> {goals === 1 ? 'goal' : 'goals'}{application.notes ? ' and your notes' : ''}. </>
         : application.notes ? <>This also deletes your notes. </> : null}
       This can&rsquo;t be undone.
     </>

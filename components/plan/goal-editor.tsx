@@ -139,7 +139,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
           <ol className="flex flex-col gap-2">
             {steps.map((s, i) => (
               <li key={s.id} className="flex items-center gap-2">
-                <span aria-hidden="true" className="num w-5 shrink-0 text-right font-mono text-sm text-muted-fg">{i + 1}</span>
+                <span aria-hidden="true" className="num w-5 shrink-0 text-right text-sm text-muted-fg">{i + 1}</span>
                 <Input
                   ref={(el) => {
                     stepRefs.current[i] = el;

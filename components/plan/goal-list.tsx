@@ -61,8 +61,8 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
       <p role="status" className="sr-only">{announcement}</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-fg">
-          <span className="num font-mono text-fg">{openGoals}</span> open {openGoals === 1 ? 'goal' : 'goals'}
-          {ws.goals.length > openGoals && <>, <span className="num font-mono text-fg">{ws.goals.length - openGoals}</span> done</>}
+          <span className="num text-fg">{openGoals}</span> open {openGoals === 1 ? 'goal' : 'goals'}
+          {ws.goals.length > openGoals && <>, <span className="num text-fg">{ws.goals.length - openGoals}</span> done</>}
         </p>
         <Button ref={addRef} variant="primary" onClick={() => setEditing({})}>
           <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
@@ -143,7 +143,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
             : group.name}
         </h2>
         {group.goals.length > 0 && (
-          <p className="num font-mono text-sm text-muted-fg">
+          <p className="num text-sm text-muted-fg">
             {done}/{group.goals.length}<span className="sr-only"> goals done</span>
           </p>
         )}
@@ -212,7 +212,7 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
                   {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
                   {overdue && <span className="font-medium">Overdue</span>}
                   <span className={cn(overdue && 'sr-only')}>Due</span>
-                  <time dateTime={goal.dueDate} className="num font-mono">{formatDate(goal.dueDate)}</time>
+                  <time dateTime={goal.dueDate} className="num">{formatDate(goal.dueDate)}</time>
                 </span>
               ) : (
                 <span className="text-muted-fg">No due date</span>
@@ -265,7 +265,7 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
             className={cn('inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm text-fg hover:text-accent', focusRing)}
           >
             <ListChecks aria-hidden="true" size={16} strokeWidth={1.5} className="text-muted-fg" />
-            Steps <span className="num font-mono text-muted-fg">{stepsDone}/{goal.steps.length}</span>
+            Steps <span className="num text-muted-fg">{stepsDone}/{goal.steps.length}</span>
             <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={cn('text-muted-fg transition-transform duration-150', showSteps && 'rotate-180')} />
           </button>
           <ul id={`${id}-steps`} hidden={!showSteps} className="flex flex-col">

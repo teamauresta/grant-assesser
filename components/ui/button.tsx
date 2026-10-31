@@ -10,7 +10,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: 'bg-bg text-fg border border-border hover:border-border-strong hover:bg-surface',
   ghost: 'bg-transparent text-fg border border-transparent hover:bg-surface',
   // Destructive confirmations only (e.g. the Remove button inside a confirmation dialog).
-  danger: 'bg-danger text-on-primary border border-danger hover:opacity-90',
+  danger: 'bg-danger text-on-danger border border-danger hover:opacity-90',
 };
 
 const SIZES: Record<ButtonSize, string> = {

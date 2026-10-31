@@ -10,8 +10,8 @@ export function DeadlineText({ deadline, className }: { deadline: ResolvedDeadli
       <CalendarClock aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />
       <span>
         {deadline.kind === 'close' ? 'Closes' : deadline.label}{' '}
-        <time dateTime={deadline.date} className="num font-mono">{formatDate(deadline.date)}</time>
-        {deadline.time && <span className="num font-mono">, {deadline.time}</span>}
+        <time dateTime={deadline.date} className="num">{formatDate(deadline.date)}</time>
+        {deadline.time && <span className="num">, {deadline.time}</span>}
       </span>
     </span>
   );

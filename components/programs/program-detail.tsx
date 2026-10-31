@@ -61,15 +61,15 @@ export function ProgramDetail({ program: p }: { program: Program }) {
         <dl className="grid grid-cols-1 rounded-lg border border-border sm:grid-cols-3 sm:divide-x sm:divide-border max-sm:divide-y max-sm:divide-border">
           <div className="flex flex-col gap-1 p-4">
             <dt className="text-xs text-muted-fg">Benefit</dt>
-            <dd className="num font-mono text-sm">{formatBenefit(p.benefit)}</dd>
+            <dd className="num text-sm">{formatBenefit(p.benefit)}</dd>
           </div>
           <div className="flex flex-col gap-1 p-4">
             <dt className="text-xs text-muted-fg">Next deadline</dt>
-            <dd className="num font-mono text-sm"><NextDeadline program={p} /></dd>
+            <dd className="num text-sm"><NextDeadline program={p} /></dd>
           </div>
           <div className="flex flex-col gap-1 p-4">
             <dt className="text-xs text-muted-fg">Type</dt>
-            <dd className="font-mono text-sm">{TYPE_LABELS[p.type]}</dd>
+            <dd className="text-sm">{TYPE_LABELS[p.type]}</dd>
           </div>
         </dl>
 
@@ -92,7 +92,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
 
       {content.howToApply.length > 0 && (
         <Section id="how-to-apply" title="How to apply">
-          <ol className="flex list-decimal flex-col gap-2 pl-6 marker:font-mono marker:text-muted-fg">
+          <ol className="flex list-decimal flex-col gap-2 pl-6 marker:num marker:text-muted-fg">
             {content.howToApply.map((s, i) => <li key={i} className="pl-1">{s}</li>)}
           </ol>
         </Section>
@@ -164,7 +164,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
                   </Badge>
                 )}
               </div>
-              <span className="font-mono text-xs text-muted-fg">{hostname(s.url)}</span>
+              <span className="text-xs text-muted-fg">{hostname(s.url)}</span>
             </li>
           ))}
         </ul>
@@ -175,7 +175,7 @@ export function ProgramDetail({ program: p }: { program: Program }) {
           <ul className="flex flex-col gap-2">
             {[...p.changelog].sort((a, b) => b.date.localeCompare(a.date)).map((c, i) => (
               <li key={i} className="flex flex-col gap-0.5 text-sm sm:flex-row sm:gap-4">
-                <time dateTime={c.date} className="num shrink-0 font-mono text-muted-fg sm:w-28">{formatDate(c.date)}</time>
+                <time dateTime={c.date} className="num shrink-0 text-muted-fg sm:w-28">{formatDate(c.date)}</time>
                 <span>{c.note}</span>
               </li>
             ))}

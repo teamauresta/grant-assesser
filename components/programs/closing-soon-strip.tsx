@@ -48,10 +48,10 @@ export function ClosingSoonStrip({ programs, className }: { programs: Program[];
                 >
                   {program.name}
                 </Link>
-                <p className="num font-mono text-xs text-muted-fg">{formatBenefit(program.benefit)}</p>
+                <p className="num text-xs text-muted-fg">{formatBenefit(program.benefit)}</p>
               </div>
               <div className="flex items-center gap-3">
-                <time dateTime={deadline.date} className="num font-mono text-sm">{formatDate(deadline.date)}</time>
+                <time dateTime={deadline.date} className="num text-sm">{formatDate(deadline.date)}</time>
                 {status.state !== 'closing-soon' && <span className="num text-xs text-muted-fg">In {daysLeft} days</span>}
                 <StatusPill declared={status.declared} derived={status.state} daysToClose={status.daysToClose} />
               </div>

@@ -109,7 +109,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
           label: (
             <>
               {TRACK_INFO[t].label}{' '}
-              <span className="num font-mono font-normal text-muted-fg">{byTrack[t].reduce((n, g) => n + g.items.length, 0)}</span>
+              <span className="num font-normal text-muted-fg">{byTrack[t].reduce((n, g) => n + g.items.length, 0)}</span>
             </>
           ),
           content: (
@@ -138,7 +138,7 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
               <div className="flex flex-col gap-0.5">
                 <h2 id={id} className="flex items-baseline gap-2 text-xl">
                   {GROUP_INFO[group].label}{' '}
-                  <span className="num font-mono text-base font-normal text-muted-fg">
+                  <span className="num text-base font-normal text-muted-fg">
                     {items.length}<span className="sr-only"> {items.length === 1 ? 'program' : 'programs'}</span>
                   </span>
                 </h2>

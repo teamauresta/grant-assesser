@@ -348,7 +348,7 @@ function ResetDialog({ open, onClose, onConfirm }: { open: boolean; onClose: () 
       )}
     >
       <form id={formId} onSubmit={submit}>
-        <Field label={<>Type <span className="font-mono">reset</span> to confirm</>}>
+        <Field label={<>Type <span className="font-semibold">reset</span> to confirm</>}>
           {(control) => (
             <Input
               {...control}

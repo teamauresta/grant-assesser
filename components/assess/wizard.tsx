@@ -86,7 +86,7 @@ function WizardView({ step, today }: { step: Step; today: string }) {
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <p className="text-sm text-muted-fg">
-            <span className="num font-mono">Step {step} of {STEP_COUNT}</span> · {info.title}
+            <span className="num">Step {step} of {STEP_COUNT}</span> · {info.title}
           </p>
           <SaveNote available={storageAvailable} />
         </div>

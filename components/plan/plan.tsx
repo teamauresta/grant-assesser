@@ -54,7 +54,7 @@ function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Da
   };
 
   const count = (n: number, label: string) => (
-    <>{label} <span className="num font-mono font-normal text-muted-fg">{n}</span></>
+    <>{label} <span className="num font-normal text-muted-fg">{n}</span></>
   );
 
   return (
@@ -66,7 +66,7 @@ function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Da
           <div className="mt-2 flex items-center gap-4">
             <ProgressRing percent={percent} />
             <p className="min-w-0 text-sm text-muted-fg">
-              <span className="num font-mono text-fg">{done}</span> of <span className="num font-mono text-fg">{total}</span> {total === 1 ? 'goal' : 'goals'} done
+              <span className="num text-fg">{done}</span> of <span className="num text-fg">{total}</span> {total === 1 ? 'goal' : 'goals'} done
               {next ? (
                 <>
                   . Next:{' '}

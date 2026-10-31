@@ -1,8 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { contrast, mixHex } from '@/lib/contrast';
 import { AURORA_ALPHA } from '@/lib/aurora';
 import { BRAND_COLOURS } from '@/lib/celebrate';
+import { HIGHLIGHT_ALPHA } from '@/lib/highlight';
 
 const css = readFileSync('app/globals.css', 'utf8');
 
@@ -40,6 +42,11 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it('--on-primary meets AA on --primary', () => {
     expect(contrast(t['--on-primary'], t['--primary'])).toBeGreaterThanOrEqual(4.5);
   });
+  // The danger button's label. It used --on-primary until the amber primary took dark text
+  // (design doc section 11, Task 1).
+  it('--on-danger meets AA on --danger', () => {
+    expect(contrast(t['--on-danger'], t['--danger'])).toBeGreaterThanOrEqual(4.5);
+  });
   // The calendar's today cell is --bg text on --accent.
   it('--bg meets AA on --accent', () => {
     expect(contrast(t['--bg'], t['--accent'])).toBeGreaterThanOrEqual(4.5);
@@ -48,6 +55,15 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
   it('--border-strong meets 3:1 on --bg and --surface', () => {
     expect(contrast(t['--border-strong'], t['--bg'])).toBeGreaterThanOrEqual(3);
     expect(contrast(t['--border-strong'], t['--surface'])).toBeGreaterThanOrEqual(3);
+  });
+  // Chunky buttons (design doc section 4): the ledge is a darker amber under the amber fill. It is part
+  // of the control's shape, so it must be visible against the page (WCAG 1.4.11, 3:1).
+  it('the primary ledge stays visible on --bg (3:1)', () => {
+    expect(contrast(t['--primary-ledge'], t['--bg'])).toBeGreaterThanOrEqual(3);
+  });
+  // Marker highlights (design doc section 2) sit behind --fg text only, at HIGHLIGHT_ALPHA over --bg.
+  it.each(['--hl-amber', '--hl-sage', '--hl-sky'])('--fg meets AA on %s', (name) => {
+    expect(contrast(t['--fg'], mixHex(t['--bg'], t[name], HIGHLIGHT_ALPHA))).toBeGreaterThanOrEqual(4.5);
   });
   // The accent focus ring (WCAG 1.4.11, 3:1) on the page. On --surface it is implied by the accent's
   // AA check above.
@@ -130,4 +146,21 @@ it('the status tokens are unchanged', () => {
   const dk = tokens('[data-theme="dark"]');
   expect([light['--ok-fg'], light['--warn-fg'], light['--danger']]).toEqual(['#166534', '#92400e', '#b91c1c']);
   expect([dk['--ok-fg'], dk['--warn-fg'], dk['--danger']]).toEqual(['#86efac', '#fcd34d', '#f87171']);
+});
+
+/** Every file under `dirs`, recursively, as paths relative to the repo root. */
+function walk(dirs: string[]): string[] {
+  return dirs.flatMap((dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name);
+    return e.isDirectory() ? walk([path]) : [path];
+  }));
+}
+
+// Billabong uses one family, Rubik, with tabular digits for numbers (design doc section 3). The match
+// is on the raw text, so a comment that names monospace counts too.
+it('no monospace in app/ or components/', () => {
+  const files = walk(['app', 'components']).filter((f) => /\.(m?[jt]sx?|css)$/.test(f));
+  const hits = files.flatMap((f) => readFileSync(f, 'utf8').split('\n').map((line, i) => [f, i + 1, line] as const))
+    .filter(([, , line]) => /\bfont-mono\b|monospace/.test(line));
+  expect(hits.map(([f, n]) => `${f}:${n}`)).toEqual([]);
 });

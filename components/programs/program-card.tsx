@@ -52,7 +52,7 @@ export function ProgramCard({ program, status, headingLevel: Heading = 'h2', not
       <p className="text-sm text-muted-fg">
         {program.provider} · {LEVEL_LABELS[program.level]} · {TYPE_LABELS[program.type]}
       </p>
-      <p className="num font-mono text-sm">{formatBenefit(program.benefit)}</p>
+      <p className="num text-sm">{formatBenefit(program.benefit)}</p>
       <p className="line-clamp-2 text-sm">{program.content.summary}</p>
       <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 text-xs text-muted-fg">
         {deadline && <DeadlineText deadline={deadline} className={muted ? undefined : 'text-fg'} />}
@@ -60,7 +60,7 @@ export function ProgramCard({ program, status, headingLevel: Heading = 'h2', not
           <StaleBadge />
         ) : (
           <span>
-            Verified <time dateTime={program.verification.lastVerified} className="num font-mono">{formatDate(program.verification.lastVerified)}</time>
+            Verified <time dateTime={program.verification.lastVerified} className="num">{formatDate(program.verification.lastVerified)}</time>
           </span>
         )}
       </div>

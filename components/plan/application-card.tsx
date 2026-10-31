@@ -114,7 +114,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
           <>
             <p className="flex items-baseline justify-between gap-2">
               <Link href={`/plan/?tab=goals#group-${a.id}`} className={cn(linkClass, 'text-fg')}>
-                <span className="num font-mono">{progress.done}</span> of <span className="num font-mono">{progress.total}</span> goals done
+                <span className="num">{progress.done}</span> of <span className="num">{progress.total}</span> goals done
               </Link>
             </p>
             <div aria-hidden="true" className="h-1 overflow-hidden rounded-full bg-border">
@@ -155,7 +155,7 @@ function NextGoal({ goal, now }: { goal: Goal & { dueDate: string }; now: Date }
       <span className={cn('inline-flex items-center gap-1 text-xs', overdue ? 'text-danger' : 'text-muted-fg')}>
         {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
         {overdue && <span className="font-medium">Overdue ·</span>}
-        <time dateTime={goal.dueDate} className="num font-mono">{formatDate(goal.dueDate)}</time>
+        <time dateTime={goal.dueDate} className="num">{formatDate(goal.dueDate)}</time>
       </span>
     </p>
   );
@@ -202,7 +202,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
           aria-describedby={error ? `${id}-error` : undefined}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); stop(); } }}
-          className={cn('min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-bg px-3 font-mono text-base aria-invalid:border-danger', focusRing)}
+          className={cn('num min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-bg px-3 text-base aria-invalid:border-danger', focusRing)}
         />
         {error && <ErrorText id={`${id}-error`}>{error}</ErrorText>}
         <div className="flex gap-2">
@@ -218,7 +218,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
       <p className="flex flex-col">
         <span className="text-xs text-muted-fg">Expected amount</span>
         {a.expectedAmount
-          ? <span className="num font-mono text-sm">{formatMoney(a.expectedAmount, 'AUD')}</span>
+          ? <span className="num text-sm">{formatMoney(a.expectedAmount, 'AUD')}</span>
           : <span className="text-sm text-muted-fg">Not set</span>}
       </p>
       <button

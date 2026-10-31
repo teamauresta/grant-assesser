@@ -146,3 +146,5 @@ Each task ends with typecheck, lint, unit tests, e2e with axe, build and size, a
 ## 11. What changed during the build
 
 (Filled in as tasks land.)
+
+- **Task 1 (palette, Rubik, plain numbers).** The section 2 values went in unchanged: every existing contrast check passed with them (`--spark` on `--neutral-bg` is 4.39 in light, but no check pairs them and brand colours never sit on title bars). One token added: the danger button's label used `--on-primary`, which is now dark, and dark text on the light `--danger` is 2.8:1 (axe failed on `/settings/`). New `--on-danger`, `#ffffff` light (as before) and `#151515` dark (6.5 / 6.6), with its own check in `tests/lib/tokens.test.ts`. Rubik is self-hosted by `next/font` (latin preloaded, other subsets by `unicode-range`; no request to Google from `out/`); the `geist` package is removed and the PDF keeps its Geist TTFs. Home first-load JS 279,481 bytes gzipped (279,493 before).

@@ -42,7 +42,7 @@ export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Potential funding (not secured)</dt>
-          <dd className="num font-mono text-2xl font-semibold tracking-tight">
+          <dd className="num text-2xl font-semibold tracking-tight">
             {funding.high > 0 ? (
               <Figure label={range(funding.low, funding.high, 'AUD')}>
                 {funding.low === funding.high
@@ -54,7 +54,7 @@ export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
         </div>
         <div className="flex flex-col gap-1">
           <dt className="text-sm text-muted-fg">Credits</dt>
-          <dd className="num font-mono text-2xl font-semibold tracking-tight">
+          <dd className="num text-2xl font-semibold tracking-tight">
             {creditsUsd.high > 0 ? (
               <Figure label={`Up to ${formatMoney(creditsUsd.high, 'USD')}`}>Up to <CountUp value={creditsUsd.high} format={moneyCounter(creditsUsd.high, 'USD')} /></Figure>
             ) : 'None counted yet'}

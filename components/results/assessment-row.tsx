@@ -67,13 +67,13 @@ export function AssessmentRow({ assessment: a, inPlan, onAdd }: AssessmentRowPro
           </h3>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <StatusPill declared={p.status.state} derived={status.state} daysToClose={status.daysToClose} />
-            <span className="num font-mono text-sm">{formatBenefit(p.benefit)}</span>
+            <span className="num text-sm">{formatBenefit(p.benefit)}</span>
           </div>
         </div>
         <p className="shrink-0 text-right">
           <span className="sr-only">Score </span>
-          <span className={cn('num font-mono text-xl font-semibold', notFit ? 'text-muted-fg' : 'text-fg')}>{score.total}</span>
-          <span className="num font-mono text-sm text-muted-fg">/100</span>
+          <span className={cn('num text-xl font-semibold', notFit ? 'text-muted-fg' : 'text-fg')}>{score.total}</span>
+          <span className="num text-sm text-muted-fg">/100</span>
         </p>
       </div>
 
@@ -161,8 +161,8 @@ function ScoreBreakdown({ assessment: { score } }: { assessment: Assessment }) {
                 <span className="font-medium">{d.label}</span>
                 <span className="block text-xs text-muted-fg">{d.help}</span>
               </th>
-              <td className="num py-1.5 pr-3 text-right align-top font-mono">{fmt(score.dims[d.key])}/5</td>
-              <td className="num py-1.5 text-right align-top font-mono">×{fmt(score.weights[d.key])}</td>
+              <td className="num py-1.5 pr-3 text-right align-top">{fmt(score.dims[d.key])}/5</td>
+              <td className="num py-1.5 text-right align-top">×{fmt(score.weights[d.key])}</td>
             </tr>
           ))}
         </tbody>

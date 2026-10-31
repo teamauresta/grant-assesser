@@ -23,7 +23,7 @@ export function HowItWorks() {
         {STEPS.map(({ preview: Preview, ...s }, i) => (
           <li key={s.title}>
             <Reveal delay={i * 40} className="flex h-full flex-col gap-3">
-              <span aria-hidden="true" className="num self-start font-mono text-5xl font-semibold text-panel-spark">{String(i + 1).padStart(2, '0')}</span>
+              <span aria-hidden="true" className="num self-start text-5xl font-semibold text-panel-spark">{String(i + 1).padStart(2, '0')}</span>
               <h3 className="text-xl">{s.title}</h3>
               <p className="text-sm text-panel-muted-fg">{s.text}</p>
               <Link href={s.href} className={cn('inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium text-panel-fg underline underline-offset-4', panelFocusRing)}>

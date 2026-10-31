@@ -78,8 +78,8 @@ export function CalendarView({ now }: { now: Date }) {
           <p className="flex items-start gap-2 text-sm">
             <Info aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-accent" />
             <span>
-              <span className="num font-mono font-medium">{changes}</span> {changes === 1 ? 'change' : 'changes'} since your last calendar export
-              {' '}on <time dateTime={ws.lastCalendarExportAt} className="num font-mono">{formatDate(todayISO(new Date(ws.lastCalendarExportAt)))}</time>.
+              <span className="num font-medium">{changes}</span> {changes === 1 ? 'change' : 'changes'} since your last calendar export
+              {' '}on <time dateTime={ws.lastCalendarExportAt} className="num">{formatDate(todayISO(new Date(ws.lastCalendarExportAt)))}</time>.
               {' '}Re-import the file to update your calendar.
             </span>
           </p>
@@ -103,7 +103,7 @@ export function CalendarView({ now }: { now: Date }) {
           <p id="export-help" className="text-xs text-muted-fg">
             {eventCount === 0
               ? 'Add a goal with a due date or a program with a deadline first.'
-              : <><span className="num font-mono">{eventCount}</span> {eventCount === 1 ? 'event' : 'events'}</>}
+              : <><span className="num">{eventCount}</span> {eventCount === 1 ? 'event' : 'events'}</>}
           </p>
         </div>
       </div>
@@ -154,7 +154,7 @@ export function CalendarView({ now }: { now: Date }) {
                         <div className="flex flex-col gap-0.5">
                           <span
                             className={cn(
-                              'num inline-flex size-6 items-center justify-center self-center rounded-full font-mono text-xs sm:self-start',
+                              'num inline-flex size-6 items-center justify-center self-center rounded-full text-xs sm:self-start',
                               isToday ? 'bg-accent font-semibold text-bg' : outside ? 'text-muted-fg' : 'text-fg',
                             )}
                           >
@@ -165,7 +165,7 @@ export function CalendarView({ now }: { now: Date }) {
                             <ul className="flex flex-wrap justify-center gap-0.5 sm:flex-col sm:flex-nowrap">
                               {dayItems.slice(0, MAX_CHIPS).map((i) => <Chip key={i.id} item={i} />)}
                               {extra > 0 && (
-                                <li className="num px-1 text-center font-mono text-xs text-muted-fg sm:text-left">
+                                <li className="num px-1 text-center text-xs text-muted-fg sm:text-left">
                                   +{extra}<span className="sr-only"> more, listed in the agenda</span>
                                 </li>
                               )}
@@ -242,7 +242,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
               <h3 className={cn('text-sm font-medium', key === 'overdue' ? 'flex items-center gap-1 text-danger' : 'text-muted-fg')}>
                 {key === 'overdue'
                   ? <><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</>
-                  : <time dateTime={key} className="num font-mono">{key === today ? 'Today' : formatDate(key)}</time>}
+                  : <time dateTime={key} className="num">{key === today ? 'Today' : formatDate(key)}</time>}
               </h3>
               <ul className="divide-y divide-border rounded-lg border border-border">
                 {list.map((i) => <AgendaRow key={i.id} item={i} />)}
@@ -268,9 +268,9 @@ function AgendaRow({ item }: { item: PlanItem }) {
         <span className="text-xs text-muted-fg">
           {item.context}
           {item.kind === 'deadline' && item.deadline.time && (
-            <>{item.context && ' · '}<span className="num font-mono">{item.deadline.time}</span> {item.deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time</>
+            <>{item.context && ' · '}<span className="num">{item.deadline.time}</span> {item.deadline.tz.split('/').at(-1)!.replace(/_/g, ' ')} time</>
           )}
-          {overdue && item.kind === 'goal' && <>{item.context && ' · '}due <span className="num font-mono">{formatDate(item.date)}</span></>}
+          {overdue && item.kind === 'goal' && <>{item.context && ' · '}due <span className="num">{formatDate(item.date)}</span></>}
         </span>
       </div>
     </li>

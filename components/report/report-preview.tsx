@@ -103,7 +103,7 @@ function Summary({ summary }: { summary: SummaryData }) {
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {summary.counts.map((c) => (
           <li key={c.group} className="rounded-md border border-border px-3 py-2">
-            <span className="num block font-mono text-xl font-semibold">{c.count}</span>
+            <span className="num block text-xl font-semibold">{c.count}</span>
             <span className="text-xs text-muted-fg">{c.label}</span>
           </li>
         ))}
@@ -122,7 +122,7 @@ function Programs({ groups, directory }: { groups: ProgramGroup[]; directory: bo
       {groups.map((g) => (
         <div key={g.id} className="flex flex-col gap-2">
           <div>
-            <h4 className="text-base">{g.label} <span className="num font-mono font-normal text-muted-fg">({g.programs.length})</span></h4>
+            <h4 className="text-base">{g.label} <span className="num font-normal text-muted-fg">({g.programs.length})</span></h4>
             <p className="text-xs text-muted-fg">{g.description}</p>
           </div>
           {g.programs.length === 0 ? <Empty>Nothing here for now.</Empty> : (
@@ -159,12 +159,12 @@ function Funding({ funding }: { funding: FundingData }) {
       <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="rounded-md border border-border p-3">
           <dt className="text-xs text-muted-fg">Potential cash and tax offsets (AUD), not secured</dt>
-          <dd className="num font-mono text-xl font-semibold">{range(funding.aud)}</dd>
+          <dd className="num text-xl font-semibold">{range(funding.aud)}</dd>
           <dd className="text-xs text-muted-fg">{funding.fundingPrograms.length ? `From ${funding.fundingPrograms.join(', ')}` : 'Nothing counted yet'}</dd>
         </div>
         <div className="rounded-md border border-border p-3">
           <dt className="text-xs text-muted-fg">Cloud and AI credits (USD), counted separately</dt>
-          <dd className="num font-mono text-xl font-semibold">{funding.creditsUsd.high > 0 ? `Up to ${formatMoney(funding.creditsUsd.high, 'USD')}` : 'None counted yet'}</dd>
+          <dd className="num text-xl font-semibold">{funding.creditsUsd.high > 0 ? `Up to ${formatMoney(funding.creditsUsd.high, 'USD')}` : 'None counted yet'}</dd>
           <dd className="text-xs text-muted-fg">{funding.creditPrograms.length ? `From ${funding.creditPrograms.join(', ')}` : 'Nothing counted yet'}</dd>
         </div>
       </dl>

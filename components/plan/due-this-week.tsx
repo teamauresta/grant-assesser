@@ -41,7 +41,7 @@ export function DueThisWeek({ className }: { className?: string }) {
       <div className="flex items-baseline justify-between gap-4">
         <h2 id="due-this-week-heading" className="text-xl">Due this week</h2>
         <Link href="/plan/?tab=goals" className={cn('inline-flex min-h-11 items-center gap-1 rounded-md text-sm text-accent hover:underline', focusRing)}>
-          {due.length > MAX_ITEMS ? <>See all <span className="num font-mono">{due.length}</span></> : 'See all goals'}
+          {due.length > MAX_ITEMS ? <>See all <span className="num">{due.length}</span></> : 'See all goals'}
           <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
         </Link>
       </div>
@@ -58,7 +58,7 @@ export function DueThisWeek({ className }: { className?: string }) {
               <span className={cn('inline-flex items-center gap-1 text-sm', overdue ? 'font-medium text-danger' : 'text-muted-fg')}>
                 {overdue && <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />}
                 {overdue && <span>Overdue</span>}
-                <time dateTime={g.dueDate} className="num font-mono">{when(g.dueDate, today)}</time>
+                <time dateTime={g.dueDate} className="num">{when(g.dueDate, today)}</time>
               </span>
             </li>
           );

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Rubik } from 'next/font/google';
 import { SkipLink } from '@/components/layout/skip-link';
 import { TopNav } from '@/components/layout/top-nav';
 import { BottomNav } from '@/components/layout/bottom-nav';
@@ -12,6 +11,9 @@ import { Toaster } from '@/components/ui/toast';
 import { MotionProvider } from '@/components/motion/motion-provider';
 import { WorkspaceProvider } from '@/lib/store/workspace-provider';
 import './globals.css';
+
+// Self-hosted at build time by next/font: the export makes no request to Google at runtime.
+const rubik = Rubik({ subsets: ['latin'], weight: ['400', '500', '700'], display: 'swap', variable: '--font-rubik' });
 
 export const metadata: Metadata = {
   title: { default: 'Grant Navigator', template: '%s · Grant Navigator' },
@@ -30,7 +32,7 @@ const THEME_SCRIPT = `(function(){var t;try{t=localStorage.getItem('gn-theme')}c
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-AU" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang="en-AU" className={rubik.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
