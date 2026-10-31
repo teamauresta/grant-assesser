@@ -12,6 +12,7 @@ import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { downloadFile } from '@/lib/download';
+import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
 import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
@@ -111,21 +112,28 @@ function BuilderView({ now }: { now: Date }) {
             one would hide its last checkboxes, and keyboard focus on them, until the end of the page. */}
         <Window title="Options" titleSize="md" bodyClassName="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <Button
-              ref={downloadRef}
-              variant="primary"
-              onClick={download}
-              disabled={!canDownload}
-              // Loading: a 16px spinner and "Making PDF…". aria-disabled, not disabled, so focus stays
-              // on the button while the PDF is made.
-              aria-disabled={busy || undefined}
-              aria-busy={busy || undefined}
-            >
-              {busy
-                ? <LoaderCircle aria-hidden="true" size={16} strokeWidth={1.5} className="animate-spin motion-reduce:animate-none" />
-                : <Download aria-hidden="true" size={16} strokeWidth={1.5} />}
-              {busy ? 'Making PDF…' : 'Download PDF'}
-            </Button>
+            {/* The stamp beside the download (docs/art/billabong-prompts.md), decorative and no taller
+                than the button, so the options start where they did. The button still fills the rest of
+                the row. */}
+            <div className="flex items-center gap-3">
+              <Button
+                ref={downloadRef}
+                variant="primary"
+                onClick={download}
+                disabled={!canDownload}
+                // Loading: a 16px spinner and "Making PDF…". aria-disabled, not disabled, so focus stays
+                // on the button while the PDF is made.
+                aria-disabled={busy || undefined}
+                aria-busy={busy || undefined}
+                className="flex-1"
+              >
+                {busy
+                  ? <LoaderCircle aria-hidden="true" size={16} strokeWidth={1.5} className="animate-spin motion-reduce:animate-none" />
+                  : <Download aria-hidden="true" size={16} strokeWidth={1.5} />}
+                {busy ? 'Making PDF…' : 'Download PDF'}
+              </Button>
+              <Art name="prop-stamp" sizes="48px" className="w-12 shrink-0" />
+            </div>
             {!canDownload && <p className="text-sm text-muted-fg">Choose at least one section.</p>}
             <p aria-live="polite" className={cn('text-sm text-muted-fg', !saved && 'sr-only')}>
               {saved ? `Downloaded ${saved}` : ''}

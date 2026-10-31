@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import type { FundingEstimate } from '@/lib/assess';
 import { formatMoney, moneyCounter } from '@/lib/format';
 import { CountUp } from '@/components/motion/count-up';
+import { Art } from '@/components/ui/art';
 import { Window } from '@/components/ui/window';
 
 export type FundingSummaryProps = {
@@ -52,28 +53,33 @@ export function FundingSummary({ estimate, counted }: FundingSummaryProps) {
   const { aud: funding, creditsUsd } = estimate;
   return (
     <Window id={FUNDING_SUMMARY_ID} title="Your funding estimate" titleSize="md" bodyClassName="flex flex-col gap-4">
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
-          <dt className="text-sm text-muted-fg">Potential funding (not secured)</dt>
-          <dd className={FIGURE}>
-            {funding.high > 0 ? (
-              <Figure label={range(funding.low, funding.high, 'AUD')}>
-                {funding.low === funding.high
-                  ? <CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} />
-                  : <><CountUp value={funding.low} format={moneyCounter(funding.low, 'AUD')} />–<CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} /></>}
-              </Figure>
-            ) : NONE}
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1">
-          <dt className="text-sm text-muted-fg">Credits</dt>
-          <dd className={FIGURE}>
-            {creditsUsd.high > 0 ? (
-              <Figure label={`Up to ${formatMoney(creditsUsd.high, 'USD')}`}>Up to <CountUp value={creditsUsd.high} format={moneyCounter(creditsUsd.high, 'USD')} /></Figure>
-            ) : NONE}
-          </dd>
-        </div>
-      </dl>
+      {/* The compass beside the figures (docs/art/billabong-prompts.md), decorative. From sm only: on a
+          phone the figures need the whole width, and the window stays as short as it was. */}
+      <div className="flex items-start gap-4">
+        <dl className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <dt className="text-sm text-muted-fg">Potential funding (not secured)</dt>
+            <dd className={FIGURE}>
+              {funding.high > 0 ? (
+                <Figure label={range(funding.low, funding.high, 'AUD')}>
+                  {funding.low === funding.high
+                    ? <CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} />
+                    : <><CountUp value={funding.low} format={moneyCounter(funding.low, 'AUD')} />–<CountUp value={funding.high} format={moneyCounter(funding.high, 'AUD')} /></>}
+                </Figure>
+              ) : NONE}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-sm text-muted-fg">Credits</dt>
+            <dd className={FIGURE}>
+              {creditsUsd.high > 0 ? (
+                <Figure label={`Up to ${formatMoney(creditsUsd.high, 'USD')}`}>Up to <CountUp value={creditsUsd.high} format={moneyCounter(creditsUsd.high, 'USD')} /></Figure>
+              ) : NONE}
+            </dd>
+          </div>
+        </dl>
+        <Art name="prop-compass" sizes="80px" className="hidden w-20 shrink-0 sm:block" />
+      </div>
       <div className="flex flex-col gap-1 text-sm text-muted-fg">
         <p>
           {counted.funding.length > 0

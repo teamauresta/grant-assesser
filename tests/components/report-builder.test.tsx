@@ -61,13 +61,26 @@ describe('ReportBuilder', () => {
     for (const heading of sections) expect(heading).toHaveClass('border-b', 'border-border');
   });
 
+  // docs/art/billabong-prompts.md: the stamp beside Download PDF, decorative, the page's one piece of art.
+  it('shows the stamp beside Download PDF, hidden from assistive technology', () => {
+    render(<ReportBuilder />);
+    const button = screen.getByRole('button', { name: 'Download PDF' });
+    const art = document.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'prop-stamp');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(art[0].previousElementSibling).toBe(button);
+    expect(within(screen.getByRole('region', { name: 'Options' })).getByRole('button', { name: 'Download PDF' })).toBe(button);
+  });
+
   it('makes Download PDF the primary button, with a 16px spinner while the PDF is made', async () => {
     let finish!: (b: Blob) => void;
     toBlob.mockReturnValue(new Promise<Blob>((r) => { finish = r; }));
     const user = userEvent.setup();
     render(<ReportBuilder />);
     const button = screen.getByRole('button', { name: 'Download PDF' });
-    expect(button).toHaveAttribute('class', buttonClasses({ variant: 'primary' }));
+    // flex-1: it fills the row beside the stamp, as it filled the column before.
+    expect(button).toHaveAttribute('class', buttonClasses({ variant: 'primary', className: 'flex-1' }));
     await user.click(button);
 
     const busy = await screen.findByRole('button', { name: 'Making PDF…' });

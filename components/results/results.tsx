@@ -14,6 +14,7 @@ import { cheer, consumeAssessmentFinish, consumeAssessmentFinished, originOf, re
 import { useNow } from '@/lib/use-now';
 import { useStoredProfile, useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
+import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -62,6 +63,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   const assessments = useMemo(() => assessAll(PROGRAMS, profile, now), [profile, now]);
   const estimate = useMemo(() => estimateFunding(assessments, profile), [assessments, profile]);
   const counted = useMemo(() => countedPrograms(estimate, PROGRAMS), [estimate]);
+  const canActNow = useMemo(() => assessments.some((a) => a.group === 'act-now'), [assessments]);
   const pipeline = useWorkspace((s) => s.ws.pipeline);
   const addApplication = useWorkspace((s) => s.addApplication);
   const inPlan = useMemo(() => new Set(pipeline.map((a) => a.programSlug)), [pipeline]);
@@ -101,7 +103,7 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
         <p className="text-xs text-muted-fg">{DISCLAIMER}</p>
       </div>
 
-      {profile.persona && <StarterGoals persona={profile.persona} />}
+      {profile.persona && <StarterGoals persona={profile.persona} celebrate={canActNow} />}
 
       <Tabs
         label="Result tracks"
@@ -180,7 +182,12 @@ function TrackView({ track, groups, inPlan, onAdd }: { track: Track; groups: Res
   );
 }
 
-function StarterGoals({ persona }: { persona: Persona }) {
+/**
+ * The persona's suggested first goal. With something to act on now, its card opens with the
+ * celebrating platypus instead of the target icon (docs/art/billabong-prompts.md): decorative, like the
+ * icon, so the card reads the same.
+ */
+function StarterGoals({ persona, celebrate }: { persona: Persona; celebrate: boolean }) {
   const goals = useWorkspace((s) => s.ws.goals);
   const addGoal = useWorkspace((s) => s.addGoal);
   const starters = PERSONA_STARTER_GOALS[persona];
@@ -193,7 +200,9 @@ function StarterGoals({ persona }: { persona: Persona }) {
         return (
           <Card key={g.title} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-3">
-              <Target aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+              {celebrate
+                ? <Art name="platypus-celebrate" alt="" sizes="56px" className="w-14 shrink-0 self-start" />
+                : <Target aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />}
               <div className="flex flex-col gap-0.5">
                 <p className="font-medium">{g.title}</p>
                 <p className="text-sm text-muted-fg">{g.description}</p>

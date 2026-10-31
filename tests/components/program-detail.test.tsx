@@ -3,6 +3,8 @@ import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { ProgramDetail } from '@/components/programs/program-detail';
 import { PersonaNotes } from '@/components/programs/persona-notes';
+import { EligibilityList } from '@/components/programs/eligibility-list';
+import { bootstrappedVic } from '@/tests/fixtures/personas';
 import { getProgram } from '@/content/programs';
 import { makeProgram } from '../helpers/program';
 
@@ -78,5 +80,26 @@ describe('PersonaNotes for one persona', () => {
     render(<PersonaNotes personas={personas} persona="bootstrapped" />);
     expect(screen.getByRole('complementary', { name: /^Advice for Bootstrapped/ })).toHaveTextContent(personas.bootstrapped!);
     expect(screen.queryByRole('region')).toBeNull();
+  });
+});
+
+// docs/art/billabong-prompts.md: the platypus reading a long form beside the invitation to check
+// eligibility, the page's one piece of art; decorative, the line beside it says what to do.
+describe('Eligibility art', () => {
+  const program = getProgram('csiro-kick-start')!;
+
+  it('shows the reading platypus beside the invitation when there is no assessment', () => {
+    render(<ProgramDetail program={program} />);
+    const art = document.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'platypus-reading');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByRole('region', { name: 'Eligibility' })).toContainElement(art[0]);
+    expect(art[0].nextElementSibling).toHaveTextContent('Answer a few questions to see which of these you meet.');
+  });
+
+  it('shows no art once the checks are evaluated', () => {
+    const { container } = render(<EligibilityList gates={program.gates} profile={bootstrappedVic} />);
+    expect(container.querySelector('[data-art]')).toBeNull();
   });
 });

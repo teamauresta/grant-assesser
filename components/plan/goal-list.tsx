@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, CircleAlert, Ellipsis, ListChecks, Pencil, Plus, Target, Trash2 } from 'lucide-react';
+import { ChevronDown, CircleAlert, Ellipsis, ListChecks, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Goal } from '@/lib/schema';
 import { getProgram } from '@/content/programs';
 import { formatDate } from '@/lib/dates';
@@ -13,6 +13,7 @@ import { cheer, goalsDoneCheer, originOf } from '@/lib/celebrate';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cn } from '@/lib/cn';
 import { AddToCalendar } from '@/components/calendar/add-to-calendar';
+import { Art } from '@/components/ui/art';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -79,8 +80,9 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
       )}
 
       {visible.length === 0 ? (
+        /* The searching platypus, as on the directory's empty state; decorative, the copy says it. */
         <EmptyState
-          icon={Target}
+          art={<Art name="platypus-search" alt="" sizes="(min-width: 48rem) 128px, 96px" className="w-24 md:w-32" />}
           title="Big applications get done one small goal at a time."
           description="Add a program to your pipeline and its checklist becomes your first goals. You can also add your own."
           action={<Link href="/programs/" className={cn('inline-flex min-h-11 items-center rounded-sm text-sm text-accent underline-offset-4 hover:underline', focusRing)}>Browse programs</Link>}

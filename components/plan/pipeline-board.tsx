@@ -4,12 +4,13 @@ import { useCallback, useId, useRef, useState, type DragEvent, type FormEvent } 
 import Link from 'next/link';
 import { LayoutGroup } from 'motion/react';
 import * as m from 'motion/react-m';
-import { ArrowRight, CircleX, Plus, SquareKanban, Trophy, Undo2 } from 'lucide-react';
+import { ArrowRight, CircleX, Plus, Trophy, Undo2 } from 'lucide-react';
 import { LIMITS, type Application } from '@/lib/schema';
 import { BOARD_COLUMNS, STAGE_LABELS, applicationName, columnOf, type BoardColumn, type Stage } from '@/lib/plan/applications';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { cheer, originOf, stageCheer } from '@/lib/celebrate';
 import { cn } from '@/lib/cn';
+import { Art } from '@/components/ui/art';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -116,8 +117,10 @@ export function PipelineBoard({ now }: { now: Date }) {
     return (
       <div className="flex flex-col gap-4">
         {status}
+        {/* The filing cabinet (docs/art/billabong-prompts.md), decorative: the copy says what to do. Small,
+            so the three ways out stay on a phone's first screen. */}
         <EmptyState
-          icon={SquareKanban}
+          art={<Art name="prop-filing-cabinet" sizes="(min-width: 48rem) 128px, 96px" className="w-24 md:w-32" />}
           title="Every funded startup started with one application."
           description="Add your first from your results, or browse programs."
           action={(

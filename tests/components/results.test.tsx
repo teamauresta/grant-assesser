@@ -79,6 +79,25 @@ describe('Results page', () => {
     expect(within(goals).getByRole('link', { name: 'View plan' })).toBeVisible();
   });
 
+  // docs/art/billabong-prompts.md: with something to act on now, the suggested goal opens with the
+  // celebrating platypus in place of the target icon; decorative, like the icon. Not in toasts. With
+  // nothing in Act now it keeps the icon (tests/components/results-cheer-nothing.test.tsx).
+  it('opens the suggested goal with the celebrating platypus when something can be acted on now', async () => {
+    render(<Results />);
+    const goals = await screen.findByRole('region', { name: 'Suggested first goal' });
+    // bootstrappedVic meets every required check of several open programs (tests/content/personas.test.ts).
+    expect(screen.getByRole('heading', { level: 2, name: /^Act now [1-9]/ })).toBeInTheDocument();
+    const art = goals.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'platypus-celebrate');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    // Square at the top of the row: a stretched box would grow as tall as the text on a phone.
+    expect(art[0]).toHaveClass('w-14', 'self-start');
+    expect(goals.querySelector('svg.lucide-target')).toBeNull();
+    // The only art on the page besides the funding summary's compass.
+    expect([...document.querySelectorAll('[data-art]')].map((a) => a.getAttribute('data-art')).sort()).toEqual(['platypus-celebrate', 'prop-compass']);
+  });
+
   it('lists results as cards, and Not a fit cards stay greyed with their reason', async () => {
     render(<Results />);
     // Bootstrapped opens on Quick wins.

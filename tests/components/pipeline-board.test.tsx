@@ -43,6 +43,26 @@ describe('PipelineBoard', () => {
     expect(screen.getByRole('link', { name: /see your results/i })).toHaveAttribute('href', expect.stringMatching(/^\/assess\/results\/?$/));
   });
 
+  // docs/art/billabong-prompts.md: the filing cabinet on the empty pipeline, decorative (the copy says
+  // what to do), and small, so the three ways out stay on a phone's first screen.
+  it('opens the empty state with the filing cabinet, hidden from assistive technology', () => {
+    render(<PipelineBoard now={now} />);
+    const empty = screen.getByText('Every funded startup started with one application.').parentElement!;
+    const art = empty.querySelectorAll<HTMLElement>('[data-art]');
+    expect(art).toHaveLength(1);
+    expect(art[0]).toHaveAttribute('data-art', 'prop-filing-cabinet');
+    expect(art[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(art[0]).toHaveClass('w-24', 'md:w-32');
+    // In place of the icon: the first thing in the empty state.
+    expect(empty.firstElementChild).toBe(art[0]);
+  });
+
+  it('shows no art once there is an application', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    const { container } = render(<PipelineBoard now={now} />);
+    expect(container.querySelector('[data-art]')).toBeNull();
+  });
+
   it('"Move to…" changes the stage, moves the card to its column and keeps focus on it', async () => {
     const id = useWorkspace.getState().addCustomApplication('Angel round');
     useWorkspace.getState().addApplication('csiro-kick-start');

@@ -40,4 +40,15 @@ describe('Results finish-line cheer with nothing to act on or prepare for', () =
     expect(create).not.toHaveBeenCalled();
     expect(confetti).not.toHaveBeenCalled();
   });
+
+  // The celebrating platypus is only for something to act on (tests/components/results.test.tsx).
+  it('keeps the target icon on the suggested goal, and no platypus', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    useWorkspace.setState({ ws: { ...emptyWorkspace(now), profile: bootstrappedVic } });
+    render(<Results />);
+    const goals = await screen.findByRole('region', { name: 'Suggested first goal' });
+    expect(screen.getByRole('heading', { level: 2, name: /^Act now 0/ })).toBeInTheDocument();
+    expect(goals.querySelector('[data-art]')).toBeNull();
+    expect(goals.querySelector('svg.lucide-target')).not.toBeNull();
+  });
 });

@@ -35,7 +35,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `hero-diorama-day.png`
 - **Size:** 1536×1024 (landscape)
 - **Background:** transparent
-- **Where:** home page hero, right of the headline (below it on phones)
+- **Where:** home page hero, right of the headline and numbers (last, below them, on phones)
 
 > [Style block] [Platypus description] A small floating clay diorama, an island-shaped slice of Australian bush shown at a three-quarter angle from slightly above, isolated on a transparent background with clean edges and a soft contact shadow under the base. On the island: a calm billabong (a small curved waterhole) with teal water, reeds and smooth river stones; a river red gum tree with pale patchy bark and a broad canopy leaning over the water; a few tufts of spinifex grass and small wattle bushes with yellow blossom. On the bank, the platypus sits at a small vintage wooden writing desk, reading glasses on, happily sorting a neat stack of paper forms into three little wooden trays. Beside the desk: a small olive-green metal filing cabinet with one drawer open showing folders, and a brass compass lying on the desk. Bright late-morning daylight, warm and optimistic. The composition leaves a little empty space around the island so it can sit beside text.
 
@@ -44,7 +44,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `hero-diorama-dusk.png`
 - **Size:** 1536×1024 (landscape)
 - **Background:** transparent
-- **Where:** home page hero in dark mode
+- **Where:** home page hero in the dark theme (the same slot; the theme swaps the picture)
 - **Tip:** upload image 2 as a reference so the scene matches exactly.
 
 > [Style block] [Platypus description] The same floating clay diorama as the reference image, identical layout and objects, now at dusk: deep blue-violet twilight light, a warm amber glow from a small brass desk lamp on the platypus's desk lighting his face and papers, the water reflecting the lamp, a few fireflies over the reeds. The palette shifts to deep teal, indigo and warm amber, with enough light that every object is still clearly readable. Transparent background with clean edges.
@@ -54,7 +54,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `platypus-wave.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** assessment start, persona cards, onboarding hints
+- **Where:** home page, the first persona card ("Where is your company today?"), at the right of its icon row
 
 > [Style block] [Platypus description] The platypus standing on a small round tuft of grass, waving hello with one front foot raised, the other foot holding a clipboard against his belly, a cheerful welcoming expression, tail curled slightly to the side. Full body, centred, isolated on a transparent background with a soft contact shadow under the grass tuft.
 
@@ -63,7 +63,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `platypus-reading.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** program detail page, results "Not a fit" explanations, report builder
+- **Where:** program page, the Eligibility window, beside "Answer a few questions to see which of these you meet" (only with no assessment)
 
 > [Style block] [Platypus description] The platypus sitting cross-legged, reading a very long paper form that unrolls from his front feet down onto the ground in loose folds, glasses pushed up, one eyebrow raised in focused, good-humoured concentration, a small pencil tucked behind his head. Only faint grey lines on the paper, no readable text. Full body, centred, isolated on a transparent background with a soft contact shadow.
 
@@ -72,7 +72,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `platypus-celebrate.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** results finish line, application awarded, goal done toasts
+- **Where:** results page, the Suggested first goal card (a persona is chosen), in place of its target icon, when something is in Act now (never in toasts: toasts have no images)
 
 > [Style block] [Platypus description] The platypus jumping for joy with both front feet raised, holding a big wooden rubber stamp in one foot, small clay confetti pieces in amber, sage green and sky blue frozen mid-air around him, a delighted open-bill smile, tail flicked up. Full body, centred, isolated on a transparent background with a soft contact shadow under where he will land.
 
@@ -81,7 +81,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `platypus-search.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** "no programs match" empty state, empty plan, 404 page
+- **Where:** the directory's "No programs match" empty state, My Plan's empty Goals tab, the 404 page
 
 > [Style block] [Platypus description] The platypus peering through a large brass magnifying glass held in both front feet, leaning forward curiously, the glass making one eye look comically big, a folded paper map sticking out from under his arm. Full body, centred, isolated on a transparent background with a soft contact shadow.
 
@@ -90,7 +90,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `prop-filing-cabinet.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** My Plan empty state, pipeline header
+- **Where:** My Plan's empty Pipeline tab
 
 > [Style block] A chunky vintage olive-green metal filing cabinet with three drawers and brass handles, the top drawer pulled open showing colourful paper folders in amber, sage and sky blue with blank tabs, one folder sticking up slightly. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
@@ -99,7 +99,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `prop-compass.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** results summary, "Choose persona" and navigation moments
+- **Where:** results page, beside the figures in the Your funding estimate window (from 640px wide; not on phones)
 
 > [Style block] A chunky brass pocket compass with its hinged lid open, a cream dial with simple tick marks only (no letters), a red-and-teal needle pointing up and slightly right, resting on a small flat river stone. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
@@ -108,7 +108,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `prop-stamp.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** report page, awarded applications
+- **Where:** report page, beside Download PDF in the Options window
 
 > [Style block] A chunky wooden-handled rubber stamp standing upright next to a small round amber-yellow ink pad, and in front of them a sheet of cream paper with one clean stamp impression in teal ink that reads exactly "APPROVED" in bold rounded capital letters inside a rounded rectangle. The word must be spelled correctly and be the only text in the image. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
@@ -117,7 +117,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `step-answer.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** home page "How it works", step 1
+- **Where:** home page "How it works", the step 1 window, above its text
 
 > [Style block] A small clay clipboard with a cream sheet showing six short rows, each with a round checkbox; the first four boxes are ticked in eucalyptus green, a chunky amber pencil lies diagonally across the bottom of the board. No readable text, only simple grey lines for the rows. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
@@ -126,7 +126,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `step-sort.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** home page "How it works", step 2
+- **Where:** home page "How it works", the step 2 window, above its text
 
 > [Style block] Three small clay trays in a row, like an in-tray set: the left tray holds a neat stack of sage-green cards, the middle tray amber cards, the right tray a few pale grey cards, with one amber card mid-air dropping into the middle tray. No text. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
@@ -135,7 +135,7 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 - **File:** `step-plan.png`
 - **Size:** 1024×1024
 - **Background:** transparent
-- **Where:** home page "How it works", step 3
+- **Where:** home page "How it works", the step 3 window, above its text
 
 > [Style block] A small clay wall calendar page with a simple grid of squares (no numbers or letters), three squares circled in amber, one with a little green flag pin stuck in it, and a small brass alarm clock sitting in front of it. Three-quarter view from slightly above, isolated on a transparent background with a soft contact shadow.
 
