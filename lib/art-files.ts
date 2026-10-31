@@ -9,9 +9,10 @@
  */
 
 /**
- * The owner's sage icons (design doc section 11, Icons landed): sixteen from Sage_Icons_16_Shadow/ and
- * ten cut from the navigation sheet by scripts/prepare-icons.mjs, which writes each to
- * art/originals/icon-<name>.png as an ICON_ORIGINAL_SIZE square. Shown by SageIcon, always decorative
+ * The owner's sage icons (design doc section 11, Icons landed and Icons regenerated): sixteen from
+ * Sage_Icons_16_Shadow/ and ten from Sage_Navigation_24_Individual/, prepared by
+ * scripts/prepare-icons.mjs, which writes each to art/originals/icon-<name>.png as an
+ * ICON_ORIGINAL_SIZE square. Shown by SageIcon, always decorative
  * beside a visible label.
  */
 export const ICON_NAMES = [

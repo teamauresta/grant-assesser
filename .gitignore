@@ -9,10 +9,11 @@ next-env.d.ts
 # Art originals are large and never deployed; only the processed files in public/art are committed (art/README.md).
 art/originals/*
 !art/originals/.gitkeep
-# The owner's source files, kept at the repo root and never committed. pnpm art reads the sage icons
-# and the navigation sheet (scripts/prepare-icons.mjs); the others are what the art originals were
-# made from (art/README.md).
+# The owner's source files, kept at the repo root and never committed. pnpm art reads the two sage
+# icon folders (scripts/prepare-icons.mjs); the others are what the art originals were made from, or
+# (the navigation sheet) the icons the owner has since redrawn (art/README.md).
 /Sage_Icons_16_Shadow/
+/Sage_Navigation_24_Individual/
 /Sage web app navigation icons.png
 /Billabong_Artwork_Assets/
 /logo_2nd.png

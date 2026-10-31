@@ -151,8 +151,8 @@ Everything here must be original. Do not reference PostHog, its hedgehogs, its l
 Twenty-six feature icons: a sage-green fill in a cream outline, chunky and slightly embossed. They replace the lucide line icons where an icon is decorative beside a label at 20px or more (`SageIcon`, `components/ui/sage-icon.tsx`); smaller slots, buttons, menus, pills, badges and inline text keep lucide's line glyphs, drawn at lucide's default 2px stroke to match (design doc section 11, Icons landed). Lucide line glyphs in warning callouts, except the backup reminder (owner's mapping).
 
 - **Size:** 512×512 (square), transparent, each written to `art/originals/` by `scripts/prepare-icons.mjs` (the first step of `pnpm art`), then output at 48, 96 and 144 pixels (`ICON_WIDTHS`).
-- **Sources** (the owner's files at the repo root, never committed): sixteen from `Sage_Icons_16_Shadow/` (1254×1254, transparent, clean edges, a soft drop shadow), trimmed to their solid pixels and centred; ten cut from the 6 × 4 sheet `Sage web app navigation icons.png` (1536×1024), whose dark glow around each icon is removed first. A square icon fills 80% of its square; a wide or tall one may grow to 90% on its long side, so they read at the same optical size.
-- **Match:** the ten from the sheet are paler, with a lighter outline and no shadow, than the sixteen. To replace one, save a new 1254px square, transparent PNG in `Sage_Icons_16_Shadow/` with its name (for example `icon-grid.png`), move its name from `SHEET_ICONS` to the folder list in `scripts/prepare-icons.mjs` (the folder list is every icon the sheet does not supply), and run `pnpm art`.
+- **Sources** (the owner's folders at the repo root, gitignored, never committed; 1254×1254, transparent, clean edges, a soft drop shadow, all one style): sixteen from `Sage_Icons_16_Shadow/` under their manifest names, and ten from `Sage_Navigation_24_Individual/` under the owner's names (`NAVIGATION_ICONS` in `scripts/prepare-icons.mjs`; the folder's other fourteen are not used). Each is trimmed to its solid pixels and centred. A square icon fills 80% of its square; a wide or tall one may grow to 90% on its long side, so they read at the same optical size.
+- **Replacing one:** overwrite its file in its folder (a transparent square, at least 512 pixels) and run `pnpm art`. The ten navigation icons were first cut from the sheet `Sage web app navigation icons.png`, paler and without the shadow; the owner redrew them as single files (design doc section 11, Icons regenerated).
 
 - **File:** `icon-backup.png`. Source: Sage_Icons_16_Shadow/icon-backup.png. Where: the backup reminder (settings and plan), 24px.
 - **File:** `icon-banknote.png`. Source: Sage_Icons_16_Shadow/icon-banknote.png. Where: home, Browse by type: Capital, 36px.
@@ -170,16 +170,16 @@ Twenty-six feature icons: a sage-green fill in a cream outline, chunky and sligh
 - **File:** `icon-trending-up.png`. Source: Sage_Icons_16_Shadow/icon-trending-up.png. Where: home, Browse by type: Investor incentive, 36px.
 - **File:** `icon-trophy.png`. Source: Sage_Icons_16_Shadow/icon-trophy.png. Where: not used yet (the Awarded outcome is a pill and a dialog button, which keep their line glyphs).
 - **File:** `icon-verified.png`. Source: Sage_Icons_16_Shadow/icon-verified.png. Where: home, the values row: Verified sources, 36px.
-- **File:** `icon-grid.png`. Source: the navigation sheet, row 1, column 1. Where: nav: Programs (top bar 20px from lg, bottom nav 24px).
-- **File:** `icon-person.png`. Source: the navigation sheet, row 1, column 2. Where: the persona chip in the top bar (20px); a program page's persona advice (24px).
-- **File:** `icon-calendar.png`. Source: the navigation sheet, row 2, column 1. Where: not used yet (the calendar's glyphs are 16px, in a legend and lists).
-- **File:** `icon-checklist.png`. Source: the navigation sheet, row 2, column 2. Where: nav: Assess (top bar 20px from lg, bottom nav 24px); the results empty state (40px); the report's No assessment yet note (24px).
-- **File:** `icon-folder.png`. Source: the navigation sheet, row 2, column 3. Where: not used yet.
-- **File:** `icon-download.png`. Source: the navigation sheet, row 2, column 6. Where: not used yet (downloads are buttons, which keep their line glyphs).
-- **File:** `icon-report.png`. Source: the navigation sheet, row 3, column 4. Where: nav: Report (top bar 20px from lg, bottom nav 24px).
-- **File:** `icon-link.png`. Source: the navigation sheet, row 3, column 5. Where: not used yet (links keep the inline external-link glyph).
-- **File:** `icon-lock.png`. Source: the navigation sheet, row 3, column 6. Where: home, the values row: Private, 36px.
-- **File:** `icon-question.png`. Source: the navigation sheet, row 4, column 2. Where: home, the values row: Honest about uncertainty, 36px.
+- **File:** `icon-grid.png`. Source: Sage_Navigation_24_Individual/icon-dashboard.png. Where: nav: Programs (top bar 20px from lg, bottom nav 24px).
+- **File:** `icon-person.png`. Source: Sage_Navigation_24_Individual/icon-profile.png. Where: the persona chip in the top bar (20px); a program page's persona advice (24px).
+- **File:** `icon-calendar.png`. Source: Sage_Navigation_24_Individual/icon-calendar.png. Where: not used yet (the calendar's glyphs are 16px, in a legend and lists).
+- **File:** `icon-checklist.png`. Source: Sage_Navigation_24_Individual/icon-tasks.png. Where: nav: Assess (top bar 20px from lg, bottom nav 24px); the results empty state (40px); the report's No assessment yet note (24px).
+- **File:** `icon-folder.png`. Source: Sage_Navigation_24_Individual/icon-files.png. Where: not used yet.
+- **File:** `icon-download.png`. Source: Sage_Navigation_24_Individual/icon-download.png. Where: not used yet (downloads are buttons, which keep their line glyphs).
+- **File:** `icon-report.png`. Source: Sage_Navigation_24_Individual/icon-reports.png. Where: nav: Report (top bar 20px from lg, bottom nav 24px).
+- **File:** `icon-link.png`. Source: Sage_Navigation_24_Individual/icon-integrations.png. Where: not used yet (links keep the inline external-link glyph).
+- **File:** `icon-lock.png`. Source: Sage_Navigation_24_Individual/icon-security.png. Where: home, the values row: Private, 36px.
+- **File:** `icon-question.png`. Source: Sage_Navigation_24_Individual/icon-help.png. Where: home, the values row: Honest about uncertainty, 36px.
 
 ---
 

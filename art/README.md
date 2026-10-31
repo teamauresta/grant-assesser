@@ -35,14 +35,14 @@ The logo is the round emblem from the owner's lockup (`Platypus Compass Grant Na
 
 ## The icons
 
-The feature icons (`SageIcon`, `components/ui/sage-icon.tsx`) are the owner's sage icons, prepared from two files the owner keeps at the repo root (never committed, like the originals):
+The feature icons (`SageIcon`, `components/ui/sage-icon.tsx`) are the owner's sage icons, prepared from two folders the owner keeps at the repo root (gitignored, never committed, like the originals), both of 1254px transparent squares in one style:
 
-- `Sage_Icons_16_Shadow/icon-<name>.png`: sixteen 1254px transparent squares;
-- `Sage web app navigation icons.png`: a 6 × 4 sheet (1536×1024) from which ten cells are cut (`SHEET_ICONS` in `scripts/prepare-icons.mjs`: grid, person, calendar, checklist, folder, download, report, link, lock, question).
+- `Sage_Icons_16_Shadow/icon-<name>.png`: sixteen icons under their manifest names (`SHADOW_ICONS` in `scripts/prepare-icons.mjs`);
+- `Sage_Navigation_24_Individual/`: twenty-four icons under the owner's names, of which ten are used, by the map `NAVIGATION_ICONS`: dashboard as grid, profile as person, calendar, tasks as checklist, files as folder, download, reports as report, integrations as link, security as lock, and help as question. The other fourteen are not in the manifest.
 
-`pnpm art` first runs `scripts/prepare-icons.mjs`, which writes `art/originals/icon-<name>.png` for each: trimmed to its solid pixels and centred on a transparent 512px square (a square icon fills 80% of it, a wide or tall one up to 90% on its long side, so they read at the same size); for the sheet's cells, the dark glow around each icon is removed first (and from its holes, such as the lock's), keeping the icon's own embossed shading, with the edge fading out in cream. The sheet's grid is found from its alpha. Without the owner's files the step prints a line and changes nothing. Then the usual pipeline writes each icon at 48, 96 and 144 pixels (`ICON_WIDTHS`). Commit `public/art/icon-*` and `lib/art-ready.json`; `pnpm test` fails unless every icon is there at every width, since `SageIcon` does not read the readiness file.
+`pnpm art` first runs `scripts/prepare-icons.mjs`, which writes `art/originals/icon-<name>.png` for each: trimmed to its solid pixels and centred on a transparent 512px square (a square icon fills 80% of it, a wide or tall one up to 90% on its long side, so they read at the same size). With a folder missing, it lists the icons it could not prepare and carries on; without either it prints a line and changes nothing. Then the usual pipeline writes each icon at 48, 96 and 144 pixels (`ICON_WIDTHS`). Commit `public/art/icon-*` and `lib/art-ready.json`; `pnpm test` fails unless every icon is there at every width, since `SageIcon` does not read the readiness file.
 
-To replace a sheet icon with one drawn like the sixteen, save it as `Sage_Icons_16_Shadow/icon-<name>.png` (a transparent square, at least 512 pixels), delete its line from `SHEET_ICONS`, and run `pnpm art`. To add an icon, add its name to `ICON_NAMES` in `lib/art.ts`, its file to `Sage_Icons_16_Shadow/`, and a line to section 15 of `docs/art/billabong-prompts.md`.
+To replace an icon, overwrite its file in its folder (a transparent square, at least 512 pixels) and run `pnpm art`. To add one, add its name to `ICON_NAMES` in `lib/art-files.ts`, and either save it as `Sage_Icons_16_Shadow/icon-<name>.png` or map the owner's navigation file to it in `NAVIGATION_ICONS`; then add a line to section 15 of `docs/art/billabong-prompts.md`. (The 6 × 4 sheet `Sage web app navigation icons.png` was the first source of the ten; the owner redrew them as single files, and its glow removal and cell detection were removed with it. Design doc section 11, Icons regenerated.)
 
 ## Originals are not committed
 
