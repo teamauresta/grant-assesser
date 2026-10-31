@@ -186,3 +186,43 @@ for (const theme of ['light', 'dark'] as const) {
     await capture(page, `results-funding-${theme}`, info.project.name);
   });
 }
+
+// Settings, the 404 and the banners (design doc section 11, Task 9): the section windows with the
+// backup reminder (exported a month ago), the reset dialog with its Close button focused (the outline
+// drawn inside the bar's corner), the 404 window, and both storage warnings.
+for (const theme of ['light', 'dark'] as const) {
+  test(`settings, 404 and banners (${theme})`, async ({ page, context }, info) => {
+    const project = info.project.name;
+    const monthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    await seedStorage(page, { workspace: { ...populatedWorkspace(), createdAt: monthAgo, lastExportedAt: monthAgo }, theme });
+    await page.goto('settings/');
+    await expect(page.getByRole('complementary', { name: 'Backup reminder' })).toBeVisible();
+    await capture(page, `settings-${theme}`, project);
+    await page.getByRole('button', { name: 'Reset everything' }).click();
+    await expect(page.getByRole('dialog', { name: 'Reset everything?' })).toBeVisible();
+    await settle(page);
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByRole('button', { name: 'Close' })).toBeFocused();
+    await page.screenshot({ path: join(OUT, `settings-dialog-close-focus-${theme}-${project}.png`) });
+
+    await page.goto('no-such-page/');
+    await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+    await capture(page, `404-${theme}`, project);
+
+    // Storage that cannot save (every write but the rescue copy fails) and a workspace that cannot be read.
+    const banners = await context.newPage();
+    await banners.addInitScript((t) => {
+      localStorage.setItem('gn-theme', t);
+      if (!sessionStorage.getItem('banners')) { sessionStorage.setItem('banners', '1'); localStorage.setItem('gn-workspace', '{"broken":'); }
+      const set = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (this: Storage, k: string, v: string) {
+        if (this === window.localStorage && !k.startsWith('gn-workspace-corrupt-') && k !== 'gn-theme') throw new Error('QuotaExceededError');
+        set.call(this, k, v);
+      };
+    }, theme);
+    await banners.goto('programs/');
+    await expect(banners.getByText(/This browser can't save your work/)).toBeVisible();
+    await expect(banners.getByRole('button', { name: 'Download the old data' })).toBeVisible();
+    await banners.screenshot({ path: join(OUT, `banners-${theme}-${project}.png`) });
+  });
+}

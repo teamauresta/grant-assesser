@@ -23,7 +23,8 @@ function Section({ id, title, lead, children }: { id: string; title: string; lea
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <h3 id={id} className="border-b border-accent pb-1.5 text-lg">{title}</h3>
+        {/* A neutral hairline, as in the PDF: coloured lines are for state only (CLAUDE.md). */}
+        <h3 id={id} className="border-b border-border pb-1.5 text-lg">{title}</h3>
         {lead && <p className="text-sm text-muted-fg">{lead}</p>}
       </div>
       {children}
@@ -43,7 +44,8 @@ function Table({ label, head, children, minWidth = 560 }: { label: string; head:
   return (
     <div role="region" aria-label={label} tabIndex={0} className={cn('overflow-x-auto rounded-md border border-border', focusRing)}>
       <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
-        <thead className="bg-surface text-xs uppercase tracking-wide text-muted-fg">
+        {/* The preview sits on the window's --surface body, so the head row takes the bar's fill. */}
+        <thead className="bg-neutral-bg text-xs uppercase tracking-wide text-muted-fg">
           <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2 font-semibold">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-border align-top">{children}</tbody>
@@ -70,7 +72,8 @@ function Cover({ data }: { data: ReportData }) {
   return (
     <header className="flex flex-col gap-3 border-b border-border pb-6">
       <p className="text-xs font-medium uppercase tracking-widest text-muted-fg">Funding report</p>
-      <h2 className="text-3xl">{cover.title}</h2>
+      {/* An h3, as the sections are: the preview sits under the Preview window's h2. */}
+      <h3 className="text-3xl">{cover.title}</h3>
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
         {cover.persona && <><dt className="text-muted-fg">Persona</dt><dd className="font-medium">{cover.persona}</dd></>}
         <dt className="text-muted-fg">Date</dt><dd className="num font-medium">{fmt(data.generatedOn)}</dd>
@@ -271,10 +274,13 @@ function Sources({ groups }: { groups: SourceGroup[] }) {
   );
 }
 
-/** An HTML rendering of the report's selected sections, in the same order as the PDF. Not a PDF viewer. */
+/**
+ * An HTML rendering of the report's selected sections, in the same order as the PDF. Not a PDF viewer.
+ * Unframed: the report builder shows it in its Preview window.
+ */
 export function ReportPreview({ data }: { data: ReportData }) {
   return (
-    <article aria-label="Report preview" className="flex flex-col gap-8 rounded-lg border border-border bg-bg p-4 shadow-sm md:p-8">
+    <article aria-label="Report preview" className="flex flex-col gap-8">
       {/* Sections fade in and out as they are switched on and off; the first render is not animated. */}
       <AnimatePresence initial={false}>
         {!hasAnySection(data) && <Fade key="none"><Empty>Choose at least one section to include.</Empty></Fade>}

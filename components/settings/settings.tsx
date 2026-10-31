@@ -18,6 +18,7 @@ import { ChoiceGroup } from '@/components/ui/choice-group';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { ErrorText, Field, HelpText, Input, Select } from '@/components/ui/field';
 import { focusRing } from '@/components/ui/focus-ring';
+import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 
 const FY_QUESTION = QUESTIONS.find((q) => q.id === 'fyEndMonth')!;
 const REMINDER_OPTIONS = [14, 7, 3, 1] as const;
@@ -41,7 +42,7 @@ export function describeSummary(s: ImportSummary): string {
 export function Settings() {
   const ready = useWorkspace((s) => s.ready);
   return (
-    <div className="flex max-w-3xl flex-col gap-10">
+    <div className="flex max-w-3xl flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl">Settings</h1>
         <p className="text-muted-fg">Your persona, company basics, appearance and reminders, and a backup of your workspace.</p>
@@ -71,15 +72,16 @@ function SettingsBody() {
   );
 }
 
+/**
+ * A settings section: a window (Billabong design doc section 4), a region named by its h2 title. The
+ * id stays on the frame for links such as /settings/#your-data; the description opens the body.
+ */
 function Section({ id, title, description, children }: { id: string; title: string; description?: ReactNode; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-24 flex-col gap-4 border-t border-border pt-8">
-      <div className="flex flex-col gap-1">
-        <h2 id={`${id}-title`} className="text-xl">{title}</h2>
-        {description && <p className="text-sm text-muted-fg">{description}</p>}
-      </div>
+    <Window id={id} title={title} titleId={`${id}-title`} titleSize="md" className="scroll-mt-24" bodyClassName="flex flex-col gap-4">
+      {description && <p className="text-sm text-muted-fg">{description}</p>}
       {children}
-    </section>
+    </Window>
   );
 }
 
@@ -286,7 +288,9 @@ function DataSection() {
           aria-describedby={importError ? `${helpId} ${errorId}` : helpId}
           className={cn(
             'w-full max-w-md rounded-md text-sm text-muted-fg',
-            'file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-solid file:border-border-strong file:bg-bg file:px-4 file:text-sm file:font-medium file:text-fg hover:file:bg-surface',
+            // The file button looks like a secondary button: --surface in a --border-strong outline with
+            // its 3px bottom edge, --neutral-bg on hover (the window body is --surface).
+            'file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-b-3 file:border-solid file:border-border-strong file:bg-surface file:px-4 file:text-sm file:font-medium file:text-fg hover:file:bg-neutral-bg',
             focusRing,
           )}
         />
@@ -367,14 +371,25 @@ function ResetDialog({ open, onClose, onConfirm }: { open: boolean; onClose: () 
 }
 
 function SettingsSkeleton() {
+  // Four section windows' frames with their bars and glyphs, so the page does not jump when the
+  // workspace loads. A status, so "Loading your settings" is announced as text (a plain div cannot
+  // take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your settings" className="flex flex-col gap-10">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex flex-col gap-4 border-t border-border pt-8">
-          <div className="h-7 w-40 rounded bg-surface" />
-          <div className="h-24 rounded-lg border border-border bg-surface" />
-        </div>
-      ))}
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading your settings</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={cn(WINDOW_FRAME, 'border-border')}>
+            <div className={WINDOW_BAR}>
+              <div className="h-6 flex-1">
+                <div className="h-full w-32 rounded bg-surface" />
+              </div>
+              <WindowControls />
+            </div>
+            <div className="h-28" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

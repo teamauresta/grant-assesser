@@ -10,7 +10,12 @@ import { useWorkspace } from '@/lib/store/use-workspace';
 import { Button } from '@/components/ui/button';
 import { focusRing } from '@/components/ui/focus-ring';
 
-const bannerClasses = 'flex items-start gap-3 rounded-lg border border-border bg-warn-bg p-4 text-sm text-warn-fg';
+/**
+ * A warning callout (Billabong design doc section 11, Task 9): --warn-fg on --warn-bg in a neutral
+ * --border-strong outline (3.5 / 3.3 on --warn-bg, 3.2 / 3.7 on the page; borders stay neutral). All its
+ * text is --warn-fg (tests/lib/tokens.test.ts). Shared with the backup reminder.
+ */
+export const WARN_CALLOUT = 'flex items-start gap-3 rounded-lg border border-border-strong bg-warn-bg p-4 text-sm text-warn-fg';
 
 /**
  * Warnings about the browser's storage, shown below the site header once the workspace has loaded:
@@ -24,7 +29,7 @@ export function StorageBanner({ className }: { className?: string }) {
   return (
     <div className={cn('mx-auto flex max-w-[1120px] flex-col gap-3 px-4 pt-4', className)}>
       {!storageAvailable && (
-        <div role="status" className={bannerClasses}>
+        <div role="status" className={WARN_CALLOUT}>
           <TriangleAlert aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
           <p className="pt-0.5">
             This browser can&apos;t save your work. Export your workspace to keep it.{' '}
@@ -56,7 +61,7 @@ function CorruptNotice({ storageKey }: { storageKey: string }) {
   };
 
   return (
-    <div role="status" className={bannerClasses}>
+    <div role="status" className={WARN_CALLOUT}>
       <TriangleAlert aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0" />
       <div className="flex min-w-0 flex-1 flex-col gap-3 pt-0.5">
         <p>

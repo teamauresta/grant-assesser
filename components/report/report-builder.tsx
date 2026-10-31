@@ -14,6 +14,7 @@ import { cn } from '@/lib/cn';
 import { downloadFile } from '@/lib/download';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { ChoiceGroup } from '@/components/ui/choice-group';
+import { WINDOW_BAR, WINDOW_FRAME, Window, WindowControls } from '@/components/ui/window';
 import { ReportPreview } from './report-preview';
 
 /** Sections that need assessment answers; a directory-only report leaves them out. */
@@ -60,6 +61,8 @@ function BuilderView({ now }: { now: Date }) {
   const canDownload = hasAnySection(data);
 
   const download = async () => {
+    // While busy the button is aria-disabled, not disabled, so it keeps keyboard focus.
+    if (busy) return;
     setBusy(true);
     setError(null);
     setSaved(null);
@@ -101,10 +104,19 @@ function BuilderView({ now }: { now: Date }) {
         </div>
       )}
 
+      {/* The options and the preview are windows (Billabong design doc section 4). */}
       <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-4">
+        <Window title="Options" titleSize="md" bodyClassName="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <Button variant="primary" onClick={download} disabled={busy || !canDownload} aria-busy={busy || undefined}>
+            <Button
+              variant="primary"
+              onClick={download}
+              disabled={!canDownload}
+              // Loading: a 16px spinner and "Making PDF…". aria-disabled, not disabled, so focus stays
+              // on the button while the PDF is made.
+              aria-disabled={busy || undefined}
+              aria-busy={busy || undefined}
+            >
               {busy
                 ? <LoaderCircle aria-hidden="true" size={16} strokeWidth={1.5} className="animate-spin motion-reduce:animate-none" />
                 : <Download aria-hidden="true" size={16} strokeWidth={1.5} />}
@@ -142,27 +154,41 @@ function BuilderView({ now }: { now: Date }) {
               disabled: !available(s),
             }))}
           />
-        </div>
+        </Window>
 
-        <div className="flex min-w-0 flex-col gap-2">
-          <h2 className="text-sm font-medium text-muted-fg">Preview</h2>
+        <Window title="Preview" titleSize="md" className="min-w-0" bodyClassName="md:p-8">
           <ReportPreview data={data} />
-        </div>
+        </Window>
       </div>
     </div>
   );
 }
 
 function BuilderSkeleton() {
+  // The heading and intro, then the options and preview windows' frames with their bars and glyphs,
+  // so the page does not jump when the workspace loads. A status, so "Loading the report builder" is
+  // announced as text (a plain div cannot take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading the report builder" className="flex flex-col gap-8">
-      <div className="flex max-w-3xl flex-col gap-2">
-        <div className="h-9 w-40 rounded bg-surface" />
-        <div className="h-6 rounded bg-surface" />
-      </div>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="h-96 rounded-lg border border-border bg-surface" />
-        <div className="h-[32rem] rounded-lg border border-border bg-surface" />
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading the report builder</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        <div className="flex max-w-3xl flex-col gap-2">
+          <div className="h-9 w-40 rounded bg-surface" />
+          <div className="h-6 rounded bg-surface" />
+        </div>
+        <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[280px_minmax(0,1fr)]">
+          {['h-96', 'h-[32rem]'].map((height) => (
+            <div key={height} className={cn(WINDOW_FRAME, 'border-border')}>
+              <div className={WINDOW_BAR}>
+                <div className="h-6 flex-1">
+                  <div className="h-full w-24 rounded bg-surface" />
+                </div>
+                <WindowControls />
+              </div>
+              <div className={height} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

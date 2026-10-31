@@ -4,6 +4,9 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Settings } from '@/components/settings/settings';
 import { StorageBanner } from '@/components/layout/storage-banner';
+import { BackupPrompt } from '@/components/layout/backup-prompt';
+import { buttonClasses } from '@/components/ui/button';
+import { WINDOW_BAR, WINDOW_FRAME } from '@/components/ui/window';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { emptyWorkspace } from '@/lib/store/workspace-store';
 import { serializeWorkspace } from '@/lib/store/transfer';
@@ -182,6 +185,62 @@ describe('Settings', () => {
   });
 });
 
+// Settings in the Billabong style (design doc sections 4 and 11, Task 9): each section is a window, a
+// region named by its h2 title; the behaviour and the plain copy are unchanged.
+describe('Settings windows', () => {
+  const SECTIONS = [
+    ['persona', 'Persona'], ['company', 'Company basics'], ['appearance', 'Appearance'], ['celebrations', 'Celebrations'],
+    ['reminders', 'Reminders'], ['your-data', 'Your data'], ['privacy', 'Privacy'],
+  ] as const;
+
+  it('draws each section as a window named by its title, keeping its id for links', () => {
+    render(<Settings />);
+    for (const [id, title] of SECTIONS) {
+      const region = screen.getByRole('region', { name: title });
+      expect(region).toHaveAttribute('id', id);
+      expect(region).toHaveClass(...WINDOW_FRAME.split(' '), 'border-border');
+      const heading = within(region).getByRole('heading', { level: 2, name: title });
+      expect(heading).toHaveAttribute('id', `${id}-title`);
+      expect(heading.parentElement).toHaveClass(...WINDOW_BAR.split(' '));
+    }
+  });
+
+  it('keeps the section descriptions in the window body, below the bar', () => {
+    render(<Settings />);
+    const region = screen.getByRole('region', { name: 'Persona' });
+    const bar = within(region).getByRole('heading', { name: 'Persona' }).parentElement!;
+    const description = within(region).getByText('Sets how results are ranked and which starter goals are suggested.');
+    expect(bar.contains(description)).toBe(false);
+  });
+
+  it('draws Reset everything as the danger button, with its ledge', () => {
+    render(<Settings />);
+    const reset = within(screen.getByRole('region', { name: 'Your data' })).getByRole('button', { name: 'Reset everything' });
+    expect(reset).toHaveAttribute('class', buttonClasses({ variant: 'danger' }));
+    expect(reset).toHaveClass('ledge', 'border-b-3');
+  });
+
+  it('shows a loading status, not an aria-label on a plain div, before the workspace loads', () => {
+    act(() => useWorkspace.setState({ ready: false }));
+    try {
+      render(<Settings />);
+      const status = screen.getByRole('status');
+      expect(status).toHaveAttribute('aria-busy', 'true');
+      expect(status).toHaveTextContent('Loading your settings');
+      expect(status).not.toHaveAttribute('aria-label');
+    } finally {
+      act(() => useWorkspace.setState({ ready: true }));
+    }
+  });
+});
+
+/** The callout classes every banner shares: warning colours in a neutral outline. */
+const expectWarnCallout = (el: HTMLElement) => {
+  expect(el).toHaveClass('bg-warn-bg', 'text-warn-fg', 'border', 'border-border-strong', 'rounded-lg');
+  // All of its text is --warn-fg: muted text is not checked against --warn-bg.
+  expect(el.querySelector('.text-muted-fg')).toBeNull();
+};
+
 describe('StorageBanner', () => {
   it('is hidden when storage works and nothing was rescued', () => {
     const { container } = render(<StorageBanner />);
@@ -195,6 +254,19 @@ describe('StorageBanner', () => {
     expect(screen.getByRole('link', { name: 'Go to Settings' })).toHaveAttribute('href', expect.stringMatching(/^\/settings\/?#your-data$/));
   });
 
+  // Design doc section 11, Task 9: warning callouts with an outline and the existing buttons.
+  it('draws both warnings as warning callouts', () => {
+    window.localStorage.setItem('gn-workspace-corrupt-1', '{"broken":');
+    act(() => useWorkspace.setState({ storageAvailable: false, corruptBackupKey: 'gn-workspace-corrupt-1' }));
+    render(<StorageBanner />);
+    const cannotSave = screen.getByText(/This browser can't save your work/).closest<HTMLElement>('[role="status"]')!;
+    const corrupt = screen.getByText(/couldn't read your saved workspace/).closest<HTMLElement>('[role="status"]')!;
+    expectWarnCallout(cannotSave);
+    expectWarnCallout(corrupt);
+    expect(screen.getByRole('button', { name: 'Download the old data' })).toHaveAttribute('class', buttonClasses());
+    expect(within(corrupt).getByRole('button', { name: 'Dismiss' })).toHaveAttribute('class', buttonClasses({ variant: 'ghost', iconOnly: true, className: '-my-1.5 -mr-1.5 shrink-0' }));
+  });
+
   it('offers the rescued raw data as a download and can be dismissed', async () => {
     const user = userEvent.setup();
     window.localStorage.setItem('gn-workspace-corrupt-1', '{"broken":');
@@ -205,5 +277,17 @@ describe('StorageBanner', () => {
     expect(await blob.text()).toBe('{"broken":');
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByText(/couldn't read your saved workspace/)).not.toBeInTheDocument();
+  });
+});
+
+describe('BackupPrompt', () => {
+  it('reminds as a warning callout, with the export button and a dismiss button', async () => {
+    useWorkspace.setState({ ws: { ...filled(), createdAt: '2026-01-01T00:00:00.000Z' } });
+    render(<BackupPrompt />);
+    const prompt = await screen.findByRole('complementary', { name: 'Backup reminder' });
+    expectWarnCallout(prompt);
+    expect(within(prompt).getByRole('button', { name: 'Export workspace' })).toHaveAttribute('class', buttonClasses());
+    await userEvent.setup().click(within(prompt).getByRole('button', { name: 'Dismiss backup reminder' }));
+    expect(screen.queryByRole('complementary', { name: 'Backup reminder' })).not.toBeInTheDocument();
   });
 });

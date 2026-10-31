@@ -97,6 +97,16 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
     expect(contrast(t['--bg'], fill)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(fill, t['--surface'])).toBeGreaterThanOrEqual(3);
   });
+  // The storage and backup banners (design doc section 11, Task 9): --warn-fg text on --warn-bg inside
+  // a neutral --border-strong outline (borders stay neutral), with secondary buttons (their own
+  // --border-strong outline), a ghost dismiss button that fills --neutral-bg on hover, and links.
+  it('the warning banners read (AA) and their outline, buttons and focus ring stand out (3:1)', () => {
+    expect(contrast(t['--warn-fg'], t['--warn-bg'])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t['--border-strong'], t['--warn-bg'])).toBeGreaterThanOrEqual(3);
+    expect(contrast(t['--border-strong'], t['--bg'])).toBeGreaterThanOrEqual(3);
+    expect(contrast(t['--warn-fg'], t['--neutral-bg'])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(t['--accent'], t['--warn-bg'])).toBeGreaterThanOrEqual(3);
+  });
   // The accent focus ring (WCAG 1.4.11, 3:1) on the page. On --surface it is implied by the accent's
   // AA check above.
   it('the accent focus ring stays visible on --bg (3:1)', () => {
