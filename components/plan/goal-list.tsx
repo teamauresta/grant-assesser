@@ -133,7 +133,7 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
   const done = group.goals.filter((g) => g.status === 'done').length;
   const sectionRef = useRef<HTMLElement>(null);
   const celebrate = (appId: string) => {
-    void cheer(`${appId}:goals-done`, { message: `All goals done for ${group.name}.`, burst: 'goals-done' }, originOf(sectionRef.current));
+    void cheer(`${appId}:goals-done`, { message: `All goals done for ${group.name}. Not a box left unticked.`, burst: 'goals-done' }, originOf(sectionRef.current));
   };
   return (
     <section ref={sectionRef} id={headingId} aria-labelledby={`${headingId}-h`} className="flex scroll-mt-24 flex-col gap-3">

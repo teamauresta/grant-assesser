@@ -48,7 +48,8 @@ describe('GoalList milestone cheer', () => {
     expect(toasts()).toEqual([]);
 
     await user.click(screen.getByRole('checkbox', { name: 'Done: Book pitch meetings' }));
-    expect(await screen.findByText('All goals done for Angel round.')).toBeInTheDocument();
+    // Copy from the Billabong copy pass (design doc, section 7); the application's name stays in it.
+    expect(await screen.findByText('All goals done for Angel round. Not a box left unticked.')).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
   });
 
@@ -61,7 +62,8 @@ describe('GoalList milestone cheer', () => {
     await settle();
     expect(toasts()).toEqual([]);
     await user.selectOptions(screen.getByLabelText('Status of Book pitch meetings'), 'done');
-    expect(await screen.findByText('All goals done for Angel round.')).toBeInTheDocument();
+    // Copy from the Billabong copy pass (design doc, section 7); the application's name stays in it.
+    expect(await screen.findByText('All goals done for Angel round. Not a box left unticked.')).toBeInTheDocument();
   });
 
   it('does not cheer for a declined application', async () => {

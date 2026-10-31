@@ -32,11 +32,11 @@ export default function HomePage() {
         <section aria-labelledby="persona-heading" className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 id="persona-heading" className="text-xl">Where is your company today?</h2>
-            <p className="text-sm text-muted-fg">Pick one to start the assessment. You can change it at any time.</p>
+            <p className="text-sm text-muted-fg">Pick one to start the assessment. No wrong answers, and you can change it any time.</p>
           </div>
           <PersonaCards />
           <p className="text-sm text-muted-fg">
-            Not ready to answer questions?{' '}
+            Just looking?{' '}
             <Link href="/programs/" className={cn('rounded-sm text-accent underline underline-offset-4', focusRing)}>
               Browse all {PROGRAMS.length} programs
             </Link>

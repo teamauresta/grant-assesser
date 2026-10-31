@@ -45,7 +45,7 @@ export function Hero() {
           <span className="block motion-safe:animate-rise-late">your startup <Highlight>qualifies for</Highlight></span>
         </h1>
         <p className="max-w-2xl text-base text-muted-fg md:text-xl">
-          Grants, tax incentives, credits and accelerators across Australia, checked against official sources and matched to you in six short steps.
+          Grants, tax incentives, credits and accelerators across Australia, checked against official sources and matched to you in six short steps. No account, no sales call.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link href="/assess/" className={buttonClasses({ variant: 'primary', size: 'lg' })}>

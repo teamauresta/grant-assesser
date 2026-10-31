@@ -263,13 +263,17 @@ test('persona cards: the platypus clears the first label and does not push it do
   await page.goto('./');
   const cards = page.getByRole('region', { name: 'Where is your company today?' }).locator('[data-spotlight]');
   await expect(cards).toHaveCount(3);
-  // Each card's second child is its label row (the first is the hidden badge row).
-  const tops = await cards.evaluateAll((els) => els.map((el) => el.children[1].getBoundingClientRect().top));
-  if (info.project.name === 'desktop') expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
   const art = cards.first().locator('[data-art]');
   await expect(art).toHaveCount(1);
   await expect(art).toHaveAttribute('data-art', 'platypus-wave');
-  const [artBox, card] = [(await art.boundingBox())!, (await cards.first().boundingBox())!];
+  // Every box is read in one frame: when the section starts below the first screen, Reveal lifts it
+  // in with a 12px translate after hydration, and boxes read at different moments of that transition
+  // would not line up. Each card's second child is its label row (the first is the badge row).
+  const { tops, artBox, card } = await cards.evaluateAll((els) => {
+    const box = (el: Element) => { const r = el.getBoundingClientRect(); return { y: r.top, height: r.height }; };
+    return { tops: els.map((el) => el.children[1].getBoundingClientRect().top), artBox: box(els[0].querySelector('[data-art]')!), card: box(els[0]) };
+  });
+  if (info.project.name === 'desktop') expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
   expect(artBox.y).toBeGreaterThanOrEqual(card.y);
   expect(artBox.y + artBox.height).toBeLessThanOrEqual(tops[0] + 1);
 });

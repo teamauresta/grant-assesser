@@ -144,7 +144,7 @@ function WizardView({ step, today }: { step: Step; today: string }) {
                 onClick={() => {
                   if (!last) return goTo(step + 1);
                   // Results celebrates once when it opens straight after this, if there is anything to
-                  // show (without answers it shows "Take the assessment first").
+                  // show (without answers it shows "Nothing to sort yet").
                   if (hasAnswers(profile)) markAssessmentFinished(useWorkspace.getState().ws.updatedAt);
                   router.push('/assess/results/');
                 }}

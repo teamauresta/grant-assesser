@@ -572,7 +572,8 @@ test.describe('plan', () => {
     await dialog.getByRole('button', { name: /^Awarded/ }).click();
 
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByText('Awarded. Add the reporting dates to your calendar.')).toBeVisible();
+    // The award message from the copy pass (design doc, section 7).
+    await expect(page.getByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeVisible();
     const seen = await page.evaluate(() => (window as unknown as { toastSeen: unknown[] }).toastSeen);
     expect(seen.length).toBeGreaterThanOrEqual(1);
     for (const moment of seen) expect(moment).toEqual({ inert: false, dialog: false });

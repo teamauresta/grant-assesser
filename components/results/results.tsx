@@ -46,8 +46,8 @@ export function Results() {
         <ResultsHeading copy={DEFAULT_RESULTS} />
         <EmptyState
           icon={ClipboardCheck}
-          title="Take the assessment first"
-          description="Answer six short steps and we will sort every program into Act now, Prepare, Watch and Not a fit."
+          title="Nothing to sort yet"
+          description="Answer six short steps and we'll sort every program into Act now, Prepare, Watch and Not a fit."
           action={<Link href="/assess/" className={buttonClasses({ variant: 'primary' })}>Start the assessment<ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>}
         />
       </div>

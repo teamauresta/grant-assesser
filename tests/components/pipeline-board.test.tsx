@@ -197,10 +197,12 @@ describe('PipelineBoard milestone cheers', () => {
     return { id, moveTo };
   }
 
+  // The submitted and awarded messages are from the Billabong copy pass (design doc, section 7); the
+  // declined message is unchanged, kind and plain.
   it('cheers a submission with a toast and a burst', async () => {
     const { id, moveTo } = await setup();
     await moveTo('Submitted');
-    expect(await screen.findByText("Submitted. That's the hardest part done.")).toBeInTheDocument();
+    expect(await screen.findByText("Submitted! The hard part's done. Time for a cuppa.")).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(1));
     expect(document.querySelector(`li[data-app-id="${id}"]`)).toContainElement(screen.getByRole('article', { name: 'Angel round' }));
   });
@@ -208,7 +210,7 @@ describe('PipelineBoard milestone cheers', () => {
   it('cheers an award and links to the calendar', async () => {
     const { moveTo } = await setup();
     await moveTo('Outcome: Awarded');
-    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    expect(await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open calendar' })).toHaveAttribute('href', expect.stringMatching(/^\/plan\/?\?tab=calendar$/));
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
   });
@@ -238,7 +240,7 @@ describe('PipelineBoard milestone cheers', () => {
     const dialog = screen.getByRole('dialog', { name: 'What was the outcome?' });
     await userEvent.setup().click(within(dialog).getByRole('button', { name: /^Awarded/ }));
     expect(useWorkspace.getState().ws.pipeline.find((a) => a.id === id)?.stage).toBe('awarded');
-    expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
+    expect(await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.')).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
   });
 
@@ -264,7 +266,7 @@ describe('PipelineBoard milestone cheers', () => {
       fireEvent.dragOver(column('Outcome'), { dataTransfer });
       fireEvent.drop(column('Outcome'), { dataTransfer });
       await userEvent.setup().click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Awarded/ }));
-      await screen.findByText('Awarded. Add the reporting dates to your calendar.');
+      await screen.findByText('Awarded! The platypus is doing laps. Add the reporting dates to your calendar.');
       expect(seen.length).toBeGreaterThanOrEqual(1);
       for (const moment of seen) expect(moment).toEqual({ dialogOpen: false, toasterInert: false, live: 'polite' });
     } finally {
@@ -283,11 +285,11 @@ describe('PipelineBoard milestone cheers', () => {
   it('cheers a submission once, even after moving back and submitting again', async () => {
     const { moveTo } = await setup();
     await moveTo('Submitted');
-    await screen.findByText("Submitted. That's the hardest part done.");
+    await screen.findByText("Submitted! The hard part's done. Time for a cuppa.");
     await moveTo('Considering');
     await moveTo('Submitted');
     await new Promise((r) => setTimeout(r, 20));
-    expect(toasts()).toEqual(["Submitted. That's the hardest part done."]);
+    expect(toasts()).toEqual(["Submitted! The hard part's done. Time for a cuppa."]);
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 

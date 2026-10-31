@@ -121,10 +121,31 @@ describe('stageCheer', () => {
   });
 });
 
+describe('celebration voice', () => {
+  // Billabong design doc, section 7: celebrations may be playful, with at most one exclamation mark
+  // and no em-dash asides; the declined message and the "nothing open" line stay plain.
+  const messages = [
+    stageCheer('submitted')!.message, stageCheer('awarded')!.message, stageCheer('declined')!.message,
+    resultsCheer(1, 0), resultsCheer(3, 0), resultsCheer(0, 2), resultsCheer(0, 0),
+  ];
+  it.each(messages)('%s: at most one exclamation mark, no em dash', (m) => {
+    expect(m.split('!').length - 1).toBeLessThanOrEqual(1);
+    expect(m).not.toMatch(/\u2014/);
+  });
+  it('keeps the declined and "nothing open" lines free of exclamation marks', () => {
+    expect(stageCheer('declined')!.message).not.toMatch(/!/);
+    expect(resultsCheer(0, 0)).not.toMatch(/!/);
+  });
+  it('keeps the plain instruction in the award message', () => {
+    expect(stageCheer('awarded')!.message).toMatch(/Add the reporting dates to your calendar\.$/);
+  });
+});
+
 describe('resultsCheer', () => {
   it('counts what can be acted on now, in the singular for one', () => {
-    expect(resultsCheer(1, 0)).toBe('1 program you can act on now. Start with the one closing first.');
-    expect(resultsCheer(4, 2)).toBe('4 programs you can act on now. Start with the one closing first.');
+    // "Good news: " added in the Billabong copy pass (design doc, section 7); the count and the advice are unchanged.
+    expect(resultsCheer(1, 0)).toBe('Good news: 1 program you can act on now. Start with the one closing first.');
+    expect(resultsCheer(4, 2)).toBe('Good news: 4 programs you can act on now. Start with the one closing first.');
   });
 
   it('falls back to what is worth preparing for, then to the next round', () => {

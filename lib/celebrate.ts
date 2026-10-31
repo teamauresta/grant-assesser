@@ -98,11 +98,16 @@ export function consumeAssessmentFinish(): string | null {
 }
 export const consumeAssessmentFinished = (): boolean => consumeAssessmentFinish() !== null;
 
-/** What moving an application to a stage says, or null when the move needs no message. */
+/**
+ * What moving an application to a stage says, or null when the move needs no message. Celebrations
+ * get the Billabong voice (design doc, section 7): one joke, at most one exclamation mark, never about
+ * money, eligibility or deadlines; the instruction after the joke stays plain.
+ */
 export function stageCheer(stage: Stage): Cheer | null {
   switch (stage) {
-    case 'submitted': return { message: "Submitted. That's the hardest part done.", burst: 'submitted' };
-    case 'awarded': return { message: 'Awarded. Add the reporting dates to your calendar.', burst: 'awarded', action: { label: 'Open calendar', href: '/plan/?tab=calendar' } };
+    case 'submitted': return { message: "Submitted! The hard part's done. Time for a cuppa.", burst: 'submitted' };
+    case 'awarded': return { message: 'Awarded! The platypus is doing laps. Add the reporting dates to your calendar.', burst: 'awarded', action: { label: 'Open calendar', href: '/plan/?tab=calendar' } };
+    // Kind and plain, no joke (Billabong design doc, section 7).
     case 'declined': return { message: 'Most funded startups applied more than once. See what else fits.', action: { label: 'See your results', href: '/assess/results/' } };
     default: return null;
   }
@@ -114,9 +119,9 @@ export function resultsCelebration(actNow: number, prepare: number): Cheer {
   return actNow + prepare > 0 ? { message, burst: 'results' } : { message };
 }
 
-/** The line shown when Results first opens after the assessment. */
+/** The line shown when Results first opens after the assessment. The "nothing open" line stays plain: nothing to celebrate. */
 export function resultsCheer(actNow: number, prepare: number): string {
-  if (actNow > 0) return `${actNow} ${actNow === 1 ? 'program' : 'programs'} you can act on now. Start with the one closing first.`;
+  if (actNow > 0) return `Good news: ${actNow} ${actNow === 1 ? 'program' : 'programs'} you can act on now. Start with the one closing first.`;
   if (prepare > 0) return `${prepare} ${prepare === 1 ? 'program is' : 'programs are'} worth preparing for. Your plan starts here.`;
   return 'Nothing is open for you today. Watch the programs below for their next round.';
 }
