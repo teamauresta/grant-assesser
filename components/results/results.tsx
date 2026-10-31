@@ -129,8 +129,11 @@ function ResultsView({ profile, now }: { profile: Profile; now: Date }) {
   );
 }
 
-/** The page's h1, with its one marker band (Billabong design doc, section 4) on the copy's phrase. */
-function ResultsHeading({ copy }: { copy: PersonaResultsCopy }) {
+/**
+ * The page's h1, with its one marker band (Billabong design doc, section 4) on the copy's phrase.
+ * Exported for tests, which render it with their own copy rather than mutate the shared constants.
+ */
+export function ResultsHeading({ copy }: { copy: PersonaResultsCopy }) {
   const [before, phrase, after] = splitHighlight(copy.title, copy.highlight);
   return <h1 className="text-3xl">{before}{phrase && <Highlight>{phrase}</Highlight>}{after}</h1>;
 }

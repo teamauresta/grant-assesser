@@ -56,7 +56,8 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setFocused(true)}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false); }}
-      className="flex animate-toast-in items-start gap-3 rounded-lg border border-border bg-bg p-4 text-sm text-fg shadow-lg"
+      // A small window-style card: --surface in a --border outline with the menus' popover shadow.
+      className="flex animate-toast-in items-start gap-3 rounded-lg border border-border bg-surface p-4 text-sm text-fg shadow-popover"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
         <p>{message}</p>
@@ -74,7 +75,7 @@ function ToastItem({ toast: { id, message, action } }: { toast: Toast }) {
         type="button"
         onClick={close}
         aria-label="Dismiss"
-        className={cn('-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+        className={cn('-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
       >
         <X aria-hidden="true" size={16} strokeWidth={1.5} />
       </button>

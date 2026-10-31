@@ -8,7 +8,7 @@ import { PERSONA_NOW as now, bootstrappedVic } from '@/tests/fixtures/personas';
 const { stableNow } = vi.hoisted(() => ({ stableNow: new Date('2026-10-27T00:00:00Z') }));
 vi.mock('@/lib/use-now', () => ({ useNow: () => stableNow }));
 
-import { Results } from '@/components/results/results';
+import { Results, ResultsHeading } from '@/components/results/results';
 import { FUNDING_SUMMARY_ID } from '@/components/results/funding-summary';
 import { buttonClasses } from '@/components/ui/button';
 import { DEFAULT_RESULTS, PERSONA_RESULTS } from '@/lib/personas';
@@ -47,18 +47,14 @@ describe('Results page', () => {
   describe('in production, with a phrase missing from its title', () => {
     afterEach(() => vi.unstubAllEnvs());
 
-    it('shows the plain heading without a band', async () => {
+    // A local copy of the default copy with a phrase that is not in its title: the shared
+    // DEFAULT_RESULTS is never mutated, so no other test can see the change.
+    it('shows the plain heading without a band', () => {
       vi.stubEnv('NODE_ENV', 'production');
-      useWorkspace.setState({ ws: emptyWorkspace(now) });
-      const phrase = DEFAULT_RESULTS.highlight;
-      DEFAULT_RESULTS.highlight = 'not in the title';
-      try {
-        render(<Results />);
-        const h1 = await screen.findByRole('heading', { level: 1, name: 'Your results' });
-        expect(h1.querySelectorAll('.highlight')).toHaveLength(0);
-      } finally {
-        DEFAULT_RESULTS.highlight = phrase;
-      }
+      render(<ResultsHeading copy={{ ...DEFAULT_RESULTS, highlight: 'not in the title' }} />);
+      const h1 = screen.getByRole('heading', { level: 1, name: DEFAULT_RESULTS.title });
+      expect(h1).toHaveTextContent(/^Your results$/);
+      expect(h1.querySelectorAll('.highlight')).toHaveLength(0);
     });
   });
 

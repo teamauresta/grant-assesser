@@ -17,7 +17,8 @@ export type ProgramCardProps = {
   headingLevel?: 'h2' | 'h3';
   /**
    * Set when the stored profile rules the program out. The card stays listed but is de-emphasised:
-   * muted text on the page background, plus an icon and this one-line reason in full-contrast text.
+   * a quiet card (no fill, dashed outline, as on the results page) with muted text, plus an icon and
+   * this one-line reason in full-contrast text.
    */
   notFitReason?: string;
 };
@@ -29,9 +30,10 @@ export function ProgramCard({ program, status, headingLevel: Heading = 'h2', not
     <Card
       as="article"
       interactive
+      emphasis={muted ? 'quiet' : 'default'}
       className={cn(
         'flex h-full flex-col gap-2 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent',
-        muted && 'border-dashed bg-bg text-muted-fg',
+        muted && 'text-muted-fg',
       )}
     >
       <div className="flex items-start justify-between gap-3">

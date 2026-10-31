@@ -13,13 +13,13 @@ describe('Toaster', () => {
     vi.useFakeTimers();
     render(<><button>Elsewhere</button><Toaster /></>);
     screen.getByRole('button', { name: 'Elsewhere' }).focus();
-    act(() => { toast('Submitted. That\'s the hardest part done.'); });
+    act(() => { toast('Saved. A neutral test message.'); });
     const region = screen.getByRole('status');
     expect(region).toHaveAttribute('aria-live', 'polite');
-    expect(region).toHaveTextContent('Submitted.');
+    expect(region).toHaveTextContent('Saved.');
     expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
     act(() => { vi.advanceTimersByTime(TOAST_MS); });
-    expect(region).not.toHaveTextContent('Submitted.');
+    expect(region).not.toHaveTextContent('Saved.');
   });
 
   it('shows an action link and a close button', async () => {
@@ -87,6 +87,20 @@ describe('Toaster', () => {
     screen.getByRole('button', { name: 'Elsewhere' }).focus();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
+  });
+
+  // A small window-style card (Billabong plan, Task 13 leftovers from the Task 9 report): --surface
+  // in a --border outline with the popover's shadow, like the menus; the dismiss button's hover is
+  // --neutral-bg, since --surface is now the toast's own fill.
+  it('is a surface card with the popover shadow', () => {
+    render(<Toaster />);
+    act(() => { toast('Styled.'); });
+    const item = screen.getByText('Styled.').closest('div.animate-toast-in')!;
+    expect(item).toHaveClass('rounded-lg', 'border', 'border-border', 'bg-surface', 'shadow-popover', 'text-fg');
+    for (const c of ['bg-bg', 'shadow-lg']) expect(item).not.toHaveClass(c);
+    const dismiss = screen.getByRole('button', { name: 'Dismiss' });
+    expect(dismiss).toHaveClass('hover:bg-neutral-bg');
+    expect(dismiss).not.toHaveClass('hover:bg-surface');
   });
 
   it('keeps at most three', () => {
