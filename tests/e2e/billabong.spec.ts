@@ -428,3 +428,60 @@ test.describe('marker highlight', () => {
     expect(await paint(page)).toEqual(system);
   });
 });
+
+// The wizard's choice cards (Billabong plan, Task 6; design doc section 11): the checked card has an
+// --accent border, a 2px inset ring and a check icon; keyboard focus is an outline 2px outside the
+// card, so checked and focused stay two different marks.
+test.describe('wizard choice cards', () => {
+  const acn = (page: Page) => page.getByRole('group', { name: /^Do you have an Australian company with an ACN\?/ });
+  /** The card around an option's input, by the input's value ('true' is Yes, 'false' is No). */
+  const card = (page: Page, value: string) => acn(page).locator('label').filter({ has: page.locator(`input[value="${value}"]`) });
+
+  /** The card's edge, outline and icon, once its 150ms transition has finished. */
+  const look = (el: Locator) =>
+    el.evaluate(async (node) => {
+      await Promise.all(node.getAnimations().map((a) => a.finished.catch(() => undefined)));
+      const s = getComputedStyle(node);
+      return {
+        border: s.borderTopColor,
+        width: s.borderTopWidth,
+        shadow: s.boxShadow,
+        outline: s.outlineStyle,
+        outlineColour: s.outlineColor,
+        offset: s.outlineOffset,
+        icon: node.querySelector('svg.lucide-check') !== null,
+      };
+    });
+
+  test('a checked card has the accent border, an inset ring and a check icon; focus is an offset outline', async ({ page }) => {
+    await page.goto('assess/?step=2');
+    await expect(page.getByRole('heading', { level: 2, name: 'Step 2 of 6: Company' })).toBeVisible();
+    const accent = await tokenColour(page, '--accent');
+
+    const resting = await look(card(page, 'true'));
+    expect(resting.border).toBe(await tokenColour(page, '--border-strong'));
+    expect(resting.width).toBe('1px');
+    expect(resting.icon).toBe(false);
+
+    await acn(page).getByRole('radio', { name: /^Yes/ }).check();
+    const checked = await look(card(page, 'true'));
+    expect(checked.border).toBe(accent);
+    expect(checked.shadow).toContain(accent);
+    expect(checked.shadow).toContain('inset');
+    expect(checked.shadow).toContain('2px');
+    expect(checked.icon).toBe(true);
+    expect(checked.outline).toBe('none');
+    expect((await look(card(page, 'false'))).icon).toBe(false);
+
+    // Back out of the group and in again with the keyboard: focus returns to the checked radio, and
+    // the card gains the offset outline on top of its ring.
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(acn(page).getByRole('radio', { name: /^Yes/ })).toBeFocused();
+    const focused = await look(card(page, 'true'));
+    expect(focused.outline).toBe('solid');
+    expect(focused.outlineColour).toBe(accent);
+    expect(focused.offset).toBe('2px');
+    expect(focused.shadow).toBe(checked.shadow);
+  });
+});

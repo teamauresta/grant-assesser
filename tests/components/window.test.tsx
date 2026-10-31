@@ -100,6 +100,16 @@ describe('Window', () => {
     expect(heading).toHaveFocus();
   });
 
+  // A heading that takes focus only from script (the wizard's step title, design doc section 11,
+  // Task 6) is a starting point for reading, not a control: no focus outline, as before it moved into
+  // a window. A heading without tabIndex={-1} keeps the default.
+  it('draws no focus outline on a heading that only script focuses', () => {
+    const { rerender } = render(<Window title="Step 2" headingProps={{ tabIndex: -1 }}><p>Body</p></Window>);
+    expect(screen.getByRole('heading', { name: 'Step 2' })).toHaveClass('focus:outline-none');
+    rerender(<Window title="Step 2"><p>Body</p></Window>);
+    expect(screen.getByRole('heading', { name: 'Step 2' })).not.toHaveClass('focus:outline-none');
+  });
+
   // cn() does not merge Tailwind classes, so the border colour is replaced, never added to.
   it('replaces the border colour with borderClassName', () => {
     render(<Window title="Drop here" borderClassName="border-accent"><p>Body</p></Window>);

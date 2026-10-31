@@ -39,7 +39,10 @@ export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'c
   titleId?: string;
   /** The heading element, for callers that move focus to it. */
   headingRef?: Ref<HTMLHeadingElement>;
-  /** Extra attributes for the heading, such as tabIndex={-1} so it can take focus. */
+  /**
+   * Extra attributes for the heading, such as tabIndex={-1} so script can move focus to it. Such a
+   * heading is a reading start point, not a control, so it draws no focus outline.
+   */
   headingProps?: Omit<ComponentPropsWithoutRef<'h2'>, 'id' | 'children' | 'className'>;
   /** Real controls for the title bar (links, buttons), shown before the decorative ones. */
   actions?: ReactNode;
@@ -93,7 +96,12 @@ export function Window({
       className={cn('rounded-lg border bg-surface shadow-window', borderClassName, className)}
     >
       <div className={WINDOW_BAR}>
-        <Heading {...headingProps} ref={headingRef} id={id} className={cn('min-w-0 flex-1 break-words font-semibold', TITLE_SIZES[titleSize])}>
+        <Heading
+          {...headingProps}
+          ref={headingRef}
+          id={id}
+          className={cn('min-w-0 flex-1 break-words font-semibold', TITLE_SIZES[titleSize], headingProps?.tabIndex === -1 && 'focus:outline-none')}
+        >
           {title}
         </Heading>
         {actions}

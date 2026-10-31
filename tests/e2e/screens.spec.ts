@@ -90,6 +90,28 @@ test('plan', async ({ page }, info) => {
   await capture(page, 'plan', info.project.name);
 });
 
+// The wizard in its window (design doc section 11, Task 6): the first, a middle and the last step with
+// the bootstrappedVic answers, so checked cards show; then keyboard focus on a checked card.
+for (const theme of ['light', 'dark'] as const) {
+  test(`wizard (${theme})`, async ({ page }, info) => {
+    const project = info.project.name;
+    await seedStorage(page, { workspace: populatedWorkspace(), theme });
+    for (const step of [1, 2, 6]) {
+      await page.goto(`assess/?step=${step}`);
+      await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^Step ${step} of 6`) })).toBeVisible();
+      await capture(page, `wizard-${step}-${theme}`, project);
+    }
+    await page.goto('assess/?step=2');
+    const yes = page.getByRole('group', { name: /^Do you have an Australian company with an ACN\?/ }).getByRole('radio', { name: /^Yes/ });
+    await expect(yes).toBeChecked();
+    await yes.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(yes).toBeFocused();
+    await page.screenshot({ path: join(OUT, `wizard-focus-${theme}-${project}.png`) });
+  });
+}
+
 test('results', async ({ page }, info) => {
   await seedStorage(page, { workspace: populatedWorkspace() });
   await page.goto('assess/results/');

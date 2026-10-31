@@ -56,6 +56,15 @@ describe.each([['light', light], ['dark', dark]] as const)('%s theme', (theme, t
     expect(contrast(t['--border-strong'], t['--bg'])).toBeGreaterThanOrEqual(3);
     expect(contrast(t['--border-strong'], t['--surface'])).toBeGreaterThanOrEqual(3);
   });
+  // The wizard's choice cards (design doc section 11, Task 6): a --surface card, --bg on hover (not
+  // --neutral-bg, on which --border-strong is under 3:1). The checked state's accent border, ring and
+  // check icon, and the unchecked --border-strong outline, stand out from both fills (WCAG 1.4.11).
+  it('choice card edges meet 3:1 on the card (--surface) and its hover (--bg)', () => {
+    for (const fill of ['--surface', '--bg']) {
+      expect(contrast(t['--accent'], t[fill])).toBeGreaterThanOrEqual(3);
+      expect(contrast(t['--border-strong'], t[fill])).toBeGreaterThanOrEqual(3);
+    }
+  });
   // Chunky buttons (design doc section 4): the ledge is a darker amber under the amber fill. It is part
   // of the control's shape, so it must be visible against the page (WCAG 1.4.11, 3:1).
   it('the primary ledge stays visible on --bg (3:1)', () => {
