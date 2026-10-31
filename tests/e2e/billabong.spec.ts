@@ -276,77 +276,126 @@ test.describe('bottom bars on a phone', () => {
       expect(await hiddenFocus(page, ['[data-wizard-footer]', BOTTOM_NAV], 80), `step ${step}`).toEqual([]);
     }
   });
+
+  // Enlarged text (WCAG 1.4.4, design doc section 11, Task 4 review): the footer grows upwards, and the
+  // wizard measures it into --wizard-footer-h, so focus still clears it and the nav.
+  test("at 200% text, the wizard's footer clears the nav and never hides focus", async ({ page }) => {
+    for (let step = 1; step <= 6; step++) {
+      await page.goto(`assess/?step=${step}`);
+      await expect(page.getByText(`Step ${step} of 6`)).toBeVisible();
+      await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+      await frames(page);
+      const footer = page.locator('[data-wizard-footer]');
+      const f = await footer.evaluate(box);
+      const nav = await page.locator(BOTTOM_NAV).evaluate(box);
+      expect(f.bottom).toBeLessThanOrEqual(nav.top + 0.5);
+      const measured = await page.evaluate(() => parseFloat(document.documentElement.style.getPropertyValue('--wizard-footer-h')));
+      expect(measured).toBeCloseTo(f.bottom - f.top, 0);
+      expect(await hiddenFocus(page, ['[data-wizard-footer]', BOTTOM_NAV], 120), `step ${step}`).toEqual([]);
+    }
+  });
 });
 
-// Marker highlights (design doc sections 2 and 9). No page uses one yet, so the checks read the built
-// CSS and paint a mark with the classes components/ui/highlight.tsx gives it.
+// Marker highlights (design doc sections 2, 4 and 9).
 test.describe('marker highlight', () => {
-  /** Every `.highlight` rule in the page's style sheets, with the at-rules around it. */
-  const highlightRules = (page: Page) =>
-    page.evaluate(() => {
-      const found: { conditions: string[]; background: string; backgroundColor: string; color: string }[] = [];
-      const walk = (rules: CSSRuleList, conditions: string[]) => {
-        for (const rule of rules) {
-          if (rule instanceof CSSStyleRule && rule.selectorText === '.highlight') {
-            found.push({
-              conditions,
-              background: rule.style.background || rule.style.backgroundColor,
-              backgroundColor: rule.style.backgroundColor,
-              color: rule.style.color,
-            });
-          }
-          if (rule instanceof CSSConditionRule || rule instanceof CSSLayerBlockRule) {
-            const at = rule instanceof CSSSupportsRule ? `@supports ${rule.conditionText}`
-              : rule instanceof CSSMediaRule ? `@media ${rule.conditionText}` : '@layer';
-            walk(rule.cssRules, [...conditions, at]);
-          }
-          if (rule instanceof CSSStyleRule && rule.cssRules.length) walk(rule.cssRules, conditions);
+  type CssRule = { conditions: string[]; selectors: string[]; declarations: [string, string][] };
+
+  /**
+   * The style rules in a (minified) style sheet's text, with the at-rule preludes around each. A
+   * small brace parser: it skips escapes and strings, which is all the built CSS needs.
+   */
+  function styleRules(text: string): CssRule[] {
+    const rules: CssRule[] = [];
+    const stack: string[] = [];
+    let start = 0;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '\\') i++;
+      else if (ch === '"' || ch === "'") i = text.indexOf(ch, i + 1);
+      else if (ch === '{') {
+        // A statement at-rule (`@import …;`) can precede the prelude.
+        stack.push(text.slice(start, i).split(';').pop()!.trim());
+        start = i + 1;
+      } else if (ch === '}') {
+        const prelude = stack.pop() ?? '';
+        if (!prelude.startsWith('@')) {
+          const declarations = text.slice(start, i).split(';').map((d) => d.trim()).filter(Boolean)
+            .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()] as [string, string]);
+          // Conditions only: a cascade layer does not decide whether a rule applies.
+          rules.push({ conditions: stack.filter((s) => /^@(supports|media|container)\b/.test(s)), selectors: prelude.split(',').map((s) => s.trim()), declarations });
         }
-      };
-      for (const sheet of document.styleSheets) walk(sheet.cssRules, []);
-      return found;
-    });
+        start = i + 1;
+      }
+    }
+    return rules;
+  }
+
+  /** Every `.highlight` rule in the page's style sheets, read from their raw text. */
+  async function highlightRules(page: Page): Promise<CssRule[]> {
+    const { hrefs, inline } = await page.evaluate(() => ({
+      hrefs: [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].map((l) => l.href),
+      inline: [...document.querySelectorAll('style')].map((s) => s.textContent ?? ''),
+    }));
+    const texts = [...inline];
+    for (const href of hrefs) texts.push(await (await page.request.get(href)).text());
+    return texts.flatMap(styleRules).filter((r) => r.selectors.includes('.highlight'));
+  }
 
   // The minifier gives a color-mix() a fallback at the tone's full strength (--fg on that is under
-  // 2:1 in dark), so the built CSS must paint the band only where color-mix() is supported.
+  // 2:1 in dark), possibly inside the same rule, where the CSSOM would show only the last value. So
+  // this reads the raw text: every background the built CSS gives .highlight is cleared, the guarded
+  // color-mix(), or Mark in forced colours.
   test('the built CSS paints the band only through color-mix(), and Mark in forced colours', async ({ page }) => {
     await page.goto('./');
     const rules = await highlightRules(page);
-    const painted = rules.filter((r) => r.background);
-    expect(painted.length).toBeGreaterThan(0);
-    // Without color-mix() there is no band: the unguarded rule clears the background.
-    const unconditional = (r: (typeof rules)[number]) => !r.conditions.some((c) => /^@(supports|media)/.test(c));
-    // The minifier writes it as `background: 0 0`, which leaves the colour at its initial value.
-    const cleared = /^(transparent|rgba\(0, 0, 0, 0\)|initial)$/;
-    expect(rules.some((r) => unconditional(r) && cleared.test(r.backgroundColor)), JSON.stringify(rules)).toBe(true);
-    for (const r of painted) {
-      const forced = r.conditions.some((c) => /forced-colors: active/.test(c));
-      if (forced) expect(r.background).toMatch(/^mark$/i);
-      else if (unconditional(r)) {
-        // The base rule clears the browser's own <mark> background (a full-strength yellow).
-        expect(r.backgroundColor, JSON.stringify(r)).toMatch(cleared);
+    const backgrounds = (r: CssRule) => r.declarations.filter(([p]) => /^background(-color)?$/.test(p)).map(([, v]) => v);
+    // `background: transparent` as minified (`0 0` is a position, leaving the colour transparent).
+    const cleared = /^(transparent|#0000|#00000000|0 0|none)$/;
+
+    const base = rules.filter((r) => r.conditions.length === 0);
+    expect(base.length).toBeGreaterThan(0);
+    expect(base.flatMap(backgrounds).length).toBeGreaterThan(0);
+    for (const v of base.flatMap(backgrounds)) expect(v).toMatch(cleared);
+
+    const conditional = rules.filter((r) => r.conditions.length > 0 && backgrounds(r).length > 0);
+    expect(conditional.length).toBeGreaterThan(0);
+    for (const r of conditional) {
+      const at = r.conditions.join(' ');
+      if (/forced-colors:\s*active/.test(at)) {
+        expect(backgrounds(r), at).toEqual(['mark']);
+        expect(r.declarations, at).toContainEqual(['color', 'marktext']);
       } else {
+        expect(at).toMatch(/^@supports \(color:\s*color-mix\(/);
         // The minifier drops some spaces, so they are optional.
-        expect(r.background, JSON.stringify(r)).toMatch(/^color-mix\(in srgb, ?var\(--hl, ?var\(--hl-amber\)\) 35%, ?transparent\)$/);
-        expect(r.conditions.some((c) => /^@supports .*color-mix/.test(c)), JSON.stringify(r)).toBe(true);
+        for (const v of backgrounds(r)) expect(v, at).toMatch(/^color-mix\(in srgb, ?var\(--hl, ?var\(--hl-amber\)\) 35%, ?transparent\)$/);
       }
     }
   });
 
+  /**
+   * Paints a highlight inside muted text and returns its colours. TODO(Task 11): use the hero's
+   * Highlight once the home page renders one, instead of this copy of the component's classes.
+   */
+  const paint = (page: Page) =>
+    page.evaluate(() => {
+      const p = document.createElement('p');
+      p.className = 'text-muted-fg';
+      const el = document.createElement('span');
+      el.className = 'highlight [--hl:var(--hl-sky)]';
+      el.textContent = 'key words';
+      p.append(el);
+      document.querySelector('main')!.prepend(p);
+      const s = getComputedStyle(el);
+      return { background: s.backgroundColor, color: s.color };
+    });
+
   for (const theme of ['light', 'dark'] as const) {
-    test(`a mark is the tone at 35% behind --fg text (${theme})`, async ({ page }) => {
+    test(`a highlight is the tone at 35% behind --fg text, inside muted text (${theme})`, async ({ page }) => {
       await seedStorage(page, { theme });
       await page.goto('./');
       const fg = await tokenColour(page, '--fg');
       const sky = await tokenColour(page, '--hl-sky');
-      const painted = await page.evaluate(() => {
-        const mark = document.createElement('mark');
-        mark.className = 'highlight text-fg [--hl:var(--hl-sky)]';
-        mark.textContent = 'key words';
-        document.querySelector('main')!.prepend(mark);
-        const s = getComputedStyle(mark);
-        return { background: s.backgroundColor, color: s.color };
-      });
+      const painted = await paint(page);
       expect(painted.color).toBe(fg);
       const [r, g, b] = sky.match(/\d+/g)!.map(Number);
       const m = painted.background.match(/^(?:rgba\((\d+), (\d+), (\d+), ([\d.]+)\)|color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\))$/);
@@ -356,4 +405,23 @@ test.describe('marker highlight', () => {
       for (const [got, want] of [[pr, r], [pg, g], [pb, b]]) expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
     });
   }
+
+  // A text-colour class on the element (.text-fg comes later in the CSS) would beat the utility's
+  // MarkText, leaving forced-colours text on the yellow Mark at about 1.07:1.
+  test('forced colours paint MarkText on Mark', async ({ page }) => {
+    await seedStorage(page, { theme: 'dark' });
+    await page.emulateMedia({ forcedColors: 'active', colorScheme: 'dark' });
+    await page.goto('./');
+    const system = await page.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'MarkText';
+      probe.style.backgroundColor = 'Mark';
+      document.body.append(probe);
+      const s = getComputedStyle(probe);
+      const out = { color: s.color, background: s.backgroundColor };
+      probe.remove();
+      return out;
+    });
+    expect(await paint(page)).toEqual(system);
+  });
 });

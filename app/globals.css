@@ -84,6 +84,10 @@
 
   /* Strength of the cursor spotlight; tests/lib/tokens.test.ts keeps text AA on it in each theme. */
   --spot-mix: 6%;
+
+  /* The window frame's soft shadow (components/ui/window.tsx, the shadow-window utility): a 1px
+     --border line under its bottom edge and a short drop. The only shadow on cards (design doc section 4). */
+  --window-shadow: 0 1px 0 var(--border), 0 8px 24px -16px rgb(0 0 0 / 0.35);
 }
 
 [data-theme="dark"] {
@@ -121,6 +125,9 @@
 
   /* Light text on a dark ground: the spotlight shows at a lower strength. */
   --spot-mix: 4%;
+
+  /* On the dark page a 35% black drop barely shows, so it is deeper. */
+  --window-shadow: 0 1px 0 var(--border), 0 10px 28px -14px rgb(0 0 0 / 0.7);
 
   /* The forest-green panel sits close to the dark page (about 1.2:1), so it gets a visible decorative edge. */
   --panel-border: #2c4a3d;
@@ -207,14 +214,17 @@
    * The bars' heights, the single source for everything that must clear them (see
    * components/layout/inset-bar.ts for who uses them). --bar-h: the sticky top band, 8px + the 56px
    * bar + 8px, below the notch's safe area. --bottom-bar-h: the bottom nav (below md), the 58px bar
-   * (56px items and its border) above max(8px, the home indicator). --wizard-footer-h: the wizard's
-   * fixed footer on phones, which sits on the bottom nav (a 44px button, 12px padding each side and
-   * a 1px top border).
+   * (56px items and its border) above max(8px, the home indicator). --wizard-footer-min-h: the
+   * wizard's fixed footer on phones, which sits on the bottom nav (a 44px button, 12px padding each
+   * side and a 1px top border). --wizard-footer-h: the footer's actual height, this until the wizard
+   * measures it (components/assess/wizard.tsx sets it on <html>), so with enlarged text the space
+   * kept clear grows with the footer.
    */
   :root {
     --bar-h: calc(4.5rem + env(safe-area-inset-top));
     --bottom-bar-h: calc(3.625rem + max(0.5rem, env(safe-area-inset-bottom)));
-    --wizard-footer-h: 4.3125rem;
+    --wizard-footer-min-h: 4.3125rem;
+    --wizard-footer-h: var(--wizard-footer-min-h);
   }
 
   /* Keeps in-page targets (skip link, anchors) and keyboard focus clear of the sticky top bar, and
@@ -304,9 +314,10 @@
  * components/ui/highlight.tsx) over the page, behind --fg text only. A slight skew and rounded ends,
  * like a pen stroke. The band is inside @supports because the minifier gives a color-mix() a
  * fallback at the first colour's full strength, and --fg on a full-strength highlight is under 2:1 in
- * dark. The browser's own <mark> background (Mark, a full-strength yellow; preflight keeps it) is
- * cleared first, so without color-mix() there is simply no band. Forced colours use the system's
- * Mark colours.
+ * dark. The base rule clears the background, so without color-mix() there is simply no band, whatever
+ * element carries the utility (Highlight renders a <span>; a <mark> would bring the browser's own
+ * full-strength yellow, which preflight keeps). Forced colours use the system's Mark colours; the
+ * component adds no text-colour class, since a later .text-fg would beat MarkText.
  */
 @utility highlight {
   color: var(--fg);
@@ -322,6 +333,11 @@
     background: Mark;
     color: MarkText;
   }
+}
+
+/* The window frame's shadow, per theme (--window-shadow). */
+@utility shadow-window {
+  box-shadow: var(--window-shadow);
 }
 
 /* A quiet eucalyptus shadow: the primary call to action in the hero. */

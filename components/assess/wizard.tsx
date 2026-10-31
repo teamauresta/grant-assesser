@@ -7,6 +7,7 @@ import { Persona, type Profile } from '@/lib/schema';
 import { STEPS, STEP_COUNT, parseStep, visibleQuestions, type Step } from '@/lib/assessment/questions';
 import { todayISO } from '@/lib/dates';
 import { useNow } from '@/lib/use-now';
+import { useHeightVar } from '@/lib/use-height-var';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { markAssessmentFinished } from '@/lib/celebrate';
 import { hasAnswers } from '@/lib/profile';
@@ -53,6 +54,10 @@ function WizardView({ step, today }: { step: Step; today: string }) {
   const [unsure, setUnsure] = useState<ReadonlySet<keyof Profile>>(() => new Set());
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shownStep = useRef(step);
+  // Enlarged text makes the phone footer taller than its default: what keeps fields clear of it
+  // (scroll-padding-bottom, the bottom padding below) follows its real height.
+  const footerRef = useRef<HTMLDivElement>(null);
+  useHeightVar(footerRef, '--wizard-footer-h');
 
   // Move focus to the new step's heading (not on first load), so keyboard and screen reader users
   // start at the top of the new questions.
@@ -120,9 +125,10 @@ function WizardView({ step, today }: { step: Step; today: string }) {
       </section>
 
       {/* Mobile: a bar fixed on top of the bottom navigation's band (--bottom-bar-h), at least
-          --wizard-footer-h tall: with enlarged text its button grows, and the bar grows upwards rather
-          than under the nav. app/globals.css keeps focused fields clear of both (scroll-padding-bottom). */}
-      <div data-wizard-footer className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-(--bottom-bar-h) max-md:min-h-(--wizard-footer-h) max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
+          --wizard-footer-min-h tall: with enlarged text its button grows, and the bar grows upwards
+          rather than under the nav. Its measured height is --wizard-footer-h, which app/globals.css
+          uses to keep focused fields clear of both (scroll-padding-bottom). */}
+      <div ref={footerRef} data-wizard-footer className="z-30 border-border bg-bg max-md:fixed max-md:inset-x-0 max-md:bottom-(--bottom-bar-h) max-md:min-h-(--wizard-footer-min-h) max-md:border-t max-md:px-4 max-md:py-3 md:border-t md:pt-6">
         <div className="mx-auto flex max-w-2xl gap-3 md:mx-0">
           {step > 1 && (
             <Button variant="secondary" className="max-md:flex-1" onClick={() => goTo(step - 1)}>

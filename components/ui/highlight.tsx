@@ -9,10 +9,12 @@ const TONES: Record<HighlightTone, string> = {
 };
 
 /**
- * A marker band behind a key phrase (Billabong design doc, section 2): the `highlight` utility in
- * app/globals.css, at most once per heading. The text is always --fg (muted text on a highlight is
- * under AA in dark), so there is no className to change it.
+ * A marker band behind a key phrase (Billabong design doc, sections 2 and 4): the `highlight` utility
+ * in app/globals.css, at most once per heading. A <span>, not a <mark>: the band is emphasis in the
+ * design, not relevance, and screen readers announce a mark as "highlighted". The utility sets the
+ * text to --fg (muted text on a highlight is under AA in dark) and MarkText in forced colours, so
+ * there is no text class here (a later .text-fg would beat MarkText) and no className to add one.
  */
 export function Highlight({ tone = 'amber', children }: { tone?: HighlightTone; children: ReactNode }) {
-  return <mark className={`highlight text-fg ${TONES[tone]}`}>{children}</mark>;
+  return <span className={`highlight ${TONES[tone]}`}>{children}</span>;
 }

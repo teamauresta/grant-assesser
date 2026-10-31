@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { Window } from '@/components/ui/window';
+import { createRef } from 'react';
+import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { WINDOW_BAR, Window } from '@/components/ui/window';
 
 const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]';
 
@@ -62,7 +63,7 @@ describe('Window', () => {
   it('draws a neutral title bar over a surface body', () => {
     render(<Window title="Report" className="mt-4"><p>Body</p></Window>);
     const region = screen.getByRole('region', { name: 'Report' });
-    expect(region).toHaveClass('bg-surface', 'border-border', 'mt-4');
+    expect(region).toHaveClass('bg-surface', 'border-border', 'shadow-window', 'mt-4');
     const bar = screen.getByRole('heading', { name: 'Report' }).parentElement!;
     expect(bar).toHaveClass('bg-neutral-bg', 'border-border');
     expect(bar.className).not.toMatch(/\b(bg|border)-(primary|accent|brand|spark|ok|warn|danger|hl)/);
@@ -72,5 +73,84 @@ describe('Window', () => {
   // it without shipping it to the browser.
   it('is not a client component', () => {
     expect(readFileSync('components/ui/window.tsx', 'utf8')).not.toMatch(/^\s*['"]use client['"]/m);
+  });
+
+  it('takes h1 and h4 titles too', () => {
+    render(<><Window title="Top" as="h1"><p>1</p></Window><Window title="Deep" as="h4"><p>4</p></Window></>);
+    expect(screen.getByRole('heading', { level: 1, name: 'Top' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 4, name: 'Deep' })).toBeInTheDocument();
+  });
+
+  it('passes other section props to the frame', () => {
+    const onDragOver = vi.fn();
+    render(<Window title="Column" data-column="preparing" onDragOver={onDragOver}><p>Body</p></Window>);
+    const region = screen.getByRole('region', { name: 'Column' });
+    expect(region).toHaveAttribute('data-column', 'preparing');
+    fireEvent.dragOver(region);
+    expect(onDragOver).toHaveBeenCalledOnce();
+  });
+
+  it('gives callers the heading to focus', () => {
+    const ref = createRef<HTMLHeadingElement>();
+    render(<Window title="Step 2" headingRef={ref} headingProps={{ tabIndex: -1 }}><p>Body</p></Window>);
+    const heading = screen.getByRole('heading', { name: 'Step 2' });
+    expect(ref.current).toBe(heading);
+    expect(heading).toHaveAttribute('tabindex', '-1');
+    ref.current!.focus();
+    expect(heading).toHaveFocus();
+  });
+
+  // cn() does not merge Tailwind classes, so the border colour is replaced, never added to.
+  it('replaces the border colour with borderClassName', () => {
+    render(<Window title="Drop here" borderClassName="border-accent"><p>Body</p></Window>);
+    const region = screen.getByRole('region', { name: 'Drop here' });
+    expect(region).toHaveClass('border', 'border-accent');
+    expect(region).not.toHaveClass('border-border');
+  });
+
+  // Focus outlines and cards moving between pipeline columns must not be clipped; the bar rounds its
+  // own top corners inside the frame's 1px border instead.
+  it('does not clip its content', () => {
+    render(<Window title="Pipeline"><p>Body</p></Window>);
+    expect(screen.getByRole('region', { name: 'Pipeline' }).className).not.toMatch(/overflow-/);
+    expect(screen.getByRole('heading', { name: 'Pipeline' }).parentElement).toHaveClass('rounded-t-[7px]');
+  });
+
+  // Enlarged text (WCAG 1.4.4): a long title wraps rather than being cut off.
+  it('wraps a long title, with the controls at the top', () => {
+    const { container } = render(<Window title="A very long window title"><p>Body</p></Window>);
+    const heading = screen.getByRole('heading', { name: 'A very long window title' });
+    expect(heading).toHaveClass('min-w-0', 'flex-1', 'break-words');
+    expect(heading).not.toHaveClass('truncate');
+    expect(container.querySelector('span[aria-hidden="true"]')).toHaveClass('self-start');
+  });
+
+  it('drops the decorative controls with controls={false}', () => {
+    const { container } = render(<Window title="Dialog-like" controls={false}><p>Body</p></Window>);
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+  });
+
+  it('uses titleId for the heading when given', () => {
+    render(<Window title="Named" titleId="named-title"><p>Body</p></Window>);
+    expect(screen.getByRole('heading', { name: 'Named' })).toHaveAttribute('id', 'named-title');
+    expect(screen.getByRole('region', { name: 'Named' })).toHaveAttribute('aria-labelledby', 'named-title');
+  });
+
+  it('exports the title bar classes for other frames (dialogs) to reuse', () => {
+    render(<Window title="Bar"><p>Body</p></Window>);
+    const bar = screen.getByRole('heading', { name: 'Bar' }).parentElement!;
+    expect(WINDOW_BAR.split(' ').every((c) => bar.classList.contains(c))).toBe(true);
+    expect(WINDOW_BAR).toMatch(/\bbg-neutral-bg\b/);
+  });
+
+  // A step in a sequence (How it works) is not a landmark: a plain div, its heading kept.
+  it('renders a div with no region landmark when landmark={false}', () => {
+    render(<Window title="Step one" landmark={false}><p>Body</p></Window>);
+    expect(screen.queryByRole('region')).toBeNull();
+    const heading = screen.getByRole('heading', { level: 2, name: 'Step one' });
+    const frame = heading.parentElement!.parentElement!;
+    expect(frame.tagName).toBe('DIV');
+    expect(frame).not.toHaveAttribute('aria-labelledby');
+    expect(frame).toHaveClass('bg-surface');
   });
 });

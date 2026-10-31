@@ -208,11 +208,16 @@ describe('the highlight utility', () => {
     expect(rule.replace(supports![0], '')).not.toMatch(/background(-color)?:\s*(color-mix|var)/);
   });
 
-  // Browsers give <mark> a full-strength yellow background (Mark) of their own, and preflight does
-  // not reset it, so the base rule clears it: without color-mix() there must be no band at all.
-  it('clears the browser\'s own mark background outside @supports', () => {
+  // Without color-mix() there must be no band at all, whatever element carries the utility (a <mark>
+  // brings the browser's own full-strength yellow, which preflight keeps). So the base rule clears the
+  // background, and every background outside the @supports and forced-colours blocks is transparent.
+  it('clears the background outside @supports', () => {
     const base = rule.slice(0, rule.indexOf('@'));
     expect(base).toMatch(/^\s*background: transparent;/m);
+    const outside = rule.replace(/@(supports|media)[^{]*\{[^}]*\}/g, '');
+    const backgrounds = [...outside.matchAll(/background(?:-color)?:\s*([^;]+);/g)].map((m) => m[1].trim());
+    expect(backgrounds.length).toBeGreaterThan(0);
+    expect(backgrounds.every((v) => v === 'transparent')).toBe(true);
   });
 
   it('uses the system Mark colours in forced-colours mode', () => {
@@ -224,4 +229,12 @@ describe('the highlight utility', () => {
   it('has no hl colour in the theme', () => {
     expect(css).not.toMatch(/--color-hl-/);
   });
+});
+
+// The window frame's shadow (design doc section 4), one per theme: a black shadow barely shows on the
+// dark page, so dark sets its own.
+it('the window shadow is a token in both themes, used by the shadow-window utility', () => {
+  expect(block(':root')).toMatch(/--window-shadow:\s*[^;]+;/);
+  expect(block('[data-theme="dark"]')).toMatch(/--window-shadow:\s*[^;]+;/);
+  expect(utility('shadow-window')).toMatch(/box-shadow:\s*var\(--window-shadow\);/);
 });
