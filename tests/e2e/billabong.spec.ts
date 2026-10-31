@@ -284,11 +284,16 @@ test.describe('marker highlight', () => {
   /** Every `.highlight` rule in the page's style sheets, with the at-rules around it. */
   const highlightRules = (page: Page) =>
     page.evaluate(() => {
-      const found: { conditions: string[]; background: string; color: string }[] = [];
+      const found: { conditions: string[]; background: string; backgroundColor: string; color: string }[] = [];
       const walk = (rules: CSSRuleList, conditions: string[]) => {
         for (const rule of rules) {
           if (rule instanceof CSSStyleRule && rule.selectorText === '.highlight') {
-            found.push({ conditions, background: rule.style.background || rule.style.backgroundColor, color: rule.style.color });
+            found.push({
+              conditions,
+              background: rule.style.background || rule.style.backgroundColor,
+              backgroundColor: rule.style.backgroundColor,
+              color: rule.style.color,
+            });
           }
           if (rule instanceof CSSConditionRule || rule instanceof CSSLayerBlockRule) {
             const at = rule instanceof CSSSupportsRule ? `@supports ${rule.conditionText}`
@@ -309,10 +314,18 @@ test.describe('marker highlight', () => {
     const rules = await highlightRules(page);
     const painted = rules.filter((r) => r.background);
     expect(painted.length).toBeGreaterThan(0);
+    // Without color-mix() there is no band: the unguarded rule clears the background.
+    const unconditional = (r: (typeof rules)[number]) => !r.conditions.some((c) => /^@(supports|media)/.test(c));
+    // The minifier writes it as `background: 0 0`, which leaves the colour at its initial value.
+    const cleared = /^(transparent|rgba\(0, 0, 0, 0\)|initial)$/;
+    expect(rules.some((r) => unconditional(r) && cleared.test(r.backgroundColor)), JSON.stringify(rules)).toBe(true);
     for (const r of painted) {
       const forced = r.conditions.some((c) => /forced-colors: active/.test(c));
       if (forced) expect(r.background).toMatch(/^mark$/i);
-      else {
+      else if (unconditional(r)) {
+        // The base rule clears the browser's own <mark> background (a full-strength yellow).
+        expect(r.backgroundColor, JSON.stringify(r)).toMatch(cleared);
+      } else {
         // The minifier drops some spaces, so they are optional.
         expect(r.background, JSON.stringify(r)).toMatch(/^color-mix\(in srgb, ?var\(--hl, ?var\(--hl-amber\)\) 35%, ?transparent\)$/);
         expect(r.conditions.some((c) => /^@supports .*color-mix/.test(c)), JSON.stringify(r)).toBe(true);

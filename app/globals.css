@@ -304,10 +304,13 @@
  * components/ui/highlight.tsx) over the page, behind --fg text only. A slight skew and rounded ends,
  * like a pen stroke. The band is inside @supports because the minifier gives a color-mix() a
  * fallback at the first colour's full strength, and --fg on a full-strength highlight is under 2:1 in
- * dark: without color-mix() there is simply no band. Forced colours use the system's Mark colours.
+ * dark. The browser's own <mark> background (Mark, a full-strength yellow; preflight keeps it) is
+ * cleared first, so without color-mix() there is simply no band. Forced colours use the system's
+ * Mark colours.
  */
 @utility highlight {
   color: var(--fg);
+  background: transparent;
   border-radius: 0.3em 0.15em;
   padding-inline: 0.15em;
   box-decoration-break: clone;

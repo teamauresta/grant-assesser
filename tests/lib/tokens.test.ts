@@ -208,6 +208,13 @@ describe('the highlight utility', () => {
     expect(rule.replace(supports![0], '')).not.toMatch(/background(-color)?:\s*(color-mix|var)/);
   });
 
+  // Browsers give <mark> a full-strength yellow background (Mark) of their own, and preflight does
+  // not reset it, so the base rule clears it: without color-mix() there must be no band at all.
+  it('clears the browser\'s own mark background outside @supports', () => {
+    const base = rule.slice(0, rule.indexOf('@'));
+    expect(base).toMatch(/^\s*background: transparent;/m);
+  });
+
   it('uses the system Mark colours in forced-colours mode', () => {
     expect(rule).toMatch(/@media \(forced-colors: active\) \{\s*background: Mark;\s*color: MarkText;\s*\}/);
   });
