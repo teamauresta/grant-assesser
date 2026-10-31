@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button, type ButtonVariant } from './button';
 import { focusRing } from './focus-ring';
+import { WINDOW_BAR, WINDOW_FRAME } from './window';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -27,6 +28,14 @@ export type DialogProps = {
  * Modal dialog (WAI-ARIA dialog pattern): focus moves in and is trapped, Escape closes, the rest of
  * the page is inert, and focus returns to the element that opened it. Clicking the backdrop does
  * nothing, so a half-filled form is never lost by a stray click.
+ *
+ * Drawn as a window (Billabong design doc section 4): the title in the window's neutral bar with a
+ * real close button (no decorative glyphs), over a --surface body.
+ *
+ * The rest of the page, the toasts included, is inert while it is open, so a toast shown then is
+ * neither announced nor reachable. Show a toast after closing: a flow that closes the dialog and
+ * cheers should cheer on the next frame (the pipeline's outcome dialog does), by which time the
+ * dialog's cleanup has made the page live again.
  */
 export function Dialog({ open, onClose, title, description, initialFocusRef, footer, children, size = 'md' }: DialogProps) {
   if (!open || typeof document === 'undefined') return null;
@@ -94,26 +103,30 @@ function DialogPanel({ onClose, title, description, initialFocusRef, footer, chi
         tabIndex={-1}
         onKeyDown={onKeyDown}
         className={cn(
-          'flex max-h-[calc(100dvh-2rem)] w-full animate-dialog-in flex-col overflow-hidden rounded-lg border border-border bg-bg focus:outline-none',
+          WINDOW_FRAME,
+          'flex max-h-[calc(100dvh-2rem)] w-full animate-dialog-in flex-col border-border focus:outline-none',
           size === 'sm' ? 'max-w-md' : 'max-w-lg',
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-          <div className="flex flex-col gap-1">
-            <h2 id={`${id}-title`} className="text-xl">{title}</h2>
-            {description && <div id={`${id}-desc`} className="text-sm text-muted-fg">{description}</div>}
-          </div>
+        <div className={WINDOW_BAR}>
+          <h2 id={`${id}-title`} className="min-w-0 flex-1 break-words text-base font-semibold">{title}</h2>
+          {/* 44px target in a bar sized for text: the negative margins keep the bar compact. */}
           <button
             type="button"
             onClick={() => onCloseRef.current()}
             aria-label="Close"
-            className={cn('-mr-2 -mt-1 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+            className={cn('-my-2 -mr-2 inline-flex size-11 shrink-0 items-center justify-center self-start rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
           >
             <X aria-hidden="true" size={20} strokeWidth={1.5} />
           </button>
         </div>
-        {children && <div className="flex flex-col gap-5 overflow-y-auto px-5 py-5">{children}</div>}
-        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-4">{footer}</div>}
+        {(description || children) && (
+          <div className="flex min-h-0 flex-col gap-5 overflow-y-auto px-5 py-5">
+            {description && <div id={`${id}-desc`} className="text-sm text-muted-fg">{description}</div>}
+            {children}
+          </div>
+        )}
+        {footer && <div className="flex flex-wrap justify-end gap-2 rounded-b-[7px] border-t border-border px-5 py-4">{footer}</div>}
       </div>
     </div>
   );

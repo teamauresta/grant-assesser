@@ -179,6 +179,18 @@ describe('Window', () => {
     expect(section).not.toHaveClass('text-sm');
   });
 
+  // Narrow windows (the plan's pipeline columns, design doc section 11, Task 8) take a tighter body:
+  // a prop, since cn() does not merge a caller's padding with the default p-4 md:p-6.
+  it('pads the body p-4 md:p-6 by default and p-3 with padding="sm"', () => {
+    render(<><Window title="Wide"><p>Wide body</p></Window><Window title="Narrow" padding="sm"><p>Narrow body</p></Window></>);
+    const wide = screen.getByText('Wide body').parentElement!;
+    expect(wide).toHaveClass('p-4', 'md:p-6');
+    const narrow = screen.getByText('Narrow body').parentElement!;
+    expect(narrow).toHaveClass('p-3');
+    expect(narrow).not.toHaveClass('p-4');
+    expect(narrow).not.toHaveClass('md:p-6');
+  });
+
   // A step in a sequence (How it works) is not a landmark: a plain div, its heading kept.
   it('renders a div with no region landmark when landmark={false}', () => {
     render(<Window title="Step one" landmark={false}><p>Body</p></Window>);

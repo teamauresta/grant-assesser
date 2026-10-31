@@ -11,6 +11,7 @@ import { useNow } from '@/lib/use-now';
 import { useWorkspace } from '@/lib/store/use-workspace';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Tabs } from '@/components/ui/tabs';
+import { WINDOW_BAR, WINDOW_FRAME, WindowControls } from '@/components/ui/window';
 import { BackupPrompt } from '@/components/layout/backup-prompt';
 import { ProgressRing } from './progress-ring';
 import { CalendarView } from './calendar-view';
@@ -98,15 +99,31 @@ function PlanView({ tab, goalId, now }: { tab: PlanTab; goalId?: string; now: Da
 }
 
 function PlanSkeleton() {
+  // The heading, the tabs and the four pipeline windows with their bars and glyphs, so the page does
+  // not jump when the workspace loads. A status, so "Loading your plan" is announced as text (a plain
+  // div cannot take an aria-label).
   return (
-    <div aria-busy="true" aria-label="Loading your plan" className="flex flex-col gap-8">
-      <div className="flex max-w-3xl flex-col gap-2">
-        <div className="h-9 w-48 rounded bg-surface" />
-        <div className="h-6 rounded bg-surface" />
-      </div>
-      <div className="h-11 w-80 max-w-full rounded bg-surface" />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => <div key={i} className="h-64 rounded-lg border border-border bg-surface" />)}
+    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+      <span className="sr-only">Loading your plan</span>
+      <div aria-hidden="true" className="flex flex-col gap-8">
+        <div className="flex max-w-3xl flex-col gap-2">
+          <div className="h-9 w-48 rounded bg-surface" />
+          <div className="h-6 rounded bg-surface" />
+        </div>
+        <div className="h-11 w-80 max-w-full rounded bg-surface" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={cn(WINDOW_FRAME, 'border-border')}>
+              <div className={WINDOW_BAR}>
+                <div className="h-6 flex-1">
+                  <div className="h-full w-28 rounded bg-surface" />
+                </div>
+                <WindowControls />
+              </div>
+              <div className="h-56" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

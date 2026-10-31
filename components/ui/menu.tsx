@@ -81,7 +81,8 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
   const itemClass = (disabled?: boolean) =>
     cn(
       'flex min-h-11 w-full items-center gap-2 rounded-md px-3 text-left text-sm text-fg',
-      disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-surface focus:bg-surface',
+      // The popover is --surface, so a hovered or focused item takes the window bar's neutral fill.
+      disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-neutral-bg focus:bg-neutral-bg',
       focusRing,
       'focus-visible:outline-offset-0',
     );
@@ -107,7 +108,8 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
       {open && (
         <div
           className={cn(
-            'absolute top-full z-50 mt-1 flex w-max min-w-56 max-w-[min(20rem,calc(100vw-2rem))] flex-col rounded-lg border border-border bg-bg p-1',
+            // A --surface popover lifted by the window's shadow (Billabong design doc section 11, Task 8).
+            'absolute top-full z-50 mt-1 flex w-max min-w-56 max-w-[min(20rem,calc(100vw-2rem))] flex-col rounded-lg border border-border bg-surface p-1 shadow-window',
             align === 'end' ? 'right-0' : 'left-0',
           )}
         >
@@ -161,7 +163,7 @@ export function Menu({ label, items, icon: Icon, align = 'start', variant = 'sec
               );
             })}
           </div>
-          {footer && <p id={`${id}-footer`} className="px-3 pb-2 pt-1.5 text-xs text-muted-fg">{footer}</p>}
+          {footer && <p id={`${id}-footer`} className="mt-1 border-t border-border px-3 pb-2 pt-2 text-xs text-muted-fg">{footer}</p>}
         </div>
       )}
     </div>

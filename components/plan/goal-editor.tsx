@@ -159,7 +159,7 @@ function GoalForm({ goal, applicationId, onClose, onSaved, formId, titleRef }: G
                     // Keep focus in the list: the previous step, or the Add step button.
                     requestAnimationFrame(() => (stepRefs.current[i - 1] ?? document.getElementById(`${formId}-add-step`))?.focus());
                   }}
-                  className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+                  className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
                 >
                   <Trash2 aria-hidden="true" size={16} strokeWidth={1.5} />
                 </button>

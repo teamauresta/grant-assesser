@@ -9,6 +9,7 @@ export const WINDOW_BAR = 'flex items-center gap-3 rounded-t-[7px] border-b bord
 export const WINDOW_FRAME = 'rounded-lg border bg-surface shadow-window';
 
 const TITLE_SIZES = { sm: 'text-sm', md: 'text-base' } as const;
+const PADDINGS = { md: 'p-4 md:p-6', sm: 'p-3' } as const;
 
 /** The decorative minimise, maximise and close glyphs: hidden from assistive tech, never focusable. */
 export function WindowControls() {
@@ -60,7 +61,12 @@ export type WindowProps = Omit<ComponentPropsWithoutRef<'section'>, 'title' | 'c
   borderClassName?: string;
   /** Layout classes for the frame (margin, grid placement). */
   className?: string;
-  /** Classes for the body, e.g. to change its padding. */
+  /**
+   * The body's padding: 'md' (p-4, p-6 from md up, default) or 'sm' (p-3) for narrow windows such as
+   * the pipeline's columns. A prop, since cn() does not merge a caller's padding with the default.
+   */
+  padding?: 'md' | 'sm';
+  /** Classes for the body's layout (flex, gap). */
   bodyClassName?: string;
   children: ReactNode;
 };
@@ -85,6 +91,7 @@ export function Window({
   landmark = true,
   borderClassName = 'border-border',
   className,
+  padding = 'md',
   bodyClassName,
   children,
   ...rest
@@ -110,7 +117,7 @@ export function Window({
         {actions}
         {controls && <WindowControls />}
       </div>
-      <div className={cn('p-4 md:p-6', bodyClassName)}>{children}</div>
+      <div className={cn(PADDINGS[padding], bodyClassName)}>{children}</div>
     </Frame>
   );
 }

@@ -485,3 +485,68 @@ test.describe('wizard choice cards', () => {
     expect(focused.shadow).toBe(checked.shadow);
   });
 });
+
+// The plan (Billabong plan, Task 8; design doc section 11): the pipeline's columns are windows that
+// never clip a card gliding between them, and a cheer from the outcome dialog reaches assistive tech.
+test.describe('plan', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedStorage(page, { workspace: populatedWorkspace() });
+    await page.goto('plan/');
+    await expect(page.getByRole('article', { name: 'CSIRO Kick-Start' })).toBeVisible();
+  });
+
+  test('nothing between a card and the board clips it, so a moved card glides in view', async ({ page }) => {
+    const clipped = await page.locator('[data-app-id="app-kick-start"]').evaluate((li) => {
+      const board = li.closest('.grid')!;
+      const found: string[] = [];
+      for (let el = li.parentElement; el && el !== board; el = el.parentElement) {
+        const s = getComputedStyle(el);
+        if (s.overflowX !== 'visible' || s.overflowY !== 'visible' || s.contain.includes('paint')) found.push(`${el.tagName}.${el.className}`);
+      }
+      return found;
+    });
+    expect(clipped).toEqual([]);
+    // The card sits in a column window: a region named by its title, in the window's frame.
+    const column = page.getByRole('region', { name: /^Considering/ });
+    await expect(column.getByRole('article', { name: 'CSIRO Kick-Start' })).toBeVisible();
+    await expect(column).toHaveClass(/\bshadow-window\b/);
+  });
+
+  test('an award chosen in the outcome dialog is cheered once the page is live again', async ({ page }) => {
+    // Record, as each toast is added, whether its live region is inert (as it is behind a dialog). The
+    // exact moment is checked in tests/components/pipeline-board.test.tsx; this is the real browser.
+    await page.evaluate(() => {
+      const w = window as unknown as { toastSeen: { inert: boolean; dialog: boolean }[] };
+      w.toastSeen = [];
+      new MutationObserver((records) => {
+        for (const r of records) {
+          for (const node of r.addedNodes) {
+            const region = node instanceof Element ? node.closest('[role="status"][aria-live="polite"]') : null;
+            if (!region || node === region) continue;
+            w.toastSeen.push({ inert: region.closest('[inert]') !== null, dialog: document.querySelector('[role="dialog"]') !== null });
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    // Drop the card on Outcome (synthetic drag events: the grip arms the card on pointer down).
+    const data = await page.evaluateHandle(() => new DataTransfer());
+    const card = page.getByRole('article', { name: 'CSIRO Kick-Start' });
+    await card.dispatchEvent('dragstart', { dataTransfer: data });
+    const outcome = page.getByRole('region', { name: /^Outcome/ });
+    await outcome.dispatchEvent('dragover', { dataTransfer: data });
+    await expect(outcome).toHaveClass(/\bborder-accent\b/);
+    await outcome.dispatchEvent('drop', { dataTransfer: data });
+    const dialog = page.getByRole('dialog', { name: 'What was the outcome?' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: /^Awarded/ }).click();
+
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText('Awarded. Add the reporting dates to your calendar.')).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { toastSeen: unknown[] }).toastSeen)).toEqual([{ inert: false, dialog: false }]);
+    // Its link is reachable: focus moves to it.
+    const link = page.getByRole('link', { name: 'Open calendar' });
+    await link.focus();
+    await expect(link).toBeFocused();
+    await expect(page.getByRole('region', { name: /^Outcome/ }).getByRole('article', { name: 'CSIRO Kick-Start' })).toBeVisible();
+  });
+});

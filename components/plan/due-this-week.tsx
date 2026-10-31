@@ -45,12 +45,12 @@ export function DueThisWeek({ className }: { className?: string }) {
           <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} />
         </Link>
       </div>
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
         {due.slice(0, MAX_ITEMS).map((g) => {
           const overdue = g.dueDate < today;
           const context = g.applicationId ? names.get(g.applicationId) : undefined;
           return (
-            <li key={g.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+            <li key={g.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 first:rounded-t-[7px] last:rounded-b-[7px] hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
               <div className="min-w-0">
                 <Link href={goalHref(g.id)} className="break-words font-medium after:absolute after:inset-0 focus-visible:outline-none">{g.title}</Link>
                 {context && <p className="text-xs text-muted-fg">{context}</p>}

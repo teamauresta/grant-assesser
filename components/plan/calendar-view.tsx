@@ -149,7 +149,7 @@ export function CalendarView({ now }: { now: Date }) {
                       <td
                         key={d}
                         aria-current={isToday ? 'date' : undefined}
-                        className={cn('h-16 border border-border p-0.5 align-top sm:h-24 sm:p-1', outside && 'bg-surface')}
+                        className={cn('h-16 border border-border p-0.5 align-top sm:h-24 sm:p-1', outside ? 'bg-bg' : 'bg-surface')}
                       >
                         <div className="flex flex-col gap-0.5">
                           <span
@@ -203,11 +203,13 @@ function Chip({ item }: { item: PlanItem }) {
         href={itemHref(item)}
         title={label}
         className={cn(
-          'flex min-h-6 min-w-6 items-center justify-center gap-1 rounded px-0.5 text-xs leading-5 sm:justify-start sm:border sm:px-1',
-          item.kind === 'deadline' ? 'font-medium sm:border-border-strong sm:bg-bg' : 'sm:border-border sm:bg-bg',
+          // A small pill (Billabong design doc section 4): an outline on --surface from sm up, the
+          // icon alone on phones. Deadlines are medium weight; the icon tells the kinds apart.
+          'flex min-h-6 min-w-6 items-center justify-center gap-1 rounded-full px-0.5 text-xs leading-5 sm:justify-start sm:border sm:border-border-strong sm:bg-surface sm:px-2',
+          item.kind === 'deadline' && 'font-medium',
           overdue && 'text-danger',
           done && 'text-muted-fg',
-          'hover:bg-surface',
+          'hover:bg-neutral-bg',
           focusRing,
         )}
       >
@@ -234,7 +236,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
     <section aria-labelledby="agenda-heading" className="flex flex-col gap-3">
       <h2 id="agenda-heading" className="text-xl">Next {AGENDA_DAYS} days</h2>
       {groups.length === 0 ? (
-        <p className="rounded-lg border border-border px-4 py-6 text-sm text-muted-fg">Nothing due in the next {AGENDA_DAYS} days.</p>
+        <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-fg">Nothing due in the next {AGENDA_DAYS} days.</p>
       ) : (
         <ol className="flex flex-col gap-4">
           {groups.map(([key, list]) => (
@@ -244,7 +246,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
                   ? <><CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} />Overdue</>
                   : <time dateTime={key} className="num">{key === today ? 'Today' : formatDate(key)}</time>}
               </h3>
-              <ul className="divide-y divide-border rounded-lg border border-border">
+              <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
                 {list.map((i) => <AgendaRow key={i.id} item={i} />)}
               </ul>
             </li>
@@ -258,7 +260,7 @@ function Agenda({ items, today }: { items: PlanItem[]; today: string }) {
 function AgendaRow({ item }: { item: PlanItem }) {
   const overdue = item.kind === 'goal' && item.overdue;
   return (
-    <li className="relative flex gap-2 px-3 py-2.5 hover:bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
+    <li className="relative flex gap-2 px-3 py-2.5 first:rounded-t-[7px] last:rounded-b-[7px] hover:bg-neutral-bg has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-accent">
       <ItemIcon item={item} className={cn('mt-[3px]', overdue ? 'text-danger' : 'text-muted-fg')} />
       <div className="flex min-w-0 flex-col">
         <Link href={itemHref(item)} className="break-words text-sm font-medium after:absolute after:inset-0 focus-visible:outline-none">

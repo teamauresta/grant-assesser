@@ -15,6 +15,8 @@ import { PipelineBoard } from '@/components/plan/pipeline-board';
 import { Toaster } from '@/components/ui/toast';
 import { resetCelebrations } from '@/lib/celebrate';
 import { useToasts } from '@/lib/toast';
+import { WINDOW_BAR } from '@/components/ui/window';
+import { buttonClasses } from '@/components/ui/button';
 
 const now = new Date('2026-10-27T00:00:00Z');
 const column = (name: string) => screen.getByRole('region', { name: new RegExp(`^${name}`) });
@@ -103,6 +105,82 @@ describe('PipelineBoard', () => {
   });
 });
 
+// The columns are windows and the cards sit on --surface (Billabong design doc section 4 and
+// section 11, Task 8).
+describe('PipelineBoard windows', () => {
+  const dragData = () => {
+    const data: Record<string, string> = {};
+    return { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+  };
+
+  it('draws each column as a window titled with its stage and count', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    useWorkspace.getState().addCustomApplication('Seed round');
+    render(<PipelineBoard now={now} />);
+    for (const [name, count] of [['Considering', '2 applications'], ['Preparing', '0 applications'], ['Submitted', '0 applications'], ['Outcome', '0 applications']]) {
+      const region = column(name);
+      const heading = within(region).getByRole('heading', { level: 2, name: `${name} ${count}` });
+      expect(region).toHaveAttribute('aria-labelledby', heading.id);
+      expect(heading.id).toBe(`column-${name.toLowerCase()}`);
+      expect(WINDOW_BAR.split(' ').every((c) => heading.parentElement!.classList.contains(c))).toBe(true);
+      expect(heading.querySelector('.num')).not.toBeNull();
+      expect(region).toHaveClass('bg-surface', 'shadow-window', 'border-border');
+    }
+  });
+
+  it('marks drop targets on the window frame while a card is dragged', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const dataTransfer = dragData();
+    fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+    // The card's own column is not a target; the others are dashed, and the one under the pointer is accent.
+    expect(column('Considering')).toHaveClass('border-border');
+    expect(column('Preparing')).toHaveClass('border-dashed', 'border-border-strong');
+    fireEvent.dragOver(column('Preparing'), { dataTransfer });
+    expect(column('Preparing')).toHaveClass('border-accent');
+    expect(column('Preparing')).not.toHaveClass('border-border', 'border-border-strong');
+    fireEvent.drop(column('Preparing'), { dataTransfer });
+    expect(useWorkspace.getState().ws.pipeline[0].stage).toBe('preparing');
+    expect(column('Preparing')).toHaveClass('border-border');
+  });
+
+  it('focuses the column heading after removing a card from it', async () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    useWorkspace.getState().addCustomApplication('Seed round');
+    render(<PipelineBoard now={now} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'More actions for Angel round' }));
+    await user.click(screen.getByRole('menuitem', { name: /remove from pipeline/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: /^Considering/ })).toHaveFocus());
+    expect(screen.getByRole('heading', { level: 2, name: /^Considering/ })).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('draws cards on --surface with a neutral outline, Move to… a secondary button', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const card = screen.getByRole('article', { name: 'Angel round' });
+    expect(card).toHaveClass('bg-surface', 'border', 'border-border', 'rounded-lg');
+    expect(card).not.toHaveClass('bg-bg');
+    expect(within(card).getByRole('button', { name: 'Move Angel round to…' })).toHaveAttribute('class', buttonClasses());
+  });
+
+  // The outcome dialog's choices are cards on the dialog's --surface body.
+  it('offers the outcomes as outlined choices on the dialog body', () => {
+    useWorkspace.getState().addCustomApplication('Angel round');
+    render(<PipelineBoard now={now} />);
+    const dataTransfer = dragData();
+    fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+    fireEvent.dragOver(column('Outcome'), { dataTransfer });
+    fireEvent.drop(column('Outcome'), { dataTransfer });
+    const dialog = screen.getByRole('dialog', { name: 'What was the outcome?' });
+    for (const name of [/^Awarded/, /^Declined/, /^Withdrawn/]) {
+      const choice = within(dialog).getByRole('button', { name });
+      expect(choice).toHaveClass('bg-surface', 'border-border-strong', 'hover:bg-bg');
+    }
+  });
+});
+
 describe('PipelineBoard milestone cheers', () => {
   const toasts = () => useToasts.getState().toasts.map((t) => t.message);
   /** Renders the board with the toaster and moves "Angel round" through Move to… */
@@ -161,6 +239,33 @@ describe('PipelineBoard milestone cheers', () => {
     expect(useWorkspace.getState().ws.pipeline.find((a) => a.id === id)?.stage).toBe('awarded');
     expect(await screen.findByText('Awarded. Add the reporting dates to your calendar.')).toBeInTheDocument();
     await waitFor(() => expect(confetti).toHaveBeenCalledTimes(2));
+  });
+
+  // A toast fired while a dialog is open would be inert (the dialog makes everything else inert), so
+  // never announced and its link unreachable. The award chosen in the outcome dialog cheers only once
+  // the dialog has closed and the page is live again.
+  it('cheers an award from the outcome dialog only after the dialog has closed', async () => {
+    await setup();
+    const seen: { dialogOpen: boolean; toasterInert: boolean }[] = [];
+    const unsubscribe = useToasts.subscribe((s) => {
+      if (!s.toasts.length) return;
+      const region = document.querySelector('[role="status"][aria-live="polite"]');
+      let inert = false;
+      for (let el = region as HTMLElement | null; el; el = el.parentElement) inert ||= el.inert === true;
+      seen.push({ dialogOpen: document.querySelector('[role="dialog"]') !== null, toasterInert: inert });
+    });
+    try {
+      const data: Record<string, string> = {};
+      const dataTransfer = { setData: (k: string, v: string) => { data[k] = v; }, getData: (k: string) => data[k] ?? '', effectAllowed: '', dropEffect: '' };
+      fireEvent.dragStart(screen.getByRole('article', { name: 'Angel round' }), { dataTransfer });
+      fireEvent.dragOver(column('Outcome'), { dataTransfer });
+      fireEvent.drop(column('Outcome'), { dataTransfer });
+      await userEvent.setup().click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Awarded/ }));
+      await screen.findByText('Awarded. Add the reporting dates to your calendar.');
+      expect(seen).toEqual([{ dialogOpen: false, toasterInert: false }]);
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('says nothing for Withdrawn', async () => {

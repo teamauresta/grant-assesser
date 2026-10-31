@@ -83,12 +83,63 @@ for (const theme of ['light', 'dark'] as const) {
   });
 }
 
-test('plan', async ({ page }, info) => {
-  await seedStorage(page, { workspace: populatedWorkspace() });
-  await page.goto('plan/');
-  await expect(page.getByRole('article', { name: 'CSIRO Kick-Start' })).toBeVisible();
-  await capture(page, 'plan', info.project.name);
-});
+// The plan (design doc section 11, Task 8): the pipeline's column windows, the goals and the
+// calendar, then viewport shots of a dialog and of an open menu, light and dark.
+for (const theme of ['light', 'dark'] as const) {
+  test(`plan (${theme})`, async ({ page }, info) => {
+    const project = info.project.name;
+    await seedStorage(page, { workspace: populatedWorkspace(), theme });
+    await page.goto('plan/');
+    await expect(page.getByRole('article', { name: 'CSIRO Kick-Start' })).toBeVisible();
+    await capture(page, `plan-pipeline-${theme}`, project);
+
+    const card = page.getByRole('article', { name: 'R&D Tax Incentive' });
+    await card.getByRole('button', { name: /^Move .* to…$/ }).click();
+    await expect(page.getByRole('menuitem', { name: 'Submitted' })).toBeVisible();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await page.screenshot({ path: join(OUT, `plan-menu-${theme}-${project}.png`) });
+    await page.keyboard.press('Escape');
+
+    await card.getByRole('button', { name: /^More actions for/ }).click();
+    await page.getByRole('menuitem', { name: 'Edit notes' }).click();
+    await expect(page.getByRole('dialog', { name: 'Notes' })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: join(OUT, `plan-dialog-notes-${theme}-${project}.png`) });
+    await page.keyboard.press('Escape');
+
+    await card.getByRole('button', { name: /^More actions for/ }).click();
+    await page.getByRole('menuitem', { name: 'Remove from pipeline' }).click();
+    await expect(page.getByRole('dialog', { name: /^Remove/ })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: join(OUT, `plan-dialog-confirm-${theme}-${project}.png`) });
+    await page.keyboard.press('Escape');
+
+    await page.goto('plan/?tab=goals');
+    await expect(page.getByText('Submit the Kick-Start EOI').first()).toBeVisible();
+    await capture(page, `plan-goals-${theme}`, project);
+    await page.getByRole('button', { name: 'Add goal' }).click();
+    await expect(page.getByRole('dialog', { name: 'Add goal' })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: join(OUT, `plan-dialog-goal-${theme}-${project}.png`) });
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Add to calendar: Submit the Kick-Start EOI' }).click();
+    await expect(page.getByRole('menuitem', { name: /^Google Calendar/ })).toBeVisible();
+    await page.screenshot({ path: join(OUT, `plan-menu-calendar-${theme}-${project}.png`) });
+    await page.keyboard.press('Escape');
+
+    await page.goto('plan/?tab=calendar');
+    await expect(page.getByRole('button', { name: 'Export all to calendar (.ics)' })).toBeEnabled();
+    await capture(page, `plan-calendar-${theme}`, project);
+    // The seeded goals fall in the coming weeks; show the month with the most of them as pills.
+    const month = (iso: string) => iso.slice(0, 7);
+    const dates = populatedWorkspace().goals.flatMap((g) => (g.dueDate ? [month(g.dueDate)] : []));
+    if (dates.some((d) => d > month(new Date().toISOString()))) {
+      await page.getByRole('button', { name: 'Next month' }).click();
+    }
+    await page.getByRole('table').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.screenshot({ path: join(OUT, `plan-calendar-month-${theme}-${project}.png`) });
+  });
+}
 
 // The wizard in its window (design doc section 11, Task 6): the first, a middle and the last step with
 // the bootstrappedVic answers, so checked cards show; then keyboard focus on a checked card.

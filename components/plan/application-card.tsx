@@ -74,7 +74,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
       onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', a.id); onDragStart?.(e); }}
       onDragEnd={() => { setArmed(false); onDragEnd?.(); }}
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-border bg-bg p-4 transition-opacity duration-150',
+        'flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition-opacity duration-150',
         focusRing,
         dragging && 'opacity-50',
       )}
@@ -100,7 +100,7 @@ export function ApplicationCard({ application: a, goals, now, onMove, onEditNote
             title="Drag to another column"
             onPointerDown={() => setArmed(true)}
             onPointerUp={() => setArmed(false)}
-            className="-mr-1 hidden size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg active:cursor-grabbing md:inline-flex"
+            className="-mr-1 hidden size-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg active:cursor-grabbing md:inline-flex"
           >
             <GripVertical size={16} strokeWidth={1.5} />
           </span>
@@ -202,7 +202,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
           aria-describedby={error ? `${id}-error` : undefined}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); stop(); } }}
-          className={cn('num min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-bg px-3 text-base aria-invalid:border-danger', focusRing)}
+          className={cn('num min-h-11 w-full min-w-0 rounded-md border border-border-strong bg-surface px-3 text-base aria-invalid:border-danger', focusRing)}
         />
         {error && <ErrorText id={`${id}-error`}>{error}</ErrorText>}
         <div className="flex gap-2">
@@ -226,7 +226,7 @@ function ExpectedAmount({ application: a, name }: { application: Application; na
         type="button"
         onClick={start}
         aria-label={`${a.expectedAmount ? 'Edit' : 'Set'} expected amount for ${name}`}
-        className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-surface hover:text-fg', focusRing)}
+        className={cn('inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-fg hover:bg-neutral-bg hover:text-fg', focusRing)}
       >
         <Pencil aria-hidden="true" size={16} strokeWidth={1.5} />
       </button>

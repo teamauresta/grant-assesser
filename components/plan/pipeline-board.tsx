@@ -15,6 +15,7 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { focusRing } from '@/components/ui/focus-ring';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { Window } from '@/components/ui/window';
 import { useMotionReady } from '@/components/motion/motion-provider';
 import { ApplicationCard } from './application-card';
 
@@ -53,7 +54,9 @@ export function PipelineBoard({ now }: { now: Date }) {
     setFocusId(a.id);
     setAnnouncement(`Moved ${nameOf(a)} to ${STAGE_LABELS[stage]}.`);
     const c = stageCheer(stage);
-    // Aim the burst at the card in its new column, once the move has rendered.
+    // Aim the burst at the card in its new column, once the move has rendered. A frame later also
+    // means after the outcome dialog has closed: while a dialog is open the toasts are inert, so the
+    // message would be neither announced nor reachable (tests/components/pipeline-board.test.tsx).
     if (c) requestAnimationFrame(() => { void cheer(`${a.id}:${stage}`, c, originOf(document.querySelector(`[data-app-id="${a.id}"]`))); });
   };
 
@@ -128,9 +131,22 @@ export function PipelineBoard({ now }: { now: Date }) {
             const headingId = `column-${column.id}`;
             const dropTarget = dragId !== undefined && !apps.some((a) => a.id === dragId);
             return (
-              <section
+              // Each column is a window (Billabong design doc section 4). The frame never clips, so a
+              // card gliding to another column stays visible all the way.
+              <Window
                 key={column.id}
-                aria-labelledby={headingId}
+                titleId={headingId}
+                title={(
+                  <>
+                    {column.label}{' '}
+                    <span className="num font-normal text-muted-fg">
+                      {apps.length}{' '}<span className="sr-only">{apps.length === 1 ? 'application' : 'applications'}</span>
+                    </span>
+                  </>
+                )}
+                titleSize="md"
+                headingRef={(el) => { headingRefs.current[column.id] = el; }}
+                headingProps={{ tabIndex: -1 }}
                 onDragOver={(e) => {
                   if (!dropTarget) return;
                   e.preventDefault();
@@ -139,22 +155,11 @@ export function PipelineBoard({ now }: { now: Date }) {
                 }}
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverColumn((c) => (c === column.id ? undefined : c)); }}
                 onDrop={(e) => onDrop(e, column)}
-                className={cn(
-                  'flex min-w-0 flex-col gap-3 rounded-lg border bg-surface p-3 transition-[border-color,background-color] duration-150',
-                  overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border',
-                )}
+                borderClassName={overColumn === column.id ? 'border-accent' : dropTarget ? 'border-dashed border-border-strong' : 'border-border'}
+                className="flex min-w-0 flex-col transition-[border-color] duration-150"
+                padding="sm"
+                bodyClassName="flex flex-1 flex-col gap-3"
               >
-                <h2
-                  id={headingId}
-                  ref={(el) => { headingRefs.current[column.id] = el; }}
-                  tabIndex={-1}
-                  className="flex items-baseline justify-between gap-2 px-1 text-base focus:outline-none"
-                >
-                  {column.label}
-                  <span className="num text-sm font-normal text-muted-fg">
-                    {apps.length}<span className="sr-only"> {apps.length === 1 ? 'application' : 'applications'}</span>
-                  </span>
-                </h2>
                 {apps.length ? (
                   <ul className="flex flex-col gap-3">
                     {apps.map((a) => (
@@ -186,11 +191,11 @@ export function PipelineBoard({ now }: { now: Date }) {
                     ))}
                   </ul>
                 ) : (
-                  <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-fg">
+                  <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-fg">
                     {column.id === 'outcome' ? 'Awarded, declined and withdrawn applications appear here.' : 'Nothing here yet.'}
                   </p>
                 )}
-              </section>
+              </Window>
             );
           })}
         </div>
@@ -219,7 +224,7 @@ export function PipelineBoard({ now }: { now: Date }) {
             <button
               key={stage}
               type="button"
-              className={cn('flex min-h-11 items-center gap-3 rounded-md border border-border bg-bg px-4 py-3 text-left text-sm font-medium hover:border-border-strong hover:bg-surface', focusRing)}
+              className={cn('flex min-h-11 items-center gap-3 rounded-lg border border-border-strong bg-surface px-4 py-3 text-left text-sm font-medium hover:bg-bg', focusRing)}
               onClick={() => { if (outcomeFor) move(outcomeFor, stage); setOutcomeFor(undefined); }}
             >
               <Icon aria-hidden="true" size={20} strokeWidth={1.5} className="shrink-0 text-muted-fg" />

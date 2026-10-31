@@ -71,7 +71,7 @@ export function GoalList({ now, highlightId }: { now: Date; highlightId?: string
       </div>
 
       {missing && (
-        <p className="flex items-start gap-2 rounded-lg border border-border px-4 py-3 text-sm">
+        <p className="flex items-start gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
           <CircleAlert aria-hidden="true" size={16} strokeWidth={1.5} className="mt-[3px] shrink-0 text-muted-fg" />
           That goal is no longer in your plan. It may have been completed elsewhere or removed.
         </p>
@@ -149,11 +149,11 @@ function GoalGroupSection({ group, now, onAdd, onEdit, onRemove }: {
         )}
       </div>
       {group.goals.length ? (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {group.goals.map((g) => <GoalRow key={g.id} goal={g} now={now} onEdit={() => onEdit(g)} onRemove={() => onRemove(g)} onCompletesApplication={celebrate} />)}
         </ul>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-fg">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-sm text-muted-fg">
           No goals for this application yet.
           <Button variant="ghost" onClick={onAdd}>
             <Plus aria-hidden="true" size={16} strokeWidth={1.5} />
@@ -189,8 +189,8 @@ function GoalRow({ goal, now, onEdit, onRemove, onCompletesApplication }: {
       id={`goal-${goal.id}`}
       tabIndex={-1}
       className={cn(
-        'flex scroll-mt-24 flex-col gap-3 p-4 transition-colors duration-200 focus:outline-none',
-        'data-[highlight=true]:bg-surface data-[highlight=true]:ring-2 data-[highlight=true]:ring-inset data-[highlight=true]:ring-accent',
+        'flex scroll-mt-24 flex-col gap-3 p-4 transition-colors duration-200 first:rounded-t-[7px] last:rounded-b-[7px] focus:outline-none',
+        'data-[highlight=true]:bg-neutral-bg data-[highlight=true]:ring-2 data-[highlight=true]:ring-inset data-[highlight=true]:ring-accent',
       )}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
